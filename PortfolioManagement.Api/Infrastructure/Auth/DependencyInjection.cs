@@ -1,4 +1,6 @@
-﻿namespace PortfolioManagement.Api.Infrastructure.Auth;
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace PortfolioManagement.Api.Infrastructure.Auth;
 
 public static class DependencyInjection
 {

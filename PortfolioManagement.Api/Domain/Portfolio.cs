@@ -8,20 +8,20 @@ public class Portfolio
     {
         Name = name;
         Description = description;
+        CreatedAt = DateTimeOffset.UtcNow;
     }
 
 
     public int Id { get; protected set; }
     public string Name { get; protected set; } = null!;
     public string? Description { get; protected set; }
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+    public DateTimeOffset CreatedAt { get; private set; }
 
     
 
     public static Portfolio Create(string name, string? description)
     {
-        return new Portfolio(name, description);
+        return new Portfolio(name.Trim(), description?.Trim());
     }
-
-
+    
 }

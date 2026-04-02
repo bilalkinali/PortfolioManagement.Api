@@ -1,6 +1,11 @@
 @PortfolioManagement.Api_HostAddress = http://localhost:5046
 
-GET {{PortfolioManagement.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+Content-Type: application/json
+
+{
+  "name": "My Portfolio",
+  "description": "Test portfolio."
+}
 
 ###
