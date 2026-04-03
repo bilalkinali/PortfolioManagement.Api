@@ -4,10 +4,11 @@ public class Portfolio
 {
     protected Portfolio() {}
 
-    private Portfolio(string name, string? description)
+    private Portfolio(string name, string? description, string userId)
     {
         Name = name;
         Description = description;
+        UserId = userId;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -16,6 +17,7 @@ public class Portfolio
     public int Id { get; protected set; }
     public string Name { get; protected set; } = null!;
     public string? Description { get; protected set; }
+    public string UserId { get; protected set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
     public IReadOnlyCollection<Position> Positions => _positions;
 
@@ -23,16 +25,16 @@ public class Portfolio
     /**************************************************************************************/
     
 
-    public static Portfolio Create(string name, string? description)
+    public static Portfolio Create(string name, string? description, string userId)
     {
-        return new Portfolio(name.Trim(), description?.Trim());
+        return new Portfolio(name, description, userId);
     }
 
 
     // Positions
-    public Position AddPosition(int id)
+    public Position AddPosition(string symbol)
     {
-        var position = Position.Create(id);
+        var position = Position.Create(symbol);
         _positions.Add(position);
         return position;
     }

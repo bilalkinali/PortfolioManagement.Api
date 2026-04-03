@@ -6,7 +6,10 @@ public static class CreatePortfolioEndpoint
     {
         app.MapPost("/api/portfolios", async (CreatePortfolioRequest request) =>
         {
-            var response = await CreatePortfolioHandler.Handle(request);
+            // Get userId from the authenticated user context.
+            // For simplicity, hardcoded userId for now.
+            var userId = new Random().Next(1, 1000).ToString(); // Replace with actual user ID retrieval logic.
+            var response = await CreatePortfolioHandler.Handle(request, userId);
             return Results.Created("/api/portfolios/{response.Id}", response);
         });
     }
