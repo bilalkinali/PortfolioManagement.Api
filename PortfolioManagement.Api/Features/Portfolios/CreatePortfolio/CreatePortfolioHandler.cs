@@ -1,18 +1,18 @@
 ﻿using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 
-public class CreatePortfolioHandler
+public class CreatePortfolioHandler(PortfolioDbContext db)
 {
-    public static Task<CreatePortfolioResponse> Handle(CreatePortfolioRequest request, string userId)
+
+    public async Task<CreatePortfolioResponse> Handle(CreatePortfolioRequest request, string userId)
     {
         // Perform validation, check for existing portfolios, and save the portfolio to a database.
         var portfolio = Portfolio.Create(request.Name, request.Description, userId);
 
-        Console.WriteLine("Created Portfolio, saving to database... (missing)");
-        
-        // Simulate saving to a database and getting an ID back
-        portfolio.GetType().GetProperty("Id")?.SetValue(portfolio, new Random().Next(1, 1000));
+        db.Portfolios.Add(portfolio);
+        await db.SaveChangesAsync();
         
         var response = new CreatePortfolioResponse(
             portfolio.Id, 
@@ -29,6 +29,7 @@ public class CreatePortfolioHandler
         }
         
 
-        return Task.FromResult(response);
+        return response;
     }
+
 }
