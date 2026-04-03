@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Identity;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
+using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,28 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddPortfolioInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+//    var email = "test@test.com";
+//    var existing = await userManager.FindByEmailAsync(email);
+
+//    if (existing is null)
+//    {
+//        var user = new AppUser
+//        {
+//            FirstName = "Bilal",
+//            LastName = "Kinali",
+//            UserName = "botjefferson",
+//            Email = email,
+//            EmailConfirmed = true
+//        };
+
+//        await userManager.CreateAsync(user, "Test123!");
+//    }
+//}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
