@@ -17,10 +17,19 @@ public static class CreatePortfolioEndpoint
             //var userId = "100"; // Replace with actual user ID retrieval logic.
             //var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-            var user = await userManager.FindByEmailAsync("test@test.com");
-            var userId = user!.Id;
-            var response = await createPortfolioHandler.Handle(request, userId);
-            return Results.Created($"/api/portfolios/{response.Id}", response);
+            try
+            {
+                var user = await userManager.FindByEmailAsync("test@test.com");
+                var userId = user!.Id;
+                var response = await createPortfolioHandler.Handle(request, userId);
+                
+                return Results.Created($"/api/portfolios/{response.Id}", response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return Results.Problem("Something went wrong");
+            }
         });
     }
 }

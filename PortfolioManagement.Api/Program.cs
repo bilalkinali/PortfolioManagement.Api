@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Identity;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
-using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
