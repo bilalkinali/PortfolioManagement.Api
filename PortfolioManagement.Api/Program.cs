@@ -1,5 +1,5 @@
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
-using PortfolioManagement.Api.Infrastructure.Auth;
+using PortfolioManagement.Api.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +9,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
 //builder.Services.AddAuthInfrastructure(builder.Configuration);
+builder.Services.AddPortfolioInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

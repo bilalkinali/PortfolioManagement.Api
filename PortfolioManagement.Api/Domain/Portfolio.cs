@@ -1,4 +1,6 @@
-﻿namespace PortfolioManagement.Api.Domain;
+﻿using PortfolioManagement.Api.Infrastructure.Auth;
+
+namespace PortfolioManagement.Api.Domain;
 
 public class Portfolio
 {
@@ -18,6 +20,7 @@ public class Portfolio
     public string Name { get; protected set; } = null!;
     public string? Description { get; protected set; }
     public string UserId { get; protected set; } = null!;
+    public AppUser User { get; protected set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
     public IReadOnlyCollection<Position> Positions => _positions;
 
