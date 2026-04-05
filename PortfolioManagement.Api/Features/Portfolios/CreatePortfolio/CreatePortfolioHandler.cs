@@ -5,7 +5,6 @@ namespace PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 
 public class CreatePortfolioHandler(PortfolioDbContext db)
 {
-
     public async Task<CreatePortfolioResponse> Handle(CreatePortfolioRequest request, string userId)
     {
         // Perform validation, check for existing portfolios, and save the portfolio to a database.
