@@ -20,8 +20,13 @@ public static class CreatePortfolioEndpoint
             try
             {
                 var user = await userManager.FindByEmailAsync("test@test.com");
-                var userId = user!.Id;
-                var response = await createPortfolioHandler.Handle(request, userId);
+
+                if (user == null)
+                {
+                    return Results.Unauthorized();
+                }
+
+                var response = await createPortfolioHandler.Handle(request, user.Id);
                 
                 return Results.Created($"/api/portfolios/{response.Id}", response);
             }
