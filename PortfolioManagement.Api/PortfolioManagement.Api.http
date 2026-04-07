@@ -9,3 +9,15 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios/2/trades
+Content-Type: application/json
+
+{
+  "symbol": "AAPL",
+  "quantity": 10,
+  "price": 100.00,
+  "executedDate": "2026-05-08"
+}
+
+###

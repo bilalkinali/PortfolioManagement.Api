@@ -36,9 +36,7 @@ public static class AddTradeEndpoint
     }
 }
 
-public record AddTradeRequest
-{
-}
+public record AddTradeRequest(string Symbol, int Quantity, decimal Price, DateOnly ExecutedDate);
 
 public record AddTradeResponse
 {
@@ -58,7 +56,12 @@ public class AddTradeHandler(PortfolioDbContext db)
             throw new Exception("Portfolio not found or user does not have access");
         }
 
-        portfolio.AddTrade("AAPL", 10, 150.00m, DateOnly.FromDateTime(DateTime.UtcNow));
+        var trade = portfolio.AddTrade(request.Symbol, request.Quantity, request.Price, request.ExecutedDate);
+
+        foreach (var prop in trade.GetType().GetProperties())
+        {
+            Console.WriteLine($"{prop.Name}: {prop.GetValue(trade)}");
+        }
 
         await db.SaveChangesAsync();
     }
