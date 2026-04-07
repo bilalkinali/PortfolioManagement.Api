@@ -22,7 +22,7 @@ public class Portfolio
     public string UserId { get; protected set; } = null!;
     public AppUser User { get; protected set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
-    public IReadOnlyCollection<Position> Positions => _positions;
+    public IReadOnlyCollection<Position> Positions => _positions.AsReadOnly();
 
 
     /**************************************************************************************/
@@ -33,9 +33,23 @@ public class Portfolio
         return new Portfolio(name, description, userId);
     }
 
+    // Trades
+    public Trade AddTrade(string symbol, int quantity, decimal price, DateOnly executedDate)
+    {
+        // input validation needed (Also handle symbol normalization, e.g. AAPL vs aapl)
+        var position = _positions.FirstOrDefault(p => p.Symbol == symbol);
+
+        if (position is null)
+        {
+            position = AddPosition(symbol);
+        }
+
+        return position.AddTrade(quantity, price, executedDate);
+    }
+
 
     // Positions
-    public Position AddPosition(string symbol)
+    private Position AddPosition(string symbol)
     {
         var position = Position.Create(symbol);
         _positions.Add(position);

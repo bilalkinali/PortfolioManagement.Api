@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
+using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Auth;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         // Update-Database -Context PortfolioDbContext
 
         services.AddScoped<CreatePortfolioHandler>();
+        services.AddScoped<AddTradeHandler>();
 
         return services;
     }
