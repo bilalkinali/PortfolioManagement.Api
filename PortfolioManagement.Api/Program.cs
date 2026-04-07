@@ -1,4 +1,5 @@
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
+using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,5 +43,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapCreatePortfolioEndpoints();
+app.MapAddTradeEndpoints();
 
 app.Run();
