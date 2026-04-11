@@ -1,20 +1,42 @@
-﻿namespace PortfolioManagement.Api.Features.Auth.Register;
+﻿using PortfolioManagement.Api.Infrastructure.Auth;
+using Microsoft.AspNetCore.Identity;
+
+namespace PortfolioManagement.Api.Features.Auth.Register;
 
 public class RegisterHandler
 {
+    private readonly UserManager<AppUser> _userManager;
 
-    public static Task<RegisterResponse> Handle(RegisterRequest request)
+    public RegisterHandler(UserManager<AppUser> userManager)
     {
-        // Perform validation, check for existing users, hash the password, and save the user to a database.
-
-        var test = new RegisterResponse(
-            FirstName: request.FirstName,
-            LastName: request.LastName,
-            Email: request.Email);
-
-        return Task.FromResult(test);
+        _userManager = userManager;
     }
 
+    public async Task<RegisterResponse> Handle(RegisterRequest request)
+    {
+        var userExists = await _userManager.FindByEmailAsync(request.Email) != null;
+        if (userExists)
+        {
+            throw new Exception("User with this email already exists.");
+        }
 
+        var user = new AppUser
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = request.Email,
+            UserName = request.Email
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new Exception($"Registration failed: {errors}");
+        }
+
+        return new RegisterResponse(user.FirstName, user.LastName, user.Email);
+    }
 }
 

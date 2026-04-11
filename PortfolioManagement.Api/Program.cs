@@ -1,3 +1,4 @@
+using PortfolioManagement.Api.Features.Auth.Register;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
@@ -44,5 +45,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapCreatePortfolioEndpoints();
 app.MapAddTradeEndpoints();
+app.MapRegisterEndpoints();
 
 app.Run();
