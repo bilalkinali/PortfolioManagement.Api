@@ -70,8 +70,11 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapCreatePortfolioEndpoints();
-app.MapAddTradeEndpoints();
+var api = app.MapGroup("/api").RequireAuthorization();
+
+api.MapCreatePortfolioEndpoints();
+api.MapAddTradeEndpoints();
+
 app.MapLoginEndpoints();
 app.MapRegisterEndpoints();
 

@@ -8,6 +8,26 @@ Content-Type: application/json
   "description": "Test portfolio."
 }
 
+POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "My Portfolio2",
+  "description": "Test portfolio."
+}
+
+###
+
+POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+Content-Type: application/json
+Authorization: Bearer {{$bearerToken}}
+
+{
+  "name": "My Portfolio2",
+  "description": "Test portfolio."
+}
+
 ###
 
 POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios/2/trades

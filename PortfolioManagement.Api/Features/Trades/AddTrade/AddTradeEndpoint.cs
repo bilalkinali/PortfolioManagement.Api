@@ -1,30 +1,30 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.Trades.AddTrade;
 
 public static class AddTradeEndpoint
 {
-    public static void MapAddTradeEndpoints(this WebApplication app)
+    public static void MapAddTradeEndpoints(this RouteGroupBuilder api)
     {
-        app.MapPost("/api/portfolios/{portfolioId}/trades", async (
+        api.MapPost("/portfolios/{portfolioId}/trades", async (
             AddTradeHandler addTradeHandler, 
             AddTradeRequest request,
-            UserManager<AppUser> userManager, // temporary
+            ClaimsPrincipal user,
             int portfolioId) =>
         {
             try
             {
-                var user = await userManager.FindByEmailAsync("test@test.com");
+                var userId = user.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-                if (user == null)
+                if (userId == null)
                 {
                     return Results.Unauthorized();
                 }
 
-                await addTradeHandler.Handle(request, portfolioId, user.Id);
+                await addTradeHandler.Handle(request, portfolioId, userId);
                 return Results.NoContent();
             }
             catch (Exception ex)

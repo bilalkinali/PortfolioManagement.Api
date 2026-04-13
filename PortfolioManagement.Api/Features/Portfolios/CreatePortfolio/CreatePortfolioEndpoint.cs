@@ -1,32 +1,28 @@
-﻿using Microsoft.AspNetCore.Identity;
-using PortfolioManagement.Api.Infrastructure.Auth;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 
 public static class CreatePortfolioEndpoint
 {
-    public static void MapCreatePortfolioEndpoints(this WebApplication app)
+    public static void MapCreatePortfolioEndpoints(this RouteGroupBuilder api)
     {
-        app.MapPost("/api/portfolios", async (
+        api.MapPost("/portfolios", async (
             CreatePortfolioHandler createPortfolioHandler, 
             CreatePortfolioRequest request,
-            UserManager<AppUser> userManager) => // temporary
+            ClaimsPrincipal user) =>
         {
-            // Get userId from the authenticated user context.
-            // For simplicity, hardcoded userId for now.
-            //var userId = "100"; // Replace with actual user ID retrieval logic.
-            //var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
             try
             {
-                var user = await userManager.FindByEmailAsync("test@test.com");
+                var userId = user.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-                if (user == null)
+                if (userId == null)
                 {
                     return Results.Unauthorized();
                 }
 
-                var response = await createPortfolioHandler.Handle(request, user.Id);
+                var response = await createPortfolioHandler.Handle(request, userId);
                 
                 return Results.Created($"/api/portfolios/{response.Id}", response);
             }
