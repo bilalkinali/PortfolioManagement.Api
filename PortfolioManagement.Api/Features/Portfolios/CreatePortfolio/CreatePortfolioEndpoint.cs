@@ -12,7 +12,6 @@ public static class CreatePortfolioEndpoint
             CreatePortfolioRequest request,
             ClaimsPrincipal user) =>
         {
-
             try
             {
                 var userId = user.FindFirstValue(JwtRegisteredClaimNames.Sub);
