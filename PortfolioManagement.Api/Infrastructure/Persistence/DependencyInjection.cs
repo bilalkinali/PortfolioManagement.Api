@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PortfolioManagement.Api.Features.Auth.Login;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Features.Auth.Register;
 using PortfolioManagement.Api.Infrastructure.Auth;
-using System.Reflection;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -34,8 +35,11 @@ public static class DependencyInjection
         services.AddScoped<AddTradeHandler>();
 
         // Auth
+        services.AddScoped<LoginHandler>();
+        services.AddScoped<IValidator<LoginRequest>, LoginValidator>();
+        services.AddScoped<JwtTokenService>();
         services.AddScoped<RegisterHandler>();
-        services.AddScoped<RegisterValidator>();
+        services.AddScoped<IValidator<RegisterRequest>, RegisterValidator>();
 
         return services;
     }

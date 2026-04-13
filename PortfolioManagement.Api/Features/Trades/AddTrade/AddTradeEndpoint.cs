@@ -38,15 +38,19 @@ public static class AddTradeEndpoint
 
 public record AddTradeRequest(string Symbol, int Quantity, decimal Price, DateOnly ExecutedDate);
 
-public record AddTradeResponse
-{
-}
 
-public class AddTradeHandler(PortfolioDbContext db)
+public class AddTradeHandler
 {
+    private readonly PortfolioDbContext _dbContext;
+
+    public AddTradeHandler(PortfolioDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
     public async Task Handle(AddTradeRequest request, int portfolioId, string userId)
     {
-        var portfolio = await db.Portfolios
+        var portfolio = await _dbContext.Portfolios
             .Include(port => port.Positions)
             .ThenInclude(pos => pos.Trades)
             .FirstOrDefaultAsync(port => port.Id == portfolioId);
@@ -63,7 +67,7 @@ public class AddTradeHandler(PortfolioDbContext db)
             Console.WriteLine($"{prop.Name}: {prop.GetValue(trade)}");
         }
 
-        await db.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
     }
 
 }

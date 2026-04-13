@@ -8,7 +8,7 @@ public static class RegisterEndpoint
     {
         app.MapPost("/auth/register", async (
             RegisterRequest request, 
-            RegisterHandler handler,
+            RegisterHandler registerHandler,
             IValidator<RegisterRequest> validator) =>
         {
             var validationResult = await validator.ValidateAsync(request);
@@ -20,7 +20,7 @@ public static class RegisterEndpoint
 
             try
             {
-                var response = await handler.Handle(request);
+                var response = await registerHandler.Handle(request);
                 return Results.Ok(response);
             }
             catch (Exception ex)

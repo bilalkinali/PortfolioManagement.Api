@@ -21,3 +21,13 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{PortfolioManagement.Api_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "Test123!"
+}
+
+###
