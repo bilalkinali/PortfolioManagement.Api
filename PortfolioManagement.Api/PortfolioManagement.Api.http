@@ -1,10 +1,23 @@
 @PortfolioManagement.Api_HostAddress = http://localhost:5046
 
-POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+POST {{PortfolioManagement.Api_HostAddress}}/auth/login
 Content-Type: application/json
 
 {
-  "name": "My Portfolio",
+  "email": "test@test.com",
+  "password": "Test123!"
+}
+
+###
+
+@token = ey...
+
+POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "My Portfolio2",
   "description": "Test portfolio."
 }
 

@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.Trades.AddTrade;
@@ -12,19 +12,19 @@ public static class AddTradeEndpoint
         app.MapPost("/api/portfolios/{portfolioId}/trades", async (
             AddTradeHandler addTradeHandler, 
             AddTradeRequest request,
-            UserManager<AppUser> userManager, // temporary
+            ClaimsPrincipal user,
             int portfolioId) =>
         {
             try
             {
-                var user = await userManager.FindByEmailAsync("test@test.com");
+                var userId = user.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-                if (user == null)
+                if (userId == null)
                 {
                     return Results.Unauthorized();
                 }
 
-                await addTradeHandler.Handle(request, portfolioId, user.Id);
+                await addTradeHandler.Handle(request, portfolioId, userId);
                 return Results.NoContent();
             }
             catch (Exception ex)
@@ -32,21 +32,25 @@ public static class AddTradeEndpoint
                 Console.WriteLine(ex);
                 return Results.Problem("Something went wrong");
             }
-        });
+        }).RequireAuthorization();
     }
 }
 
 public record AddTradeRequest(string Symbol, int Quantity, decimal Price, DateOnly ExecutedDate);
 
-public record AddTradeResponse
-{
-}
 
-public class AddTradeHandler(PortfolioDbContext db)
+public class AddTradeHandler
 {
+    private readonly PortfolioDbContext _dbContext;
+
+    public AddTradeHandler(PortfolioDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
     public async Task Handle(AddTradeRequest request, int portfolioId, string userId)
     {
-        var portfolio = await db.Portfolios
+        var portfolio = await _dbContext.Portfolios
             .Include(port => port.Positions)
             .ThenInclude(pos => pos.Trades)
             .FirstOrDefaultAsync(port => port.Id == portfolioId);
@@ -63,7 +67,7 @@ public class AddTradeHandler(PortfolioDbContext db)
             Console.WriteLine($"{prop.Name}: {prop.GetValue(trade)}");
         }
 
-        await db.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
     }
 
 }
