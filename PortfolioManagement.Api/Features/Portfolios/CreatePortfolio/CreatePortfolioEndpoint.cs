@@ -5,9 +5,9 @@ namespace PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 
 public static class CreatePortfolioEndpoint
 {
-    public static void MapCreatePortfolioEndpoints(this RouteGroupBuilder api)
+    public static void MapCreatePortfolioEndpoints(this WebApplication app)
     {
-        api.MapPost("/portfolios", async (
+        app.MapPost("/api/portfolios", async (
             CreatePortfolioHandler createPortfolioHandler, 
             CreatePortfolioRequest request,
             ClaimsPrincipal user) =>
@@ -31,6 +31,6 @@ public static class CreatePortfolioEndpoint
                 Console.WriteLine(ex);
                 return Results.Problem("Something went wrong");
             }
-        });
+        }).RequireAuthorization();
     }
 }

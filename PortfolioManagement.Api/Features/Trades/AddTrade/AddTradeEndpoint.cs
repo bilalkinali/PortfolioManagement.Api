@@ -7,9 +7,9 @@ namespace PortfolioManagement.Api.Features.Trades.AddTrade;
 
 public static class AddTradeEndpoint
 {
-    public static void MapAddTradeEndpoints(this RouteGroupBuilder api)
+    public static void MapAddTradeEndpoints(this WebApplication app)
     {
-        api.MapPost("/portfolios/{portfolioId}/trades", async (
+        app.MapPost("/api/portfolios/{portfolioId}/trades", async (
             AddTradeHandler addTradeHandler, 
             AddTradeRequest request,
             ClaimsPrincipal user,
@@ -32,7 +32,7 @@ public static class AddTradeEndpoint
                 Console.WriteLine(ex);
                 return Results.Problem("Something went wrong");
             }
-        });
+        }).RequireAuthorization();
     }
 }
 
