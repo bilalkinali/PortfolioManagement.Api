@@ -362,5 +362,11 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+# Extras #
+
 # MD
 *.md
+
+node_modules/
+dist/
+.vite/
