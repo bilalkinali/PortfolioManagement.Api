@@ -1,27 +1,20 @@
 @PortfolioManagement.Api_HostAddress = http://localhost:5046
 
-POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+POST {{PortfolioManagement.Api_HostAddress}}/auth/login
 Content-Type: application/json
 
 {
-  "name": "My Portfolio",
-  "description": "Test portfolio."
-}
-
-POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "name": "My Portfolio2",
-  "description": "Test portfolio."
+  "email": "test@test.com",
+  "password": "Test123!"
 }
 
 ###
 
+@token = ey...
+
 POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
 Content-Type: application/json
-Authorization: Bearer {{$bearerToken}}
+Authorization: Bearer {{token}}
 
 {
   "name": "My Portfolio2",
@@ -38,16 +31,6 @@ Content-Type: application/json
   "quantity": 10,
   "price": 100.00,
   "executedDate": "2026-05-08"
-}
-
-###
-
-POST {{PortfolioManagement.Api_HostAddress}}/auth/login
-Content-Type: application/json
-
-{
-  "email": "test@test.com",
-  "password": "Test123!"
 }
 
 ###
