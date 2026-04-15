@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import LoginDialog from "@/features/auth/login/components/LoginDialog"
 
 export default function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -13,11 +14,11 @@ export default function Header() {
                 {isLoggedIn ? (
                     <div className="flex items-center gap-3">
                         <div>Hello user</div>
-                        <Button onClick={() => setIsLoggedIn(prev => !prev)}>Logout</Button>
+                        <Button onClick={() => setIsLoggedIn(false)}>Logout</Button>
                     </div>
                 ) : (
                     <div className="flex items-center gap-3">
-                        <Button onClick={() => setIsLoggedIn(prev => !prev)}>Login</Button>
+                        <LoginDialog onSuccess={() => setIsLoggedIn(true)} />
                         <Button>Register</Button>
                     </div>
                 )}
