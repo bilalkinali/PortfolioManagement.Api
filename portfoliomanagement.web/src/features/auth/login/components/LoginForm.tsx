@@ -5,6 +5,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { login } from "../api/login"
 import type { LoginRequest } from "../api/login"
 import type { LoginResponse } from "../api/login"
+import { saveToken } from "../../shared/token-storage"
 
 type LoginFormProps = {
     onLoginSuccess: () => void;
@@ -31,6 +32,8 @@ export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps)
         try {
             const response = await login(request);
 
+            saveToken(response.token);
+
             const responseData: LoginResponse = {
                 token: response.token,
                 email: response.email,
@@ -39,9 +42,8 @@ export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps)
             };
 
             console.log("Login successful:", responseData);
-            // Save the token
-
             onLoginSuccess();
+
         } catch (e: unknown) {
             if (e instanceof Error) {
                 setErrorMessage(e.message);
