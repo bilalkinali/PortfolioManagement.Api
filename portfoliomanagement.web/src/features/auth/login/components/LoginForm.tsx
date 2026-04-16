@@ -2,10 +2,9 @@ import { useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { login } from "../api/login"
+import { login as loginRequest } from "../api/login"
 import type { LoginRequest } from "../api/login"
-import type { LoginResponse } from "../api/login"
-import { saveToken } from "../../shared/token-storage"
+import { useAuth } from "../../shared/auth-context"
 
 type LoginFormProps = {
     onLoginSuccess: () => void;
@@ -17,6 +16,8 @@ export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps)
     const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const { login } = useAuth();
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -30,18 +31,16 @@ export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps)
         };
 
         try {
-            const response = await login(request);
+            const response = await loginRequest(request);
 
-            saveToken(response.token);
+            login(response.token,
+                {
+                    email: response.email,
+                    firstName: response.firstName,
+                    lastName: response.lastName
+                }
+            );
 
-            const responseData: LoginResponse = {
-                token: response.token,
-                email: response.email,
-                firstName: response.firstName,
-                lastName: response.lastName
-            };
-
-            console.log("Login successful:", responseData);
             onLoginSuccess();
 
         } catch (e: unknown) {
