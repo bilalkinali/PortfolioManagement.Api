@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import LoginDialog from "@/features/auth/login/components/LoginDialog"
 import { useAuth } from "@/features/auth/shared/auth-context"
+import { Spinner } from "@/components/ui/spinner"
 
 export default function Header() {
     const { isLoggedIn, user, logout } = useAuth();
@@ -13,7 +14,14 @@ export default function Header() {
 
                 {isLoggedIn ? (
                     <div className="flex items-center gap-3">
-                        <div>Hello {user?.firstName}</div>
+                        {user ? (
+                            <span>Hello, {user.firstName} {user.lastName}</span>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Spinner className="size-3" data-icon="inline-start"/>
+                                <span className="text-sm text-slate-300">Loading user...</span>
+                            </div>
+                        )}
                         <Button onClick={logout}>Logout</Button>
                     </div>
                 ) : (

@@ -1,57 +1,30 @@
 import { useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Spinner }from "@/components/ui/spinner"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { login as loginRequest } from "../api/login"
-import type { LoginRequest } from "../api/login"
-import { useAuth } from "../../shared/auth-context"
 
 type LoginFormProps = {
-    onLoginSuccess: () => void;
+    onSubmit: (email: string, password: string) => Promise<void>;
     onCancel: () => void;
+    isSubmitting: boolean;
+    errorMessage: string | null;
 }
 
-export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps) {
+export default function LoginForm({
+    onSubmit,
+    onCancel,
+    isSubmitting,
+    errorMessage
+}: LoginFormProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { login } = useAuth();
+
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
-
-        setErrorMessage(null);
-        setIsSubmitting(true);
-
-        const request: LoginRequest = {
-            email,
-            password
-        };
-
-        try {
-            const response = await loginRequest(request);
-
-            login(response.token,
-                {
-                    email: response.email,
-                    firstName: response.firstName,
-                    lastName: response.lastName
-                }
-            );
-
-            onLoginSuccess();
-
-        } catch (e: unknown) {
-            if (e instanceof Error) {
-                setErrorMessage(e.message);
-            } else {
-                setErrorMessage("Login failed");
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
+        await onSubmit(email, password);
     }
     
 
@@ -65,6 +38,7 @@ export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps)
                         type="email"
                         value={email}
                         placeholder="email@example.com"
+                        disabled={isSubmitting}
                         onChange={(e) => setEmail(e.target.value)} />
                 </Field>
                 <Field>
@@ -74,6 +48,7 @@ export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps)
                         type="password"
                         value={password}
                         placeholder="******"
+                        disabled={isSubmitting}
                         onChange={(e) => setPassword(e.target.value)} />
                 </Field>
 
@@ -83,7 +58,8 @@ export default function LoginForm({ onLoginSuccess, onCancel } : LoginFormProps)
                     <Button
                         type="submit"
                         disabled={isSubmitting}>
-                        {isSubmitting ? "Logging in..." : "Login"}
+                        Login
+                        { isSubmitting && <Spinner className="mr-2" />}
                     </Button>
 
                     <Button
