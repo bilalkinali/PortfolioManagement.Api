@@ -1,5 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -17,7 +16,7 @@ public static class AddTradeEndpoint
         {
             try
             {
-                var userId = user.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (userId == null)
                 {

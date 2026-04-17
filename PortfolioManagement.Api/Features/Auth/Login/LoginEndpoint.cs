@@ -20,18 +20,12 @@ public static class LoginEndpoint
                 return Results.ValidationProblem(validationResult.ToDictionary());
             }
 
-            try
-            {
-                var result = await loginHandler.Handle(request);
+            var result = await loginHandler.Handle(request);
 
-                return result is null
-                    ? Results.Unauthorized()
-                    : Results.Ok(result);
-            }
-            catch (Exception)
-            {
-                return Results.InternalServerError();
-            }
+            return result is null
+                ? Results.Unauthorized()
+                : Results.Ok(result);
+
         });
     }
 
@@ -70,7 +64,8 @@ public class LoginHandler
             token,
             user.Email!,
             user.FirstName,
-            user.LastName);
+            user.LastName
+        );
     }
 }
 
