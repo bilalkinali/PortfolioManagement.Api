@@ -6,6 +6,7 @@ using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using System.Text;
+using PortfolioManagement.Api.Features.Auth.Me;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +72,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapLoginEndpoints();
+app.MapMeEndpoints();
 app.MapRegisterEndpoints();
 app.MapCreatePortfolioEndpoints();
 app.MapAddTradeEndpoints();

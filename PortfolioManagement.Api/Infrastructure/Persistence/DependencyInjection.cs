@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Features.Auth.Login;
+using PortfolioManagement.Api.Features.Auth.Me;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Features.Auth.Register;
@@ -36,6 +37,7 @@ public static class DependencyInjection
 
         // Auth
         services.AddScoped<LoginHandler>();
+        services.AddScoped<MeHandler>();
         services.AddScoped<IValidator<LoginRequest>, LoginValidator>();
         services.AddScoped<JwtTokenService>();
         services.AddScoped<RegisterHandler>();

@@ -1,9 +1,9 @@
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import LoginDialog from "@/features/auth/login/components/LoginDialog"
+import { useAuth } from "@/features/auth/shared/auth-context"
 
 export default function Header() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { isLoggedIn, user, logout } = useAuth();
 
     return (
         <header className="bg-slate-950 text-white">
@@ -13,12 +13,12 @@ export default function Header() {
 
                 {isLoggedIn ? (
                     <div className="flex items-center gap-3">
-                        <div>Hello user</div>
-                        <Button onClick={() => setIsLoggedIn(false)}>Logout</Button>
+                        <div>Hello {user?.firstName}</div>
+                        <Button onClick={logout}>Logout</Button>
                     </div>
                 ) : (
                     <div className="flex items-center gap-3">
-                        <LoginDialog onSuccess={() => setIsLoggedIn(true)} />
+                            <LoginDialog onSuccess={() => {}} /> {/* not needed, but keeping for now */}
                         <Button>Register</Button>
                     </div>
                 )}
