@@ -8,16 +8,20 @@ public class RegisterValidator : AbstractValidator<RegisterRequest>
     {
         RuleFor(x => x.FirstName)
             .NotEmpty()
-            .MaximumLength(50);
+            .MaximumLength(30);
 
         RuleFor(x => x.LastName)
             .NotEmpty()
-            .MaximumLength(50);
+            .MaximumLength(30);
 
         RuleFor(x => x.Email)
             .NotEmpty()
             .EmailAddress()
-            .MaximumLength(100);
+            .MaximumLength(50);
+
+        RuleFor(x => x.UserName)
+            .NotEmpty()
+            .MaximumLength(20);
 
         RuleFor(x => x.Password)
             .NotEmpty()

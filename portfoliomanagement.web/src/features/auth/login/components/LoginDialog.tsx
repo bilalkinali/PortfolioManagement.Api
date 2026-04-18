@@ -28,7 +28,6 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
     }
 
     async function handleSubmit(email: string, password: string) {
-
         setErrorMessage(null);
         setIsSubmitting(true);
 

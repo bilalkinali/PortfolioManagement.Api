@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import LoginDialog from "@/features/auth/login/components/LoginDialog"
+import RegisterDialog from "@/features/auth/register/components/RegisterDialog"
 import { useAuth } from "@/features/auth/shared/auth-context"
 import { Spinner } from "@/components/ui/spinner"
 
@@ -26,8 +27,8 @@ export default function Header() {
                     </div>
                 ) : (
                     <div className="flex items-center gap-3">
-                            <LoginDialog onSuccess={() => {}} /> {/* not needed, but keeping for now */}
-                        <Button>Register</Button>
+                        <LoginDialog onSuccess={() => { }} />
+                        <RegisterDialog onSuccess={() => { }} />
                     </div>
                 )}
             </div>
