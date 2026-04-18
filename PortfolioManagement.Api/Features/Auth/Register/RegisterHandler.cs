@@ -25,7 +25,7 @@ public class RegisterHandler
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
-            UserName = request.Email
+            UserName = request.UserName
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -36,7 +36,7 @@ public class RegisterHandler
             throw new Exception($"Registration failed: {errors}");
         }
 
-        return new RegisterResponse(user.FirstName, user.LastName, user.Email);
+        return new RegisterResponse(user.FirstName, user.LastName, user.Email, user.UserName);
     }
 }
 

@@ -1,3 +1,3 @@
 ﻿namespace PortfolioManagement.Api.Features.Auth.Register;
 
-public record RegisterResponse(string FirstName, string LastName, string Email);
+public record RegisterResponse(string FirstName, string LastName, string Email, string UserName);
