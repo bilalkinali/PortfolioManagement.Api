@@ -34,3 +34,6 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{PortfolioManagement.Api_HostAddress}}/stocks/AAPL/history?from=2026-01-01&to=2026-04-01&timespan=day
+Accept: application/json
