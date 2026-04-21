@@ -39,6 +39,7 @@ public static class DependencyInjection
 
         // Stock History
         services.AddScoped<GetStockHistoryHandler>();
+        services.AddScoped<IValidator<GetStockHistoryRequest>, GetStockHistoryValidator>();
         services.AddHttpClient("Massive", (sp, client) =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
