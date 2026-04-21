@@ -7,6 +7,7 @@ using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using System.Text;
 using PortfolioManagement.Api.Features.Auth.Me;
+using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,5 +77,6 @@ app.MapMeEndpoints();
 app.MapRegisterEndpoints();
 app.MapCreatePortfolioEndpoints();
 app.MapAddTradeEndpoints();
+app.MapGetStockHistoryEndpoint();
 
 app.Run();
