@@ -362,7 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Extras #
+######## Extras #########
 
 # MD
 *.md
@@ -370,3 +370,9 @@ FodyWeavers.xsd
 node_modules/
 dist/
 .vite/
+
+# Testing local claude configuration with ollama
+.claude
+
+appsettings.Development.json
+/PortfolioManagement.Api/appsettings.Development.json
