@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using PortfolioManagement.Api.Features.Auth.Login;
 using PortfolioManagement.Api.Features.Auth.Register;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
+using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using System.Text;
@@ -76,6 +77,7 @@ app.MapLoginEndpoints();
 app.MapMeEndpoints();
 app.MapRegisterEndpoints();
 app.MapCreatePortfolioEndpoints();
+app.MapDeletePortfolioEndpoints();
 app.MapAddTradeEndpoints();
 app.MapGetStockHistoryEndpoint();
 
