@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import LoginForm from "./LoginForm"
 import { login as loginRequest } from "../api/login"
 import type { LoginRequest } from "../api/login"
@@ -14,11 +15,12 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
     const [open, setOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const formRef = useRef<HTMLFormElement>(null);
 
     const { login } = useAuth();
 
     function handleOpenChange(nextOpen: boolean) {
-        if (isSubmitting) return; // Prevent closing the dialog while submitting
+        if (!nextOpen && isSubmitting) return; // Prevent closing while submitting
         setOpen(nextOpen);
     }
 
@@ -31,13 +33,10 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
         setErrorMessage(null);
         setIsSubmitting(true);
 
-        const request: LoginRequest = {
-            email,
-            password
-        };
+        const request: LoginRequest = { email, password };
 
         try {
-            //await new Promise(resolve => setTimeout(resolve, 5000)); // Debug spinner
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Debug spinner
 
             const response = await loginRequest(request);
 
@@ -80,11 +79,26 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
                 </DialogHeader>
 
                 <LoginForm
+                    ref={formRef}
                     onSubmit={handleSubmit}
-                    onCancel={handleCancel}
                     isSubmitting={isSubmitting}
-                    errorMessage={errorMessage}
-                />
+                    errorMessage={errorMessage} />
+
+                <DialogFooter>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleCancel}
+                        disabled={isSubmitting}>
+                        Cancel
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={() => formRef.current?.requestSubmit()} 
+                        disabled={isSubmitting}>
+                        {isSubmitting ? <>Logging in...<Spinner className="mr-2" /></> : "Login"}
+                    </Button>
+                </DialogFooter>
 
             </DialogContent>
         </Dialog>        
