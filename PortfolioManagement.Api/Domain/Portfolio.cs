@@ -48,6 +48,15 @@ public class Portfolio
     }
 
 
+    public void AssureUserIsCreator(string userId)
+    {
+        if (!UserId.Equals(userId))
+        {
+            throw new ArgumentException("Only the creator of the portfolio can perform this action");
+        }
+    }
+
+
     // Positions
     private Position AddPosition(string symbol)
     {

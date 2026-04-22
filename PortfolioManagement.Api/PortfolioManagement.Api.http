@@ -37,3 +37,13 @@ Content-Type: application/json
 
 GET {{PortfolioManagement.Api_HostAddress}}/stocks/AAPL/history?from=2026-01-01&to=2026-01-02&timespan=day
 Accept: application/json
+
+
+###
+
+@token = ey...
+@portfolioId = 3
+
+DELETE {{PortfolioManagement.Api_HostAddress}}/api/portfolios/{{portfolioId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
