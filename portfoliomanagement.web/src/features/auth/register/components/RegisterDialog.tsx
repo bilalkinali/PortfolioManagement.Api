@@ -99,7 +99,13 @@ export default function RegisterDialog({ onSuccess }: RegisterDialogProps) {
                     type="button"
                     onClick={() => formRef.current?.requestSubmit()}
                     disabled={isSubmitting}>
-                    {isSubmitting ? <>Registering...<Spinner className="mr-2" /></> : "Register"}
+                    {isSubmitting ?
+                        <>
+                            Registering...
+                            <Spinner className="mr-2" />
+                        </>
+                        : "Register"
+                    }
                 </Button>
             </DialogFooter>
 

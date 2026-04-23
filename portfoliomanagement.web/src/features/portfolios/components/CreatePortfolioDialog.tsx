@@ -90,7 +90,13 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
                     type="button"
                     onClick={() => formRef.current?.requestSubmit()}
                     disabled={isSubmitting}>
-                    {isSubmitting ? <>Creating...<Spinner className="mr-2" /></> : "Create"}
+                    {isSubmitting ?
+                        <>
+                            Creating...
+                            <Spinner className="mr-2" />
+                        </>
+                        : "Create"
+                    }
                 </Button>
             </DialogFooter>
 

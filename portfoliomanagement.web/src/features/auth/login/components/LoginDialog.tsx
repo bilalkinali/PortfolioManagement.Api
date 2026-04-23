@@ -98,7 +98,13 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
                         type="button"
                         onClick={() => formRef.current?.requestSubmit()} 
                         disabled={isSubmitting}>
-                        {isSubmitting ? <>Logging in...<Spinner className="mr-2" /></> : "Login"}
+                        {isSubmitting ?
+                            <>
+                                Logging in...
+                                <Spinner className="mr-2" />
+                            </> 
+                            : "Login"
+                        }
                     </Button>
                 </DialogFooter>
 
