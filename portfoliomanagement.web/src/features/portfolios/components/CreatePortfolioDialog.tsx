@@ -1,16 +1,16 @@
 import { useState, useRef } from 'react';
-import RegisterForm from './RegisterForm';
+import CreatePortfolioForm from './CreatePortfolioForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
-import { Spinner } from "@/components/ui/spinner"
-import { register as registerRequest } from '../api/register';
-import type { RegisterRequest } from '../api/register';
+import { Spinner } from '@/components/ui/spinner';
+import { createPortfolio as createPortfolioRequest } from '../api/createPortfolio';
+import type { CreatePortfolioRequest } from '../api/createPortfolio';
 
-type RegisterDialogProps = {
+type CreatePortfolioDialogProps = {
     onSuccess: () => void;
 }
 
-export default function RegisterDialog({ onSuccess }: RegisterDialogProps) {
+export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDialogProps) {
     const [open, setOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,35 +27,26 @@ export default function RegisterDialog({ onSuccess }: RegisterDialogProps) {
     }
 
     async function handleSubmit(
-        firstname: string,
-        lastname: string,
-        email: string,
-        username: string,
-        password: string) {
+        name: string,
+        description: string) {
 
         setErrorMessage(null);
         setIsSubmitting(true);
 
-        const request: RegisterRequest = {
-            firstname,
-            lastname,
-            email,
-            username,
-            password
-        };
+        const request: CreatePortfolioRequest = { name, description };
 
         try {
             await new Promise(resolve => setTimeout(resolve, 2000)); // Debug spinner
-            await registerRequest(request);
+            await createPortfolioRequest(request);
 
             setOpen(false);
             onSuccess();
 
         } catch (e: unknown) {
             if (e instanceof Error) {
-                setErrorMessage(e.message);
+                setErrorMessage("Couldn't connect to server");
             } else {
-                setErrorMessage("Registration failed");
+                setErrorMessage("Creation failed");
             }
         } finally {
             setIsSubmitting(false);
@@ -65,21 +56,21 @@ export default function RegisterDialog({ onSuccess }: RegisterDialogProps) {
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button>Register</Button>
+                <Button>Create Portfolio</Button>
             </DialogTrigger>
 
             <DialogContent
                 onInteractOutside={(e) => e.preventDefault()}
-                onEscapeKeyDown={(e) => { if (isSubmitting) e.preventDefault(); }}>
-
+                onEscapeKeyDown={(e) => { if (isSubmitting) e.preventDefault(); }}
+            >
             <DialogHeader>
-                <DialogTitle>Create an account</DialogTitle>
+                <DialogTitle>Create a portfolio</DialogTitle>
                 <DialogDescription>
-                    Please enter your details.
+                    Please enter the details for your new portfolio.
                 </DialogDescription>
             </DialogHeader>
 
-            <RegisterForm
+            <CreatePortfolioForm
                 ref={formRef}
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
@@ -97,7 +88,7 @@ export default function RegisterDialog({ onSuccess }: RegisterDialogProps) {
                     type="button"
                     onClick={() => formRef.current?.requestSubmit()}
                     disabled={isSubmitting}>
-                    {isSubmitting ? <>Registering...<Spinner className="mr-2" /></> : "Register"}
+                    {isSubmitting ? <>Creating...<Spinner className="mr-2" /></> : "Create"}
                 </Button>
             </DialogFooter>
 

@@ -51,7 +51,7 @@ export default function LoginForm({
                         required />
                 </Field>
 
-                {errorMessage && <p>{errorMessage}</p>}
+                {errorMessage && <p className="text-destructive text-sm">{errorMessage}</p>}
             </FieldGroup>
         </form>
     )
