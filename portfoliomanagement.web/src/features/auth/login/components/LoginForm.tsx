@@ -1,25 +1,22 @@
-import { useState, type FormEvent } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
-import { Spinner }from "@/components/ui/spinner"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 
 type LoginFormProps = {
+    ref: RefObject<HTMLFormElement>;
     onSubmit: (email: string, password: string) => Promise<void>;
-    onCancel: () => void;
     isSubmitting: boolean;
     errorMessage: string | null;
 }
 
 export default function LoginForm({
+    ref,
     onSubmit,
-    onCancel,
     isSubmitting,
     errorMessage
 }: LoginFormProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-
 
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -29,7 +26,7 @@ export default function LoginForm({
     
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form ref={ref} onSubmit={handleSubmit}>
             <FieldGroup>
                 <Field>
                     <FieldLabel htmlFor="login-email">Email</FieldLabel>
@@ -39,7 +36,8 @@ export default function LoginForm({
                         value={email}
                         placeholder="email@example.com"
                         disabled={isSubmitting}
-                        onChange={(e) => setEmail(e.target.value)} />
+                        onChange={(e) => setEmail(e.target.value)}
+                        required />
                 </Field>
                 <Field>
                     <FieldLabel htmlFor="login-password">Password</FieldLabel>
@@ -49,28 +47,12 @@ export default function LoginForm({
                         value={password}
                         placeholder="******"
                         disabled={isSubmitting}
-                        onChange={(e) => setPassword(e.target.value)} />
+                        onChange={(e) => setPassword(e.target.value)}
+                        required />
                 </Field>
 
-                {errorMessage && <p>{errorMessage}</p>}
-
-                <Field orientation="horizontal">
-                    <Button
-                        type="submit"
-                        disabled={isSubmitting}>
-                        Login
-                        { isSubmitting && <Spinner className="mr-2" />}
-                    </Button>
-
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onCancel}
-                        disabled={isSubmitting}>
-                        Cancel
-                    </Button>
-                </Field>
+                {errorMessage && <p className="text-destructive text-sm">{errorMessage}</p>}
             </FieldGroup>
         </form>
-    );
+    )
 }

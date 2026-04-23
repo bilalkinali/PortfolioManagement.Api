@@ -12,6 +12,5 @@
     <Folder Include="src\app\routes\" />
     <Folder Include="src\app\providers\" />
     <Folder Include="src\features\auth\register\components\" />
-    <Folder Include="src\shared\components\ui\" />
   </ItemGroup>
 </Project>
