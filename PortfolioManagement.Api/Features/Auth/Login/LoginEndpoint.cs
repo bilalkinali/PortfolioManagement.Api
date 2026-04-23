@@ -48,7 +48,7 @@ public class LoginHandler
 
     public async Task<LoginResponse?> Handle(LoginRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _userManager.FindByEmailAsync(request.Email); // Handle expection (server offline etc)
 
         if (user is null) 
             return null;

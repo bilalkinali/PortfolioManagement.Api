@@ -19,6 +19,8 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
     function handleOpenChange(nextOpen: boolean) {
         if (!nextOpen && isSubmitting) return;
         setOpen(nextOpen);
+
+        if (!nextOpen) setErrorMessage(null);
     }
 
     function handleCancel() {

@@ -19,6 +19,8 @@ export default function RegisterDialog({ onSuccess }: RegisterDialogProps) {
     function handleOpenChange(nextOpen: boolean) {
         if (!nextOpen && isSubmitting) return;
         setOpen(nextOpen);
+
+        if (!nextOpen) setErrorMessage(null);
     }
 
     function handleCancel() {

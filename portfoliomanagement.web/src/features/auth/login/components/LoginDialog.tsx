@@ -22,6 +22,8 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
     function handleOpenChange(nextOpen: boolean) {
         if (!nextOpen && isSubmitting) return; // Prevent closing while submitting
         setOpen(nextOpen);
+
+        if (!nextOpen) setErrorMessage(null);
     }
 
     function handleCancel() {
