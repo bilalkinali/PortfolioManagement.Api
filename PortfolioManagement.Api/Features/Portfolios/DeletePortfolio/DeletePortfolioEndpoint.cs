@@ -4,7 +4,7 @@ namespace PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 
 public static class DeletePortfolioEndpoint
 {
-    public static void MapDeletePortfolioEndpoints(this WebApplication app)
+    public static void MapDeletePortfolioEndpoint(this WebApplication app)
         {
         app.MapDelete("/api/portfolios/{portfolioId:int}", async (
             int portfolioId,

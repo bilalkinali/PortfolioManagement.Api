@@ -4,7 +4,7 @@ namespace PortfolioManagement.Api.Features.Auth.Register;
 
 public static class RegisterEndpoint
 {
-    public static void MapRegisterEndpoints(this WebApplication app)
+    public static void MapRegisterEndpoint(this WebApplication app)
     {
         app.MapPost("/auth/register", async (
             RegisterRequest request, 

@@ -6,7 +6,7 @@ namespace PortfolioManagement.Api.Features.Auth.Me;
 
 public static class MeEndpoint
 {
-    public static void MapMeEndpoints(this WebApplication app)
+    public static void MapMeEndpoint(this WebApplication app)
     {
         app.MapGet("/auth/me", async (
             MeHandler handler,

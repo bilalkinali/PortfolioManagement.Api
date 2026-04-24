@@ -47,3 +47,11 @@ Accept: application/json
 DELETE {{PortfolioManagement.Api_HostAddress}}/api/portfolios/{{portfolioId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
+
+###
+
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMmQwZDdlNy04OWRhLTQwNzItYjJkNC1lMzFiNGY3OWQzMWEiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJCaWxhbCIsImxhc3ROYW1lIjoiS2luYWxpIiwiZXhwIjoxNzc3MDM0Mzg0LCJpc3MiOiJQb3J0Zm9saW9NYW5hZ2VtZW50LkFwaSIsImF1ZCI6IlBvcnRmb2xpb01hbmFnZW1lbnQuQ2xpZW50In0.X2XIGAQC0Xw_WE4ehGIuCZhGnTHM-wcE8ExsKx5I4oI
+
+GET {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+Accept: application/json
+Authorization: Bearer {{token}}
