@@ -1,3 +1,5 @@
+import { apiFetch } from '@/features/auth/shared/apiClient';
+
 export type PortfolioResponse = {
     id: number;
     name: string;
@@ -6,11 +8,8 @@ export type PortfolioResponse = {
 }
 
 export async function getPortfolios(): Promise<PortfolioResponse[]> {
-    const response = await fetch("/api/portfolios", {
+    const response = await apiFetch("/api/portfolios", {
         method: "GET",
-        headers: {
-            "Accept": "application/json",
-        }
     });
 
     if (!response.ok) {
