@@ -20,11 +20,18 @@ public static class LoginEndpoint
                 return Results.ValidationProblem(validationResult.ToDictionary());
             }
 
-            var result = await loginHandler.Handle(request);
+            try
+            {
+                var result = await loginHandler.Handle(request);
 
-            return result is null
-                ? Results.Unauthorized()
-                : Results.Ok(result);
+                return result is null
+                    ? Results.Unauthorized()
+                    : Results.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return Results.InternalServerError("Server is unreachable at the moment.");
+            }
 
         });
     }

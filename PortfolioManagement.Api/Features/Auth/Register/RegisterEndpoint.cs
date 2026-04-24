@@ -25,7 +25,7 @@ public static class RegisterEndpoint
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(ex.Message);
+                return Results.InternalServerError("Server is unreachable at the moment.");
             }
         });
     }
