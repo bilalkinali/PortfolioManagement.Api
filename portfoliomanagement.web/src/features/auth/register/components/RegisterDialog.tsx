@@ -25,6 +25,8 @@ export default function RegisterDialog({ onSuccess }: RegisterDialogProps) {
 
     function handleCancel() {
         if (isSubmitting) return;
+
+        setErrorMessage(null);
         setOpen(false);
     }
 

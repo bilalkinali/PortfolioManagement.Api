@@ -25,6 +25,8 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
 
     function handleCancel() {
         if (isSubmitting) return;
+
+        setErrorMessage(null);
         setOpen(false);
     }
 

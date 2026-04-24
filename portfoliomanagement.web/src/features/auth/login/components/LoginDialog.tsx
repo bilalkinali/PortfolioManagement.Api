@@ -28,6 +28,8 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
 
     function handleCancel() {
         if (isSubmitting) return;
+
+        setErrorMessage(null);
         setOpen(false);
     }
 

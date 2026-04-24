@@ -18,11 +18,18 @@ public static class GetStockHistoryEndpoint
                 return Results.ValidationProblem(validationResult.ToDictionary());
             }
 
-            var result = await getStockHistoryHandler.Handle(request);
+            try
+            {
+                var result = await getStockHistoryHandler.Handle(request);
 
-            return result is null
-                ? Results.NotFound($"No data found for {request.Ticker}.")
-                : Results.Ok(result);
+                return result is null
+                    ? Results.NotFound($"No data found for {request.Ticker}.")
+                    : Results.Ok(result);
+            }
+            catch (Exception)
+            {
+                return Results.InternalServerError("Server is unreachable at the moment.");
+            }
         });
     }
 }

@@ -19,11 +19,18 @@ public static class MeEndpoint
                 return Results.Unauthorized();
             }
 
-            var result = await handler.Handle(userId);
+            try
+            {
+                var result = await handler.Handle(userId);
 
-            return result is null
-                ? Results.Unauthorized()
-                : Results.Ok(result);
+                return result is null
+                    ? Results.Unauthorized()
+                    : Results.Ok(result);
+            }
+            catch (Exception)
+            {
+                return Results.InternalServerError("Server is unreachable at the moment.");
+            }
 
         }).RequireAuthorization();
     }

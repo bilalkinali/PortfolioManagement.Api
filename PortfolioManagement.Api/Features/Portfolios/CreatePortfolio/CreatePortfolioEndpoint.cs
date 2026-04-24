@@ -27,7 +27,7 @@ public static class CreatePortfolioEndpoint
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return Results.Problem("Something went wrong");
+                return Results.InternalServerError("Server is unreachable at the moment.");
             }
         }).RequireAuthorization();
     }
