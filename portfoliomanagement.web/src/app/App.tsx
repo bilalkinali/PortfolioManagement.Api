@@ -68,6 +68,7 @@ function App() {
             return null;
         }
 
+        {/* Empty portfolios */ }
         if (portfolios.length === 0) {
             return (
                 <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
@@ -86,8 +87,9 @@ function App() {
             );
         }
 
+        {/* Show portfolio cards */ }
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {portfolios.map((portfolio) => (
                     <div
                         className="rounded-xl border bg-white p-6"
@@ -95,6 +97,33 @@ function App() {
                     >
                         <h3 className="font-semibold">{portfolio.name}</h3>
                         <p>{portfolio.description}</p>
+
+                        <div className="mt-4 flex items-center justify-between">
+                            <div>
+                                <p>Current value</p>
+                                <h2 className="font-semibold text-2xl">$5,157.23</h2>                                
+                            </div>
+                            <div>
+                                <p className="text-right">Day P/L</p>
+                                <h2 className="font-semibold text-2xl text-green-600">+$253.89</h2>
+                            </div>
+                        </div>
+                        <p className="text-right text-green-600">5.17%</p>
+
+                        <div className="mt-4 border-t-1" /> {/* Horizontal Line*/ }
+
+                        <div className="mt-4 flex items-center justify-between">
+                            <div>
+                                <p>Invested</p>
+                                <h2 className="font-semibold text-1xl">$1,000.00</h2>
+                            </div>
+                            <div>
+                                <p className="text-right">Return</p>
+                                <h2 className="font-semibold text-1xl text-green-600">+$4,157.23</h2>
+                            </div>
+                        </div>
+                        <p className="text-right text-green-600">415.72%</p>
+
                     </div>
                 ))}
             </div>
