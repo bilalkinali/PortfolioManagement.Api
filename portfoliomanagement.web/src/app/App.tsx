@@ -38,55 +38,68 @@ function App() {
         loadPortfolios();
     }, [user])
 
+
     return (
-        <AppLayout>                
+        <AppLayout>
             <h1 className="text-3xl font-semibold mb-6">Portfolio Management</h1>
+
             <Button>Test</Button>
+
             <CreatePortfolioDialog onSuccess={() => console.log("Portfolio created")} />
 
-            {/* Portfolio section (hide if no user) */}
-            <section className="mt-6">              
+            {/* Portfolio section */}
+            <section className="mt-6">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">Your Portfolios</h1>
                         <p className="text-1xl">Manage and track your portfolios here</p>
                     </div>
+
                     <Button>New Portfolio</Button>
                 </div>
-
-                {/* If user is logged in but no portfolio */}
-                {user && !isLoading && portfolios.length === 0 && (
-                    <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                            <Wallet className="h-8 w-8 text-gray-400" />
-                        </div>
-
-                        <h3 className="font-semibold text-gray-800">No portfolios yet</h3>
-
-                        <p className="text-gray-800 mb-4">
-                            Create your first portfolio to start tracking investments
-                        </p>
-
-                        <Button>Create Portfolio</Button>
-                    </div>
-                )}
-
-                {/* Display portfolio cards (need PortfolioCard) */}
-                {user && !isLoading && portfolios.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {portfolios.map((portfolio) => (
-                            <div className="rounded-xl border bg-white p-6"
-                                key={portfolio.id}>
-                                <h3 className="font-semibold">{portfolio.name}</h3>
-                                <p>{portfolio.description}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                {renderPortfolioContent()}
             </section>
 
         </AppLayout>
     );
+
+    function renderPortfolioContent() {
+        if (!user || isLoading) {
+            return null;
+        }
+
+        if (portfolios.length === 0) {
+            return (
+                <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                        <Wallet className="h-8 w-8 text-gray-400" />
+                    </div>
+
+                    <h3 className="font-semibold text-gray-800">No portfolios yet</h3>
+
+                    <p className="text-gray-800 mb-4">
+                        Create your first portfolio to start tracking investments
+                    </p>
+
+                    <Button>Create Portfolio</Button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {portfolios.map((portfolio) => (
+                    <div
+                        className="rounded-xl border bg-white p-6"
+                        key={portfolio.id}
+                    >
+                        <h3 className="font-semibold">{portfolio.name}</h3>
+                        <p>{portfolio.description}</p>
+                    </div>
+                ))}
+            </div>
+        );
+    }
 }
 
 export default App
