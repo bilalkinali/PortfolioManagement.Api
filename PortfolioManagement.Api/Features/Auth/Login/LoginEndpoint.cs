@@ -6,7 +6,7 @@ namespace PortfolioManagement.Api.Features.Auth.Login;
 
 public static class LoginEndpoint
 {
-    public static void MapLoginEndpoints(this WebApplication app)
+    public static void MapLoginEndpoint(this WebApplication app)
     {
         app.MapPost("/auth/login", async (
             LoginRequest request, 

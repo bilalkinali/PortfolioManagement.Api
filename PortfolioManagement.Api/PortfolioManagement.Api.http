@@ -47,3 +47,11 @@ Accept: application/json
 DELETE {{PortfolioManagement.Api_HostAddress}}/api/portfolios/{{portfolioId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
+
+###
+
+@token = ey..
+
+GET {{PortfolioManagement.Api_HostAddress}}/api/portfolios
+Accept: application/json
+Authorization: Bearer {{token}}

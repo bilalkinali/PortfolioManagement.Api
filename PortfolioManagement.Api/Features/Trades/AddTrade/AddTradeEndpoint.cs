@@ -6,7 +6,7 @@ namespace PortfolioManagement.Api.Features.Trades.AddTrade;
 
 public static class AddTradeEndpoint
 {
-    public static void MapAddTradeEndpoints(this WebApplication app)
+    public static void MapAddTradeEndpoint(this WebApplication app)
     {
         app.MapPost("/api/portfolios/{portfolioId}/trades", async (
             AddTradeHandler addTradeHandler, 

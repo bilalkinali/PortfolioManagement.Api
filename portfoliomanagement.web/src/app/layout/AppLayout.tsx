@@ -7,7 +7,7 @@ type AppLayoutProps = {
 
 export default function AppLayout({ children }: AppLayoutProps) {
     return (
-        <div className="min-h-screen bg-slate-900 text-white flex flex-col">       
+        <div className="min-h-screen bg-gray-50 flex flex-col">       
             <Header />
             <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
                 {children}

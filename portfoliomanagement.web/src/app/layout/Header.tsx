@@ -8,7 +8,7 @@ export default function Header() {
     const { isLoggedIn, user, logout } = useAuth();
 
     return (
-        <header className="bg-slate-950 text-white">
+        <header className="bg-white border">
             <div className="mx-auto flex h-24 w-full max-w-7xl items-center justify-between px-6">
             {/* testing structure and content */}
                 <div>Header</div>

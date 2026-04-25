@@ -16,7 +16,7 @@ public class Position
     public int Quantity => _trades.Sum(t => t.Quantity);
     public decimal AvgCost => Quantity != 0 ? _trades.Sum(t => t.Quantity * t.Price) / Quantity : 0m;
     public decimal RealizedPnL => _trades.Where(t => t.Quantity < 0).Sum(t => -t.Quantity * (t.Price - AvgCost));
-    public string Status => Quantity > 0 ? "Open" : "Closed";
+    public string Status => Quantity > 0 ? "Open" : "Closed"; // Just temporary, since shorting would result in negative quantity but still open position
     public DateOnly OpenDate => _trades.Min(t => t.ExecutedDate);
     public DateOnly? CloseDate => Quantity == 0 ? _trades.Max(t => t.ExecutedDate) : null;
     public int PortfolioId { get; protected set; }

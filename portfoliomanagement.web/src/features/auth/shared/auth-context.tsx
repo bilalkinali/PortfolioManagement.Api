@@ -38,7 +38,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         async function loadCurrentUser() {
             try {
                 console.log("Loading current user info..."); // Debug log
-                const me = await getMe(token);
+                const me = await getMe();
 
                 setUser({
                     email: me.email,

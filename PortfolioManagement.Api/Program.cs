@@ -8,6 +8,7 @@ using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using System.Text;
 using PortfolioManagement.Api.Features.Auth.Me;
+using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,12 +74,13 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapLoginEndpoints();
-app.MapMeEndpoints();
-app.MapRegisterEndpoints();
-app.MapCreatePortfolioEndpoints();
-app.MapDeletePortfolioEndpoints();
-app.MapAddTradeEndpoints();
+app.MapLoginEndpoint();
+app.MapMeEndpoint();
+app.MapRegisterEndpoint();
+app.MapCreatePortfolioEndpoint();
+app.MapDeletePortfolioEndpoint();
+app.MapAddTradeEndpoint();
 app.MapGetStockHistoryEndpoint();
+app.MapGetPortfoliosEndpoint();
 
 app.Run();
