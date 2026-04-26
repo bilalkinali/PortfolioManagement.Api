@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/shared/auth-context'
 import { Button } from '@/components/ui/button'
 import EmptyPortfolioCollection from '@/features/portfolios/get/components/EmptyPortfolioCollection'
 import PortfolioCardMini from '@/features/portfolios/get/components/PortfolioCardMini'
+import PortfolioCardMiniSkeleton from '@/features/portfolios/get/components/PortfolioCardMiniSkeleton'
 
 export default function PortfolioSection() {
     const [portfolios, setPortfolios] = useState<PortfolioResponse[]>([]);
@@ -33,26 +34,6 @@ export default function PortfolioSection() {
         loadPortfolios();
     }, [user])
 
-    function renderContent() {
-        if (!user || isLoading) {
-            return null;
-        }
-
-        {/* Empty portfolios */ }
-        if (portfolios.length === 0) {
-            return <EmptyPortfolioCollection />
-        }
-
-        {/* Show portfolio cards */ }
-        return (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
-                {portfolios.map((portfolio) => (
-                    <PortfolioCardMini key={portfolio.id} portfolio={portfolio} />
-                ))}
-            </div>
-        );
-    }
-
     return (
         <section className="mt-6">
             <div className="mb-6 flex items-center justify-between">
@@ -67,4 +48,36 @@ export default function PortfolioSection() {
             {renderContent()}
         </section>
     )
+
+    function renderContent() {
+        if (!user) {
+            return null;
+        }
+
+        if (isLoading) {
+            return (
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <PortfolioCardMiniSkeleton key={index} />
+                    ))}
+                </div>
+            )
+        }
+
+        if (portfolios.length === 0)
+            return <EmptyPortfolioCollection />
+
+        return (
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {portfolios.map((portfolio) => (
+                    <PortfolioCardMini
+                        key={portfolio.id}
+                        portfolio={portfolio}
+                    />
+                ))}
+            </div>
+        );
+    }
+
+
 }
