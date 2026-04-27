@@ -12,7 +12,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 61045,
+    host: "127.0.0.1",
+    port: 5173,
+    strictPort: true,
     proxy: {
         "/auth": {
             target: "http://localhost:5046",
