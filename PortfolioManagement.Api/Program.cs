@@ -8,6 +8,7 @@ using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using System.Text;
 using PortfolioManagement.Api.Features.Auth.Me;
+using PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 
@@ -80,6 +81,7 @@ app.MapRegisterEndpoint();
 app.MapCreatePortfolioEndpoint();
 app.MapDeletePortfolioEndpoint();
 app.MapAddTradeEndpoint();
+app.MapSearchInstrumentsEndpoint();
 app.MapGetStockHistoryEndpoint();
 app.MapGetPortfoliosEndpoint();
 
