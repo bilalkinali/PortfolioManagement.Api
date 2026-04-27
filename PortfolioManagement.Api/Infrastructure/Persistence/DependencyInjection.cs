@@ -8,6 +8,7 @@ using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Features.Auth.Register;
+using PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 using PortfolioManagement.Api.Infrastructure.Auth;
@@ -40,6 +41,10 @@ public static class DependencyInjection
 
         // Trade
         services.AddScoped<AddTradeHandler>();
+
+        // Instruments
+        services.AddScoped<SearchInstrumentsHandler>();
+        services.AddScoped<IValidator<SearchInstrumentsRequest>, SearchInstrumentsValidator>();
 
         // Stock History
         services.AddScoped<GetStockHistoryHandler>();
