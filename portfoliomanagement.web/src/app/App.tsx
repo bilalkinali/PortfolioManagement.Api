@@ -1,4 +1,4 @@
-import { SearchIcon } from 'lucide-react'
+import { PlusCircleIcon, SearchIcon } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import AppLayout from '@/app/layout/AppLayout'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,14 @@ import {
 } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
+import {
+    Item,
+    ItemActions,
+    ItemContent,
+    ItemGroup,
+    ItemMedia,
+    ItemSeparator,
+} from '@/components/ui/item'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import {
@@ -124,34 +131,54 @@ function App() {
         }
 
         return (
-            <div className="flex flex-col gap-0 rounded-lg border">
+            <ItemGroup className="gap-0 rounded-md border">
                 {results.map((instrument, index) => (
                     <div key={`${instrument.symbol}-${instrument.exchange ?? index}`}>
-                        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-mono text-sm font-semibold">
-                                        {instrument.symbol}
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                        {instrument.exchange ?? instrument.market ?? 'Unknown market'}
-                                    </span>
-                                </div>
-                                <p className="truncate font-medium">{instrument.name}</p>
-                            </div>
+                        <Item className="flex flex-col gap-3 rounded-none border-0 p-3 sm:flex-row sm:items-center sm:justify-between">
+                            <ItemContent className="min-w-0 flex-row items-center gap-3">
+                                <span className="w-12 shrink-0 rounded-md border px-2 py-0.5 text-center font-mono text-xs font-semibold">
+                                    {instrument.symbol}
+                                </span>
 
-                            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                {instrument.currency && <span>{instrument.currency}</span>}
-                                {instrument.type && <span>{instrument.type}</span>}
-                                <span>{instrument.active ? 'Active' : 'Inactive'}</span>
-                            </div>
-                        </div>
+                                <span className="truncate font-medium">
+                                    {instrument.name}
+                                </span>
+                            </ItemContent>
 
-                        {index < results.length - 1 && <Separator />}
+                            <div className="flex items-center gap-3 sm:ml-auto">
+                                <ItemMedia className="text-sm text-muted-foreground">
+                                    {instrument.exchange ?? instrument.market ?? "Unknown"}
+                                </ItemMedia>
+
+                                <ItemMedia className="text-sm">
+                                    {instrument.currency && <span>{instrument.currency}</span>}
+
+                                    {instrument.type && (
+                                        <span className="rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
+                                            {instrument.type}
+                                        </span>
+                                    )}
+                                </ItemMedia>
+
+                                <ItemActions>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        disabled
+                                        aria-label={`Follow ${instrument.symbol}`}
+                                    >
+                                        <PlusCircleIcon />
+                                    </Button>
+                                </ItemActions>
+                            </div>
+                        </Item>
+
+                        {index < results.length - 1 && <ItemSeparator className="my-0" />}
                     </div>
                 ))}
-            </div>
-        )
+            </ItemGroup>
+        );
     }
 }
 
