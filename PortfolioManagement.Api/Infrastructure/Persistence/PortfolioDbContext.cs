@@ -14,6 +14,8 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
     public DbSet<Portfolio> Portfolios { get; set; }
     public DbSet<Position> Positions { get; set; }
     public DbSet<Trade> Trades { get; set; }
+    public DbSet<Instrument> Instruments { get; set; }
+    public DbSet<MarketDataBar> MarketDataBars { get; set; }
 
     // https://learn.microsoft.com/en-us/aspnet/core/security/authentication/customize-identity-model?view=aspnetcore-10.0
 
@@ -24,6 +26,18 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
         builder.Entity<AppUser>(entity =>
         {
             entity.Property(x => x.Email).IsRequired();
+        });
+
+        builder.Entity<Instrument>(entity =>
+        {
+            entity.HasIndex(x => x.Symbol)
+                .IsUnique();
+        });
+
+        builder.Entity<MarketDataBar>(entity =>
+        {
+            entity.HasIndex(x => new { x.InstrumentId, x.Date })
+                .IsUnique();
         });
 
         //builder.Entity<Portfolio>(entity =>

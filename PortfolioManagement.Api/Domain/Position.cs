@@ -20,6 +20,8 @@ public class Position
     public DateOnly OpenDate => _trades.Min(t => t.ExecutedDate);
     public DateOnly? CloseDate => Quantity == 0 ? _trades.Max(t => t.ExecutedDate) : null;
     public int PortfolioId { get; protected set; }
+    public int? InstrumentId { get; protected set; }
+    public Instrument? Instrument { get; protected set; }
 
     public IReadOnlyCollection<Trade> Trades => _trades;
 

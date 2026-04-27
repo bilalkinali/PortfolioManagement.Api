@@ -376,3 +376,5 @@ dist/
 
 appsettings.Development.json
 /PortfolioManagement.Api/appsettings.Development.json
+/.agents/skills
+/.dotnet-home/.dotnet
