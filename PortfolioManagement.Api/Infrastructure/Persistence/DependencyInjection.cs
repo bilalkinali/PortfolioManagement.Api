@@ -9,6 +9,7 @@ using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Features.Auth.Register;
 using PortfolioManagement.Api.Features.Instruments.SearchInstruments;
+using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 using PortfolioManagement.Api.Infrastructure.Auth;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         // Portfolio
         services.AddScoped<CreatePortfolioHandler>();
         services.AddScoped<DeletePortfolioHandler>();
+        services.AddScoped<GetPortfolioQuery>();
         services.AddScoped<GetPortfoliosQuery>();
 
         // Trade
