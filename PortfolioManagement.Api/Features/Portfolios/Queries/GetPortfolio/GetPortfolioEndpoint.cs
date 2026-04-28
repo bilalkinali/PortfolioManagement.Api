@@ -51,11 +51,16 @@ public class GetPortfolioQuery(PortfolioDbContext db)
             .AsNoTracking()
             .Include(p => p.Positions)
                 .ThenInclude(pos => pos.Trades)
-            .FirstAsync(p => p.UserId == userId && p.Id == portfolioId);
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == portfolioId);
+
+        if (portfolio is null)
+        {
+            throw new KeyNotFoundException("Portfolio not found.");
+        }
 
         var getPortfolioResponse = new GetPortfolioResponse
         (
-            portfolio!.Id,
+            portfolio.Id,
             portfolio.Name,
             portfolio.Description,
             portfolio.CreatedAt,
@@ -74,8 +79,9 @@ public class GetPortfolioQuery(PortfolioDbContext db)
                     pos.IsBuy,
                     pos.Quantity,
                     pos.Price,
-                    pos.ExecutedDate))
+                    pos.ExecutedDate)).ToList()
                 ))
+                .ToList()
         );
 
         return getPortfolioResponse;
