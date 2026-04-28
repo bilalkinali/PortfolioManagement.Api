@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 
 type RegisterFormProps = {
-    ref: RefObject<HTMLFormElement>;
+    ref: RefObject<HTMLFormElement | null>;
     onSubmit: (
         firstname: string,
         lastname: string,

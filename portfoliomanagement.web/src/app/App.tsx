@@ -1,6 +1,5 @@
 import { PlusCircleIcon, SearchIcon } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import AppLayout from '@/app/layout/AppLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -46,7 +45,7 @@ function App() {
     }
 
     return (
-        <AppLayout>
+        <>
             <section className="mt-6">
                 <Card>
                     <CardHeader>
@@ -88,7 +87,7 @@ function App() {
             </section>
 
             <PortfolioSection />
-        </AppLayout>
+        </>
     );
 
     function renderInstrumentSearchContent() {
