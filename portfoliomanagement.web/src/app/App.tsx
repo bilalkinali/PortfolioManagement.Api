@@ -2,29 +2,13 @@ import { PlusCircleIcon, SearchIcon } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import AppLayout from '@/app/layout/AppLayout'
 import { Button } from '@/components/ui/button'
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import {
-    Item,
-    ItemActions,
-    ItemContent,
-    ItemGroup,
-    ItemMedia,
-    ItemSeparator,
-} from '@/components/ui/item'
+import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemSeparator } from '@/components/ui/item'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import {
-    searchInstruments,
-    type SearchInstrumentResult,
-} from '@/features/instruments/searchInstruments/api/searchInstruments'
+import { searchInstruments, type SearchInstrumentResult } from '@/features/instruments/searchInstruments/api/searchInstruments'
 import PortfolioSection from '@/features/portfolios/get/components/PortfolioSection'
 
 function App() {
