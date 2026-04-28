@@ -1,13 +1,76 @@
-//import PortfolioCard from '@/features/portfolios/details/components/PortfolioCard'
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router'
 import EmptyPortfolio from '@/features/portfolios/details/components/EmptyPortfolio'
+import { getPortfolio, type PortfolioResponse } from '@/features/portfolios/details/api/getPortfolio'
 import PortfolioCard from '../components/PortfolioCard'
 
 export default function PortfolioDetailPage() {
+    const { portfolioId } = useParams<{ portfolioId: string }>()
+    const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const id = Number(portfolioId)
+
+        if (!Number.isInteger(id)) {
+            setPortfolio(null)
+            setError('Invalid portfolio id.')
+            setIsLoading(false)
+            return
+        }
+
+        let ignore = false
+
+        async function loadPortfolio() {
+            try {
+                setIsLoading(true)
+                setError(null)
+
+                const result = await getPortfolio(id)
+
+                // DEBUG //
+                console.log(JSON.stringify(result, null, 2))
+                ///////////
+
+                if (!ignore) {
+                    setPortfolio(result)
+                }
+            } catch {
+                if (!ignore) {
+                    setPortfolio(null)
+                    setError('Failed to fetch portfolio.')
+                }
+            } finally {
+                if (!ignore) {
+                    setIsLoading(false)
+                }
+            }
+        }
+
+        loadPortfolio()
+
+        return () => {
+            ignore = true
+        }
+    }, [portfolioId])
+
+    if (isLoading) {
+        return <p>Loading portfolio...</p>
+    }
+
+    if (error) {
+        return <p>{error}</p>
+    }
+
+    if (!portfolio) {
+        return <EmptyPortfolio />
+    }
 
     return (
         <>
-            <EmptyPortfolio />
-            <PortfolioCard />
+            {portfolio.positions.length === 0 ? <EmptyPortfolio /> : null}
+            <PortfolioCard portfolio={portfolio} />
         </>
   )
 }

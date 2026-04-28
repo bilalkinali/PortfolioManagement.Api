@@ -88,7 +88,7 @@ public record GetPortfolioResponse
     string Name,
     string? Description,
     DateTimeOffset CreatedAt,
-    IEnumerable<GetPortfolioPositionResponse> Positions
+    IReadOnlyCollection<GetPortfolioPositionResponse> Positions
 );
 
 public record GetPortfolioPositionResponse
@@ -102,7 +102,7 @@ public record GetPortfolioPositionResponse
     DateOnly OpenDate,
     DateOnly? CloseDate,
     int? InstrumentId,
-    IEnumerable<GetPortfolioTradeResponse> Trades
+    IReadOnlyCollection<GetPortfolioTradeResponse> Trades
 );
 
 public record GetPortfolioTradeResponse
