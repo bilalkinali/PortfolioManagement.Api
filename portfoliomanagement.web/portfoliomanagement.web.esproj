@@ -12,5 +12,7 @@
     <Folder Include="src\app\routes\" />
     <Folder Include="src\app\providers\" />
     <Folder Include="src\features\auth\register\components\" />
+    <Folder Include="src\features\instruments\searchInstruments\api\" />
+    <Folder Include="src\features\instruments\searchInstruments\components\" />
   </ItemGroup>
 </Project>
