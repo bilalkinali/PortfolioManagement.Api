@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 
 type LoginFormProps = {
-    ref: RefObject<HTMLFormElement>;
+    ref: RefObject<HTMLFormElement | null>;
     onSubmit: (email: string, password: string) => Promise<void>;
     isSubmitting: boolean;
     errorMessage: string | null;

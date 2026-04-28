@@ -1,10 +1,11 @@
 import { createRoot } from 'react-dom/client'
+import { RouterProvider } from 'react-router'
 import './index.css'
-import App from './app/App.tsx'
+import { router } from './app/router.tsx'
 import { AuthProvider } from './features/auth/shared/auth-context.tsx'
 
 createRoot(document.getElementById('root')!).render(
     <AuthProvider>
-        <App />
+        <RouterProvider router={router} />
     </AuthProvider>
 )

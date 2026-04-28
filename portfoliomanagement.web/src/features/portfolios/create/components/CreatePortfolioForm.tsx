@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 
 type CreatePortfolioFormProps = {
-    ref: RefObject<HTMLFormElement>;
+    ref: RefObject<HTMLFormElement | null>;
     onSubmit: (name: string, description: string) => Promise<void>;
     isSubmitting: boolean;
     errorMessage: string | null;
