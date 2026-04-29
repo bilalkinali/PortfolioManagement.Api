@@ -16,13 +16,62 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
 })
 
 export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
+
+    const currentPrice = 100;
+
+    const invested = portfolio.positions.reduce(
+        (sum, position) =>
+            sum +
+            position.trades.reduce(
+                (tradeSum, trade) => tradeSum + trade.quantity * trade.price,
+                0
+            ),
+        0
+    );
+
+    const marketValue = portfolio.positions.reduce(
+        (sum, position) => sum + position.quantity * currentPrice,
+        0
+    );
+
+    const profitLoss = marketValue - invested;
+
     return (
         <Card>
             <CardHeader className="border-b">
-                <CardTitle>{portfolio.name}</CardTitle>
-                {portfolio.description ? (
-                    <CardDescription>{portfolio.description}</CardDescription>
-                ) : null}
+                <div className="flex items-start justify-between gap-6">
+                    <div>
+                        <CardTitle>{portfolio.name}</CardTitle>
+
+                        {portfolio.description ? (
+                            <CardDescription>{portfolio.description}</CardDescription>
+                        ) : null}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3">
+                    <div className="rounded-md bg-muted p-4">
+                        <h1 className="text-sm font-medium text-muted-foreground">Invested</h1>
+                        <p className="mt-2 text-xl font-semibold tabular-nums">
+                            {currencyFormatter.format(invested)}
+                        </p>
+                    </div>
+
+                    <div className="rounded-md bg-muted p-4">
+                        <h1 className="text-sm font-medium text-muted-foreground">Market Value</h1>
+                        <p className="mt-2 text-xl font-semibold tabular-nums">
+                            {currencyFormatter.format(marketValue)}
+                        </p>
+                    </div>
+
+                    <div className="rounded-md bg-muted p-4">
+                        <h1 className="text-sm font-medium text-muted-foreground">Profit / Loss</h1>
+                        <p className="mt-2 text-xl font-semibold tabular-nums">
+                            {currencyFormatter.format(profitLoss)}
+                        </p>
+                    </div>
+                </div>
+
                 <CardAction className="rounded-md bg-muted px-3 py-1 text-sm font-medium">
                     {portfolio.positions.length} positions
                 </CardAction>
