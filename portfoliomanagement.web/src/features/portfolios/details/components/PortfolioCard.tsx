@@ -17,7 +17,7 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
 
 export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
 
-    const currentPrice = 100;
+    const currentPrice = 500; // Need to get price from API
 
     const invested = portfolio.positions.reduce(
         (sum, position) =>
@@ -67,7 +67,12 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                     <div className="rounded-md bg-muted p-4">
                         <h1 className="text-sm font-medium text-muted-foreground">Profit / Loss</h1>
                         <p className="mt-2 text-xl font-semibold tabular-nums">
-                            {currencyFormatter.format(profitLoss)}
+                            <span className={
+                                profitLoss >= 0
+                                    ? "text-green-600"
+                                    : "text-red-600"}>
+                                {currencyFormatter.format(profitLoss)}
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -85,6 +90,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                             <TableHead className="text-right font-semibold">Quantity</TableHead>
                             <TableHead className="text-right font-semibold">Avg. Cost</TableHead>
                             <TableHead className="text-right font-semibold">Current Price</TableHead>
+                            <TableHead className="text-right font-semibold">Invested</TableHead>
                             <TableHead className="text-right font-semibold">Market Value</TableHead>
                             <TableHead className="px-6 text-right font-semibold">Realized P/L</TableHead>
                         </TableRow>
@@ -92,7 +98,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
 
                     <TableBody>
                         {portfolio.positions.map((position) => {
-                            const currentPrice = 100 // Need to get price from API
+                            const invested = position.trades.reduce((sum, trade) => sum + trade.quantity * trade.price, 0);
                             const marketValue = position.quantity * currentPrice
                             const isProfit = position.realizedPnL >= 0
 
@@ -117,6 +123,10 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
 
                                     <TableCell className="text-right tabular-nums">
                                         {currencyFormatter.format(currentPrice)}
+                                    </TableCell>
+
+                                    <TableCell className="text-right tabular-nums">
+                                        {currencyFormatter.format(invested)}
                                     </TableCell>
 
                                     <TableCell className="text-right tabular-nums">

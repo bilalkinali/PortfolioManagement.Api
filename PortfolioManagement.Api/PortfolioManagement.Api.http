@@ -10,8 +10,6 @@ Content-Type: application/json
 
 ###
 
-@token = ey...
-
 POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -25,12 +23,13 @@ Authorization: Bearer {{token}}
 
 POST {{PortfolioManagement.Api_HostAddress}}/api/portfolios/2/trades
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMmQwZDdlNy04OWRhLTQwNzItYjJkNC1lMzFiNGY3OWQzMWEiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJCaWxhbCIsImxhc3ROYW1lIjoiS2luYWxpIiwiZXhwIjoxNzc3NDY2MTA1LCJpc3MiOiJQb3J0Zm9saW9NYW5hZ2VtZW50LkFwaSIsImF1ZCI6IlBvcnRmb2xpb01hbmFnZW1lbnQuQ2xpZW50In0.6quOUPxw00-AzB3axbsawcro7hhoE6JMIROd3A8QVqY
 
 {
-  "symbol": "AAPL",
-  "quantity": 10,
-  "price": 100.00,
-  "executedDate": "2026-05-08"
+  "symbol": "TSLA",
+  "quantity": 20,
+  "price": 300.00,
+  "executedDate": "2026-04-08"
 }
 
 ###
@@ -43,10 +42,8 @@ Accept: application/json
 GET {{PortfolioManagement.Api_HostAddress}}/api/instruments/search?query=apple&limit=10
 Accept: application/json
 
-
 ###
 
-@token = ey...
 @portfolioId = 3
 
 DELETE {{PortfolioManagement.Api_HostAddress}}/api/portfolios/{{portfolioId}}
@@ -55,7 +52,6 @@ Authorization: Bearer {{token}}
 
 ###
 
-@token = ey..
 
 GET {{PortfolioManagement.Api_HostAddress}}/api/portfolios
 Accept: application/json
