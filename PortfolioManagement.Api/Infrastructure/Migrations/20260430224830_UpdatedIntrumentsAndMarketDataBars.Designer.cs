@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortfolioManagement.Api.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PortfolioManagement.Api.Infrastructure.Persistence;
 namespace PortfolioManagement.Api.Infrastructure.Migrations
 {
     [DbContext(typeof(PortfolioDbContext))]
-    partial class PortfolioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260430224830_UpdatedIntrumentsAndMarketDataBars")]
+    partial class UpdatedIntrumentsAndMarketDataBars
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,7 +198,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
                     b.HasIndex("ProviderSymbol")
                         .IsUnique();
 
-                    b.HasIndex("Symbol")
+                    b.HasIndex("Symbol", "Market")
                         .IsUnique();
 
                     b.ToTable("Instruments");
@@ -232,9 +235,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
                         .HasColumnType("numeric(18,8)");
 
                     b.Property<int>("Period")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasColumnType("integer");
 
                     b.Property<long>("Volume")
                         .HasColumnType("bigint");

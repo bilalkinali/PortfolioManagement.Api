@@ -28,21 +28,30 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
             entity.Property(x => x.Email).IsRequired();
         });
 
+
         builder.Entity<Instrument>(entity =>
         {
             entity.HasIndex(x => x.Symbol)
                 .IsUnique();
-        });
 
-        builder.Entity<Instrument>(entity =>
-        {
             entity.HasIndex(x => x.Cik);
+
+            entity.HasIndex(x => x.ProviderSymbol)
+                .IsUnique();
         });
 
         builder.Entity<MarketDataBar>(entity =>
         {
-            entity.HasIndex(x => new { x.InstrumentId, x.Date })
+            entity.HasIndex(x => new { x.InstrumentId, x.Period, x.Date })
                 .IsUnique();
+
+            entity.Property(x => x.Period)
+                .HasDefaultValue(MarketDataPeriod.Daily);
+
+            entity.Property(x => x.Open).HasPrecision(18, 8);
+            entity.Property(x => x.High).HasPrecision(18, 8);
+            entity.Property(x => x.Low).HasPrecision(18, 8);
+            entity.Property(x => x.Close).HasPrecision(18, 8);
         });
 
         //builder.Entity<Portfolio>(entity =>
