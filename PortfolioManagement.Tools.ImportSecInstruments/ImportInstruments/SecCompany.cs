@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace PortfolioManagement.Tools.ImportSecInstruments;
+namespace PortfolioManagement.Tools.ImportData.ImportInstruments;
 
-public class SecCompany
+public sealed record SecCompany
 {
     [JsonPropertyName("cik_str")]
     public int Cik { get; set; }
