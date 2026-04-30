@@ -35,20 +35,28 @@ public static class SecJsonImporter
             var symbol = company.Ticker.Trim().ToUpperInvariant();
             var name = company.Title.Trim();
 
-            var existingInstrument = await dbContext.Instruments
-                .FirstOrDefaultAsync(x => x.Symbol == symbol);
-
-            if (existingInstrument is null)
+            try
             {
-                var instrument = Instrument.Create(symbol, name, company.Cik);
+                var existingInstrument = await dbContext.Instruments
+                        .FirstOrDefaultAsync(x => x.Symbol == symbol);
 
-                dbContext.Instruments.Add(instrument);
-                ++inserted;
+                if (existingInstrument is null)
+                {
+                    var instrument = Instrument.Create(symbol, name, company.Cik);
+
+                    dbContext.Instruments.Add(instrument);
+                    ++inserted;
+                }
+                else
+                {
+                    existingInstrument.UpdateMetadata(name, company.Cik);
+                    ++updated;
+                }
             }
-            else
+            catch (Exception)
             {
-                existingInstrument.UpdateMetadata(name, company.Cik);
-                ++updated;
+                Console.WriteLine("Could not connect to server.");
+                return;
             }
         }
 

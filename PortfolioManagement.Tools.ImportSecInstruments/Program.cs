@@ -1,6 +1,5 @@
 ﻿using PortfolioManagement.Tools.ImportData.ImportInstruments;
 
-/*------------------------------------------------------------------------------------------------*/
 int option = 1;
 bool isSelected = false;
 string colorGreen = "[X] \u001b[32m";
@@ -99,7 +98,7 @@ if (selected == "Instruments")
 
     await SecJsonImporter.ImportAsync(path);
 
-    Console.WriteLine("\nImport completed.");
+    Console.WriteLine("\nImport process has ended.");
     Console.ReadLine(); 
 }
 
