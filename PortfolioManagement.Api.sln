@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioManagement.Api", "
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "portfoliomanagement.web", "PortfolioManagement.Web\portfoliomanagement.web.esproj", "{AB59CC83-518A-62E7-0FBF-1B07B036736C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioManagement.Tools.ImportSecInstruments", "PortfolioManagement.Tools.ImportSecInstruments\PortfolioManagement.Tools.ImportSecInstruments.csproj", "{FFDA8BF8-F40B-44E6-ACFF-89DF047C200C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioManagement.Tools.ImportData", "PortfolioManagement.Tools.ImportSecInstruments\PortfolioManagement.Tools.ImportData.csproj", "{FFDA8BF8-F40B-44E6-ACFF-89DF047C200C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

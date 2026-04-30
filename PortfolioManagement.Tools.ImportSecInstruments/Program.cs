@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Infrastructure.Persistence;
-using PortfolioManagement.Tools.ImportSecInstruments;
+using PortfolioManagement.Tools.ImportData;
 
 Console.WriteLine("Enter path to SEC company_tickers.json:");
 

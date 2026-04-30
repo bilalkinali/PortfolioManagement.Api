@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
-namespace PortfolioManagement.Tools.ImportSecInstruments;
+namespace PortfolioManagement.Tools.ImportData;
 
 public class SecJsonImporter
 {

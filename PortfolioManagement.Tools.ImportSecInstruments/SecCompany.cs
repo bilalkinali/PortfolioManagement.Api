@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace PortfolioManagement.Tools.ImportSecInstruments;
+namespace PortfolioManagement.Tools.ImportData;
 
 public class SecCompany
 {
