@@ -46,6 +46,7 @@ public static class DependencyInjection
 
         // Instruments
         services.AddScoped<SearchInstrumentsHandler>();
+        services.AddScoped<SearchInstrumentsProxy>();
         services.AddScoped<IValidator<SearchInstrumentsRequest>, SearchInstrumentsValidator>();
 
         // Stock History

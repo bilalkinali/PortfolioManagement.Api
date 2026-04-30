@@ -34,6 +34,11 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
                 .IsUnique();
         });
 
+        builder.Entity<Instrument>(entity =>
+        {
+            entity.HasIndex(x => x.Cik);
+        });
+
         builder.Entity<MarketDataBar>(entity =>
         {
             entity.HasIndex(x => new { x.InstrumentId, x.Date })
