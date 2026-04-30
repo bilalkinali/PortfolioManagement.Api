@@ -1,19 +1,18 @@
 ﻿using System.Text.Json;
-using PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
 
-namespace PortfolioManagement.Api.Features.Instruments.SearchInstruments;
+namespace PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
 
-public class SearchInstrumentsProxy
+public class MassiveProxy
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    private readonly ILogger<SearchInstrumentsProxy> _logger;
+    private readonly ILogger<MassiveProxy> _logger;
     private readonly HttpClient _httpClient;
 
-    public SearchInstrumentsProxy(IHttpClientFactory httpClientFactory, ILogger<SearchInstrumentsProxy> logger)
+    public MassiveProxy(IHttpClientFactory httpClientFactory, ILogger<MassiveProxy> logger)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("Massive");

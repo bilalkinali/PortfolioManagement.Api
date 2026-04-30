@@ -13,6 +13,7 @@ using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 using PortfolioManagement.Api.Infrastructure.Auth;
+using PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -46,7 +47,7 @@ public static class DependencyInjection
 
         // Instruments
         services.AddScoped<SearchInstrumentsHandler>();
-        services.AddScoped<SearchInstrumentsProxy>();
+        services.AddScoped<MassiveProxy>();
         services.AddScoped<IValidator<SearchInstrumentsRequest>, SearchInstrumentsValidator>();
 
         // Stock History
