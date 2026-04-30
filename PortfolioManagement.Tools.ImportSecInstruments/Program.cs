@@ -20,6 +20,8 @@ if (!File.Exists(path))
     return;
 }
 
+Console.WriteLine("Working...");
+
 var connectionString = "";
 
 var options = new DbContextOptionsBuilder<PortfolioDbContext>()

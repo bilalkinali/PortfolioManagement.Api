@@ -53,7 +53,14 @@ public class SecJsonImporter
             }
         }
 
-        await _dbContext.SaveChangesAsync();
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Something went wrong: {ex.Message}", ex);
+        }
 
         Console.WriteLine($"Inserted: {inserted}");
         Console.WriteLine($"Updated: {updated}");

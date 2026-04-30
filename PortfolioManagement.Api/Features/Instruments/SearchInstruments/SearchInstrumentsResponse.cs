@@ -6,8 +6,8 @@ public sealed record SearchInstrumentsResponse(
 public sealed record SearchInstrumentResult(
     string Symbol,
     string Name,
+    int? Cik,
+    string? Market,
     string? Exchange,
     string? Currency,
-    string? Market,
-    string? Type,
-    bool Active);
+    string? Type);

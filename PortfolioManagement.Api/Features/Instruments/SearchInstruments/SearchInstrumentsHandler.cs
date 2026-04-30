@@ -1,20 +1,24 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
+using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 
 public sealed class SearchInstrumentsHandler
 {
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private readonly PortfolioDbContext _db;
+    private readonly ILogger<SearchInstrumentsHandler> _logger;
+    private readonly SearchInstrumentsProxy _proxy;
 
-    private readonly HttpClient _httpClient;
-
-    public SearchInstrumentsHandler(IHttpClientFactory httpClientFactory)
+    public SearchInstrumentsHandler(
+        PortfolioDbContext db, 
+        ILogger<SearchInstrumentsHandler> logger,
+        SearchInstrumentsProxy proxy)
     {
-        _httpClient = httpClientFactory.CreateClient("Massive");
+        _db = db;
+        _logger = logger;
+        _proxy = proxy;
     }
 
     public async Task<SearchInstrumentsResponse?> Handle(SearchInstrumentsRequest request)
@@ -23,80 +27,132 @@ public sealed class SearchInstrumentsHandler
         var limit = request.Limit ?? 10;
         var type = request.Type ?? SearchInstrumentType.CS;
 
-        var queryParameters = new List<string>
-        {
-            $"search={Uri.EscapeDataString(query)}",
-            "market=stocks",
-            "active=true",
-            $"limit={limit}",
-            "sort=ticker",
-            "order=asc"
-        };
+        var localResults = await SearchLocalDatabase(query, limit);
 
-        if (type != SearchInstrumentType.All)
+        if (localResults.Count > 0)
         {
-            queryParameters.Add($"type={type}");
+            return new SearchInstrumentsResponse(localResults);
         }
 
-        var url = $"/v3/reference/tickers?{string.Join("&", queryParameters)}";
+        _logger.LogInformation(
+            "No local instruments found for query '{Query}'. Calling Massive API.",
+            query);
 
-        using var response = await _httpClient.GetAsync(url);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            return null;
-        }
-
-        var content = await response.Content.ReadAsStringAsync();
-        var massiveResponse = JsonSerializer.Deserialize<MassiveTickerResponse>(content, JsonSerializerOptions);
+        var massiveResponse = await _proxy.SearchAsync(query, limit, type);
 
         if (massiveResponse is null)
         {
             return null;
         }
 
+        if (massiveResponse.Results.Count == 0)
+        {
+            _logger.LogInformation(
+                "No instruments found locally or from Massive for query '{Query}'.",
+                query);
+
+            return new SearchInstrumentsResponse([]);
+        }
+
+        await SaveMissingMassiveInstruments(massiveResponse.Results);
+
         var results = massiveResponse.Results
-            .Where(ticker => !string.IsNullOrWhiteSpace(ticker.Ticker) && !string.IsNullOrWhiteSpace(ticker.Name))
+            .Where(ticker =>
+                !string.IsNullOrWhiteSpace(ticker.Ticker) &&
+                !string.IsNullOrWhiteSpace(ticker.Name))
             .Select(ticker => new SearchInstrumentResult(
-                ticker.Ticker!,
+                ticker.Ticker!.Trim().ToUpperInvariant(),
                 ticker.Name!,
+                null,
+                ticker.Market,
                 ticker.PrimaryExchange,
                 ticker.CurrencyName,
-                ticker.Market,
-                ticker.Type,
-                ticker.Active))
+                ticker.Type))
             .ToList();
 
         return new SearchInstrumentsResponse(results);
     }
 
-    private sealed record MassiveTickerResponse
+    private async Task<List<SearchInstrumentResult>> SearchLocalDatabase(string query, int limit)
     {
-        [JsonPropertyName("results")]
-        public List<MassiveTickerResult> Results { get; init; } = [];
+        var pattern = $"%{query}%";
+        var startsWithPattern = $"{query}%";
+
+        return await _db.Instruments
+            .AsNoTracking()
+            .Where(i =>
+                EF.Functions.ILike(i.Symbol, pattern) ||
+                EF.Functions.ILike(i.Name, pattern))
+            .OrderBy(i =>
+                EF.Functions.ILike(i.Symbol, startsWithPattern) ? 0 :
+                EF.Functions.ILike(i.Name, startsWithPattern) ? 1 :
+                2)
+            .ThenBy(i => i.Symbol)
+            .Take(limit)
+            .Select(i => new SearchInstrumentResult(
+                i.Symbol,
+                i.Name,
+                i.Cik,
+                i.Market,
+                i.Exchange,
+                i.Currency,
+                i.Type))
+            .ToListAsync();
     }
 
-    private sealed record MassiveTickerResult
+
+    private async Task SaveMissingMassiveInstruments(List<MassiveTickerResult> massiveResults)
     {
-        [JsonPropertyName("active")]
-        public bool Active { get; init; }
+        var validResults = massiveResults
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x.Ticker) &&
+                !string.IsNullOrWhiteSpace(x.Name))
+            .ToList();
 
-        [JsonPropertyName("currency_name")]
-        public string? CurrencyName { get; init; }
+        var symbols = validResults
+            .Select(x => x.Ticker!.Trim().ToUpperInvariant())
+            .Distinct()
+            .ToList();
 
-        [JsonPropertyName("market")]
-        public string? Market { get; init; }
+        var existingSymbols = await _db.Instruments
+            .Where(i => symbols.Contains(i.Symbol))
+            .Select(i => i.Symbol)
+            .ToListAsync();
 
-        [JsonPropertyName("name")]
-        public string? Name { get; init; }
+        var existingSymbolSet = existingSymbols.ToHashSet();
 
-        [JsonPropertyName("primary_exchange")]
-        public string? PrimaryExchange { get; init; }
+        foreach (var result in validResults)
+        {
+            var symbol = result.Ticker!.Trim().ToUpperInvariant();
 
-        [JsonPropertyName("ticker")]
-        public string? Ticker { get; init; }
+            if (existingSymbolSet.Contains(symbol))
+            {
+                continue;
+            }
 
-        [JsonPropertyName("type")]
-        public string? Type { get; init; }
+            var instrument = Instrument.Create(
+                symbol: symbol,
+                name: result.Name!,
+                cik: null,
+                market: result.Market,
+                exchange: result.PrimaryExchange,
+                currency: result.CurrencyName,
+                type: result.Type);
+
+
+            _logger.LogInformation(
+                "Added instrument from Massive. Symbol: {Symbol}, Name: {Name}, Market: {Market}, Exchange: {Exchange}, Currency: {Currency}, Type: {Type}",
+                symbol,
+                result.Name,
+                result.Market,
+                result.PrimaryExchange,
+                result.CurrencyName,
+                result.Type);
+
+            _db.Instruments.Add(instrument);
+            existingSymbolSet.Add(symbol);
+        }
+
+        await _db.SaveChangesAsync();
     }
 }
