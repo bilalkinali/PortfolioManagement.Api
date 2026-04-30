@@ -3,22 +3,21 @@ using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
-namespace PortfolioManagement.Tools.ImportData;
+namespace PortfolioManagement.Tools.ImportData.ImportInstruments;
 
-public class SecJsonImporter
+public static class SecJsonImporter
 {
-    private readonly string _path;
-    private readonly PortfolioDbContext _dbContext;
-
-    public SecJsonImporter(string path, PortfolioDbContext dbContext)
+    public static async Task ImportAsync(string path)
     {
-        _path = path;
-        _dbContext = dbContext;
-    }
+        var connectionString = "";
 
-    public async Task ImportAsync()
-    {
-        var json = await File.ReadAllTextAsync(_path);
+        var options = new DbContextOptionsBuilder<PortfolioDbContext>()
+            .UseNpgsql(connectionString)
+            .Options;
+
+        await using var dbContext = new PortfolioDbContext(options);
+
+        var json = await File.ReadAllTextAsync(path);
 
         var companies = JsonSerializer.Deserialize<Dictionary<string, SecCompany>>(json);
 
@@ -36,14 +35,14 @@ public class SecJsonImporter
             var symbol = company.Ticker.Trim().ToUpperInvariant();
             var name = company.Title.Trim();
 
-            var existingInstrument = await _dbContext.Instruments
+            var existingInstrument = await dbContext.Instruments
                 .FirstOrDefaultAsync(x => x.Symbol == symbol);
 
             if (existingInstrument is null)
             {
                 var instrument = Instrument.Create(symbol, name, company.Cik);
 
-                _dbContext.Instruments.Add(instrument);
+                dbContext.Instruments.Add(instrument);
                 ++inserted;
             }
             else
@@ -55,11 +54,12 @@ public class SecJsonImporter
 
         try
         {
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Something went wrong: {ex.Message}", ex);
+            return;
         }
 
         Console.WriteLine($"Inserted: {inserted}");
