@@ -1,4 +1,8 @@
-﻿using PortfolioManagement.Tools.ImportData.ImportInstruments;
+﻿using PortfolioManagement.Tools.ImportData.Helpers;
+using PortfolioManagement.Tools.ImportData.ImportHistoricData;
+using PortfolioManagement.Tools.ImportData.ImportInstruments;
+
+/*V------------------------------------- Main Console Interaction -------------------------------------V*/
 
 int option = 1;
 bool isSelected = false;
@@ -54,45 +58,17 @@ var selected = option switch
 
 Console.WriteLine($"\n\u001b[36m***************************************************************\u001b[0m\n");
 
+/*^--------------------------------------- ******************** ---------------------------------------^*/
+
+/*V--------------------------------------- Instruments from SEC ---------------------------------------V*/
+
 if (selected == "Instruments")
 {
-    Console.Write("Enter the path for the SEC file: ");
-    var path = Console.ReadLine();
+    var path = ConsoleImportPrompt.AskForExistingFilePath("SEC file");
 
-    if (string.IsNullOrWhiteSpace(path))
-    {
-        Console.WriteLine("No path entered");
-        Console.ReadLine();
-        return;
-    }
+    if (path is null) return;
 
-    path = path.Trim().Trim('"');
-
-    if (!File.Exists(path))
-    {
-        Console.WriteLine($"File not found: {path}");
-        Console.ReadLine();
-        return;
-    }
-
-    Console.WriteLine("\nProceed with importing this file? (y/n)\n");
-    var proceed = Console.ReadLine();
-
-    if (string.IsNullOrWhiteSpace(proceed))
-    {
-        Console.WriteLine("Import cancelled.");
-        Console.ReadLine();
-        return;
-    }
-
-    proceed = proceed.Trim().ToLowerInvariant();
-
-    if (proceed is not ("y" or "yes"))
-    {
-        Console.WriteLine("Import cancelled.");
-        Console.ReadLine();
-        return;
-    }
+    if (!ConsoleImportPrompt.ConfirmProceed()) return;
 
     Console.WriteLine("Working...\n");
 
@@ -102,8 +78,44 @@ if (selected == "Instruments")
     Console.ReadLine(); 
 }
 
+/*^--------------------------------------- ******************** ---------------------------------------^*/
+
+/*V------------------------------------- Historic Data from Stooq -------------------------------------V*/
+
 if (selected == "Historic Data")
 {
-    Console.WriteLine("Historic Data import not implemented yet.");
+    var path = ConsoleImportPrompt.AskForExistingFileOrDirectoryPath("Historic Data (file or directory)");
+
+    if (path is null) return;
+
+    var files = StooqMarketDataBarImporter.ResolveImportFiles(path);
+
+    if (files.Length == 0)
+    {
+        Console.WriteLine("No .txt files found.");
+        Console.ReadLine();
+        return;
+    }
+
+    if (Directory.Exists(path))
+    {
+        Console.WriteLine($"Found {files.Length} .txt files in directory:");
+        Console.WriteLine(path);
+    }
+    else
+    {
+        Console.WriteLine($"Found 1 file:");
+        Console.WriteLine(files[0]);
+    }
+
+    if (!ConsoleImportPrompt.ConfirmProceed()) return;
+
+    Console.WriteLine("Working...\n");
+
+    await StooqMarketDataBarImporter.ImportAsync(files);
+
+    Console.WriteLine("\nImport process has ended.");
     Console.ReadLine();
 }
+
+/*^--------------------------------------- ******************** ---------------------------------------^*/

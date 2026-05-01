@@ -5,7 +5,6 @@ public class MarketDataBar
     protected MarketDataBar() { }
 
     private MarketDataBar(
-        int instrumentId,
         DateOnly date,
         MarketDataPeriod period,
         decimal open,
@@ -14,7 +13,6 @@ public class MarketDataBar
         decimal close,
         long volume)
     {
-        InstrumentId = instrumentId;
         Date = date;
         Period = period;
         Open = open;
@@ -41,15 +39,12 @@ public class MarketDataBar
     /**************************************************************************************/
 
 
-    public static MarketDataBar Create(int instrumentId, DateOnly date, MarketDataPeriod period, decimal open, decimal high, decimal low, decimal close, long volume) 
+    public static MarketDataBar Create(DateOnly date, MarketDataPeriod period, decimal open, decimal high, decimal low, decimal close, long volume) 
     {
-        if (instrumentId <= 0)
-            throw new ArgumentOutOfRangeException(nameof(instrumentId));
-
         if (high < low)
             throw new ArgumentException("High cannot be lower than low.");
 
-        return new MarketDataBar(instrumentId, date, period, open, high, low, close, volume);
+        return new MarketDataBar(date, period, open, high, low, close, volume);
     }
 }
 
