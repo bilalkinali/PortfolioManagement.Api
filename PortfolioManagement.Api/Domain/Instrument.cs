@@ -5,16 +5,12 @@ public class Instrument
     protected Instrument() { }
 
     private Instrument(
-        string symbol,
-        string name,
-        int? cik,
-        string? market,
-        string? exchange,
-        string? currency,
-        string? type)
+        string symbol, string name, string? providerSymbol, int? cik,
+        string? market, string? exchange, string? currency, string? type)
     {
         Symbol = symbol.Trim().ToUpperInvariant();
         Name = name.Trim();
+        ProviderSymbol = providerSymbol?.Trim().ToUpperInvariant();
         Cik = cik;
 
         Market = market?.Trim();
@@ -28,6 +24,7 @@ public class Instrument
     public int Id { get; protected set; }
     public string Symbol { get; protected set; } = null!;
     public string Name { get; protected set; } = null!;
+    public string? ProviderSymbol { get; protected set; }
     public int? Cik { get; protected set; }
 
     public string? Market { get; protected set; }
@@ -41,33 +38,18 @@ public class Instrument
 
 
     public static Instrument Create(
-        string symbol,
-        string name,
-        int? cik = null,
-        string? market = null,
-        string? exchange = null,
-        string? currency = null,
-        string? type = null)
+        string symbol, string name, string? providerSymbol = null, int? cik = null,
+        string? market = null, string? exchange = null, string? currency = null, string? type = null)
     {
-        return new Instrument(
-            symbol,
-            name,
-            cik,
-            market,
-            exchange,
-            currency,
-            type);
+        return new Instrument(symbol, name, providerSymbol, cik, market, exchange, currency, type);
     }
 
     public void UpdateMetadata(
-        string name,
-        int? cik = null,
-        string? market = null,
-        string? exchange = null,
-        string? currency = null,
-        string? type = null)
+        string name, string? providerSymbol = null, int? cik = null, string? market = null,
+        string? exchange = null, string? currency = null, string? type = null)
     {
         Name = name.Trim();
+        ProviderSymbol = providerSymbol?.Trim().ToUpperInvariant();
         Cik = cik;
 
         Market = market?.Trim();
@@ -89,22 +71,13 @@ public class Instrument
     //}
 
     public MarketDataBar AddMarketDataBar(
-        DateOnly date,
-        decimal open,
-        decimal high,
-        decimal low,
-        decimal close,
-        decimal adjustedClose,
-        decimal volume)
+        DateOnly date, MarketDataPeriod period, decimal open, 
+        decimal high, decimal low, decimal close, long volume)
     {
-        var marketDataBar = MarketDataBar.Create(
-            date,
-            open,
-            high,
-            low,
-            close,
-            adjustedClose,
-            volume);
+        if (Id == 0)
+            throw new InvalidOperationException("Instrument must be persisted before adding market data bars");
+
+        var marketDataBar = MarketDataBar.Create(Id, date, period, open, high, low, close, volume);
 
         _marketDataBars.Add(marketDataBar);
         return marketDataBar;
