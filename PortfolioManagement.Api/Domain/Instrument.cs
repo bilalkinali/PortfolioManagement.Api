@@ -73,11 +73,8 @@ public class Instrument
     public MarketDataBar AddMarketDataBar(
         DateOnly date, MarketDataPeriod period, decimal open, 
         decimal high, decimal low, decimal close, long volume)
-    {
-        if (Id == 0)
-            throw new InvalidOperationException("Instrument must be persisted before adding market data bars");
-
-        var marketDataBar = MarketDataBar.Create(Id, date, period, open, high, low, close, volume);
+    { 
+        var marketDataBar = MarketDataBar.Create(date, period, open, high, low, close, volume);
 
         _marketDataBars.Add(marketDataBar);
         return marketDataBar;

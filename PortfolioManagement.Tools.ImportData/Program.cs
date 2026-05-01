@@ -1,5 +1,8 @@
 ﻿using PortfolioManagement.Tools.ImportData.Helpers;
+using PortfolioManagement.Tools.ImportData.ImportHistoricData;
 using PortfolioManagement.Tools.ImportData.ImportInstruments;
+
+/*V------------------------------------- Main Console Interaction -------------------------------------V*/
 
 int option = 1;
 bool isSelected = false;
@@ -55,9 +58,13 @@ var selected = option switch
 
 Console.WriteLine($"\n\u001b[36m***************************************************************\u001b[0m\n");
 
+/*^--------------------------------------- ******************** ---------------------------------------^*/
+
+/*V--------------------------------------- Instruments from SEC ---------------------------------------V*/
+
 if (selected == "Instruments")
 {
-    var path = ConsoleImportPrompt.AskForExistingFilePath("Sec file");
+    var path = ConsoleImportPrompt.AskForExistingFilePath("SEC file");
 
     if (path is null) return;
 
@@ -71,6 +78,10 @@ if (selected == "Instruments")
     Console.ReadLine(); 
 }
 
+/*^--------------------------------------- ******************** ---------------------------------------^*/
+
+/*V------------------------------------- Historic Data from Stooq -------------------------------------V*/
+
 if (selected == "Historic Data")
 {
     var path = ConsoleImportPrompt.AskForExistingFilePath("Historic Data file");
@@ -80,4 +91,12 @@ if (selected == "Historic Data")
     if (!ConsoleImportPrompt.ConfirmProceed()) return;
 
     Console.WriteLine("Working...\n");
+    // Needs implementation
+
+    await StooqMarketDataBarImporter.ImportAsync(path);
+
+    Console.WriteLine("\nImport process has ended.");
+    Console.ReadLine();
 }
+
+/*^--------------------------------------- ******************** ---------------------------------------^*/
