@@ -42,14 +42,14 @@ public static class SecJsonImporter
 
                 if (existingInstrument is null)
                 {
-                    var instrument = Instrument.Create(symbol, name, company.Cik);
+                    var instrument = Instrument.Create(symbol: symbol, name: name, cik: company.Cik);
 
                     dbContext.Instruments.Add(instrument);
                     ++inserted;
                 }
                 else
                 {
-                    existingInstrument.UpdateMetadata(name, company.Cik);
+                    existingInstrument.UpdateMetadata(name: name, cik: company.Cik);
                     ++updated;
                 }
             }
