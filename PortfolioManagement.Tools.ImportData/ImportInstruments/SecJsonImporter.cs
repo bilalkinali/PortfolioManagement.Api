@@ -66,7 +66,7 @@ public static class SecJsonImporter
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Something went wrong: {ex.Message}", ex);
+            Console.WriteLine($"Something went wrong: {ex.Message}");
             return;
         }
 

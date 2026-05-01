@@ -84,16 +84,35 @@ if (selected == "Instruments")
 
 if (selected == "Historic Data")
 {
-    var path = ConsoleImportPrompt.AskForExistingFilePath("Historic Data file");
+    var path = ConsoleImportPrompt.AskForExistingFileOrDirectoryPath("Historic Data (file or directory)");
 
     if (path is null) return;
+
+    var files = StooqMarketDataBarImporter.ResolveImportFiles(path);
+
+    if (files.Length == 0)
+    {
+        Console.WriteLine("No .txt files found.");
+        Console.ReadLine();
+        return;
+    }
+
+    if (Directory.Exists(path))
+    {
+        Console.WriteLine($"Found {files.Length} .txt files in directory:");
+        Console.WriteLine(path);
+    }
+    else
+    {
+        Console.WriteLine($"Found 1 file:");
+        Console.WriteLine(files[0]);
+    }
 
     if (!ConsoleImportPrompt.ConfirmProceed()) return;
 
     Console.WriteLine("Working...\n");
-    // Needs implementation
 
-    await StooqMarketDataBarImporter.ImportAsync(path);
+    await StooqMarketDataBarImporter.ImportAsync(files);
 
     Console.WriteLine("\nImport process has ended.");
     Console.ReadLine();

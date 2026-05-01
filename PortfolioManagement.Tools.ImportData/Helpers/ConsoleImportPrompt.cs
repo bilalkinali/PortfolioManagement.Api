@@ -27,6 +27,23 @@ public static class ConsoleImportPrompt
         return path;
     }
 
+    public static string? AskForExistingFileOrDirectoryPath(string label)
+    {
+        Console.Write($"{label} path: ");
+        var path = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(path))
+            return null;
+
+        path = path.Trim().Trim('"');
+
+        if (File.Exists(path) || Directory.Exists(path))
+            return path;
+
+        Console.WriteLine($"Path was not found: {path}");
+        return null;
+    }
+
     public static bool ConfirmProceed(string actionDescription = "importing this file")
     {
         Console.WriteLine($"\nProceed with {actionDescription}? (y/n)\n");
