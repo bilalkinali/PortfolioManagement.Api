@@ -10,14 +10,19 @@ export type PortfolioResponse = {
 
 export type PortfolioPositionResponse = {
     id: number;
-    symbol: string;
     quantity: number;
     avgCost: number;
     realizedPnL: number;
     status: string;
     openDate: string;
     closeDate: string | null;
-    instrumentId: number | null;
+    instrumentId: number;
+    symbol: string;
+    name: string;
+    currency: string | null;
+    exchange: string | null;
+    latestPrice: number | null;
+    latestPriceDate: string | null;
     trades: PortfolioTradeResponse[];
 }
 
@@ -46,7 +51,8 @@ export async function getPortfolio(portfolioId: number): Promise<PortfolioRespon
         positions: portfolio.positions.map((position) => ({
             ...position,
             closeDate: position.closeDate ?? null,
-            instrumentId: position.instrumentId ?? null,
+            currency: position.currency ?? null,
+            exchange: position.exchange ?? null,
             trades: position.trades,
         })),
     };

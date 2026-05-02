@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Domain.Enums;
 using PortfolioManagement.Api.Infrastructure.Auth;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
@@ -44,9 +45,6 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
         {
             entity.HasIndex(x => new { x.InstrumentId, x.Period, x.Date })
                 .IsUnique();
-
-            entity.Property(x => x.Period)
-                .HasDefaultValue(MarketDataPeriod.Daily);
 
             entity.Property(x => x.Open).HasPrecision(18, 8);
             entity.Property(x => x.High).HasPrecision(18, 8);

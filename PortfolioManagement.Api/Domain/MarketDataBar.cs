@@ -26,7 +26,7 @@ public class MarketDataBar
     public int InstrumentId { get; protected set; }
 
     public DateOnly Date { get; protected set; }
-    public MarketDataPeriod Period { get; protected set; }
+    public MarketDataPeriod Period { get; protected set; } = MarketDataPeriod.Daily;
 
     public decimal Open { get; protected set; }
     public decimal High { get; protected set; }

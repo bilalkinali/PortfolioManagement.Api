@@ -1,19 +1,21 @@
-﻿using System.Net.Http.Headers;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Features.Auth.Login;
 using PortfolioManagement.Api.Features.Auth.Me;
-using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
-using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
-using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Features.Auth.Register;
 using PortfolioManagement.Api.Features.Instruments.SearchInstruments;
+using PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
+using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
+using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
+using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Auth;
-using PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
+using PortfolioManagement.Api.Shared.Events;
+using System.Net.Http.Headers;
+using PortfolioManagement.Api.Features.Instruments.TrackInstrument;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -47,8 +49,9 @@ public static class DependencyInjection
 
         // Instruments
         services.AddScoped<SearchInstrumentsHandler>();
-        services.AddScoped<MassiveProxy>();
+        services.AddScoped<MassiveSearchProxy>();
         services.AddScoped<IValidator<SearchInstrumentsRequest>, SearchInstrumentsValidator>();
+        services.AddScoped<IDomainEventHandler<TradeAddedEvent>, TrackInstrumentWhenTradeAddedHandler>();
 
         // Stock History
         services.AddScoped<GetStockHistoryHandler>();
@@ -68,6 +71,9 @@ public static class DependencyInjection
         services.AddScoped<JwtTokenService>();
         services.AddScoped<RegisterHandler>();
         services.AddScoped<IValidator<RegisterRequest>, RegisterValidator>();
+
+        // Events
+        services.AddScoped<DomainEventDispatcher>();
 
         return services;
     }

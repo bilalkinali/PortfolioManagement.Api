@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Infrastructure.Persistence;
+using PortfolioManagement.Api.Shared.Events;
 
 namespace PortfolioManagement.Api.Features.Trades.AddTrade;
 
@@ -35,20 +36,31 @@ public static class AddTradeEndpoint
     }
 }
 
-public record AddTradeRequest(string Symbol, int Quantity, decimal Price, DateOnly ExecutedDate);
+public record AddTradeRequest(int InstrumentId, int Quantity, decimal Price, DateOnly ExecutedDate);
 
 
 public class AddTradeHandler
 {
     private readonly PortfolioDbContext _dbContext;
+    private readonly DomainEventDispatcher _domainEventDispatcher;
 
-    public AddTradeHandler(PortfolioDbContext dbContext)
+    public AddTradeHandler(PortfolioDbContext dbContext, DomainEventDispatcher domainEventDispatcher)
     {
         _dbContext = dbContext;
+        _domainEventDispatcher = domainEventDispatcher;
     }
 
     public async Task Handle(AddTradeRequest request, int portfolioId, string userId)
     {
+        var instrument = await _dbContext.Instruments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == request.InstrumentId);
+
+        if (instrument is null)
+        {
+            throw new Exception("Instrument not found");
+        }
+
         var portfolio = await _dbContext.Portfolios
             .Include(port => port.Positions)
             .ThenInclude(pos => pos.Trades)
@@ -59,14 +71,11 @@ public class AddTradeHandler
             throw new Exception("Portfolio not found or user does not have access");
         }
 
-        var trade = portfolio.AddTrade(request.Symbol, request.Quantity, request.Price, request.ExecutedDate);
-
-        foreach (var prop in trade.GetType().GetProperties())
-        {
-            Console.WriteLine($"{prop.Name}: {prop.GetValue(trade)}");
-        }
+        var trade = portfolio.AddTrade(instrument.Id, request.Quantity, request.Price, request.ExecutedDate);
 
         await _dbContext.SaveChangesAsync();
+
+        await _domainEventDispatcher.Dispatch(new TradeAddedEvent(instrument.Id), CancellationToken.None);
     }
 
 }

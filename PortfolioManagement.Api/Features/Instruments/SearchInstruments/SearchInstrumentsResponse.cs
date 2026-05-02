@@ -10,4 +10,6 @@ public sealed record SearchInstrumentResult(
     string? Market,
     string? Exchange,
     string? Currency,
-    string? Type);
+    string? Type,
+    decimal? LatestPrice,
+    DateOnly? LatestPriceDate);
