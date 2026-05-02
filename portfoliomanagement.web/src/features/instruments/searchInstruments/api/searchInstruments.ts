@@ -14,6 +14,8 @@ export type SearchInstrumentResult = {
     market?: string;
     type?: string;
     active: boolean;
+    latestPrice: number;
+    latestPriceDate: string;
 }
 
 export type SearchInstrumentsResponse = {

@@ -67,7 +67,9 @@ public sealed class SearchInstrumentsHandler
                 ticker.Market,
                 ticker.PrimaryExchange,
                 ticker.CurrencyName,
-                ticker.Type))
+                ticker.Type,
+                null,
+                null))
             .ToList();
 
         return new SearchInstrumentsResponse(results);
@@ -77,6 +79,27 @@ public sealed class SearchInstrumentsHandler
     {
         var pattern = $"%{query}%";
         var startsWithPattern = $"{query}%";
+
+        //var instruments = await _db.Instruments
+        //    .AsNoTracking()
+        //    .Where(i =>
+        //        EF.Functions.ILike(i.Symbol, pattern) ||
+        //        EF.Functions.ILike(i.Name, pattern))
+        //    .OrderBy(i =>
+        //        EF.Functions.ILike(i.Symbol, startsWithPattern) ? 0 :
+        //        EF.Functions.ILike(i.Name, startsWithPattern) ? 1 :
+        //        2)
+        //    .ThenBy(i => i.Symbol)
+        //    .Take(limit)
+        //    .Select(i => new SearchInstrumentResult(
+        //        i.Symbol,
+        //        i.Name,
+        //        i.Cik,
+        //        i.Market,
+        //        i.Exchange,
+        //        i.Currency,
+        //        i.Type))
+        //    .ToListAsync();
 
         return await _db.Instruments
             .AsNoTracking()
@@ -89,14 +112,36 @@ public sealed class SearchInstrumentsHandler
                 2)
             .ThenBy(i => i.Symbol)
             .Take(limit)
-            .Select(i => new SearchInstrumentResult(
+            .Select(i => new
+            {
                 i.Symbol,
                 i.Name,
                 i.Cik,
                 i.Market,
                 i.Exchange,
                 i.Currency,
-                i.Type))
+                i.Type,
+                LatestBar = _db.MarketDataBars
+                    .Where(b => b.InstrumentId == i.Id &&
+                                b.Period == MarketDataPeriod.Daily)
+                    .OrderByDescending(b => b.Date)
+                    .Select(b => new
+                    {
+                        b.Date,
+                        b.Close
+                    })
+                    .FirstOrDefault()
+            })
+            .Select(x => new SearchInstrumentResult(
+                x.Symbol,
+                x.Name,
+                x.Cik,
+                x.Market,
+                x.Exchange,
+                x.Currency,
+                x.Type,
+                x.LatestBar != null ? x.LatestBar.Close : null,
+                x.LatestBar != null ? x.LatestBar.Date : null))
             .ToListAsync();
     }
 
