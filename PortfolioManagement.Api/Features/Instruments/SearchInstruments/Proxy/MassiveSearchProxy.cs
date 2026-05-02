@@ -2,17 +2,17 @@
 
 namespace PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
 
-public class MassiveProxy
+public class MassiveSearchProxy
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    private readonly ILogger<MassiveProxy> _logger;
+    private readonly ILogger<MassiveSearchProxy> _logger;
     private readonly HttpClient _httpClient;
 
-    public MassiveProxy(IHttpClientFactory httpClientFactory, ILogger<MassiveProxy> logger)
+    public MassiveSearchProxy(IHttpClientFactory httpClientFactory, ILogger<MassiveSearchProxy> logger)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("Massive");

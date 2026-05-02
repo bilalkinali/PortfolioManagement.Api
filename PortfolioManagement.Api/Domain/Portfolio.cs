@@ -34,14 +34,14 @@ public class Portfolio
     }
 
     // Trades
-    public Trade AddTrade(string symbol, int quantity, decimal price, DateOnly executedDate)
+    public Trade AddTrade(int instrumentId, int quantity, decimal price, DateOnly executedDate)
     {
         // input validation needed (Also handle symbol normalization, e.g. AAPL vs aapl)
-        var position = _positions.FirstOrDefault(p => p.Symbol == symbol);
+        var position = _positions.FirstOrDefault(p => p.InstrumentId == instrumentId);
 
         if (position is null)
         {
-            position = AddPosition(symbol);
+            position = AddPosition(instrumentId);
         }
 
         return position.AddTrade(quantity, price, executedDate);
@@ -58,9 +58,9 @@ public class Portfolio
 
 
     // Positions
-    private Position AddPosition(string symbol)
+    private Position AddPosition(int instrumentId)
     {
-        var position = Position.Create(symbol);
+        var position = Position.Create(instrumentId);
         _positions.Add(position);
         return position;
     }

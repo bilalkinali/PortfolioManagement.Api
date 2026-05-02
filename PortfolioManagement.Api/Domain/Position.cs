@@ -4,15 +4,14 @@ public class Position
 {
     protected Position() { }
     
-    private Position(string symbol)
+    private Position(int instrumentId)
     {
-        Symbol = symbol;
+        InstrumentId = instrumentId;
     }
 
     private readonly List<Trade> _trades = [];
 
     public int Id { get; protected set; }
-    public string Symbol { get; protected set; } = null!;
     public int Quantity => _trades.Sum(t => t.Quantity);
     public decimal AvgCost => Quantity != 0 ? _trades.Sum(t => t.Quantity * t.Price) / Quantity : 0m;
     public decimal RealizedPnL => _trades.Where(t => t.Quantity < 0).Sum(t => -t.Quantity * (t.Price - AvgCost));
@@ -20,8 +19,8 @@ public class Position
     public DateOnly OpenDate => _trades.Min(t => t.ExecutedDate);
     public DateOnly? CloseDate => Quantity == 0 ? _trades.Max(t => t.ExecutedDate) : null;
     public int PortfolioId { get; protected set; }
-    public int? InstrumentId { get; protected set; }
-    public Instrument? Instrument { get; protected set; }
+    public int InstrumentId { get; protected set; }
+    public Instrument Instrument { get; protected set; } = null!;
 
     public IReadOnlyCollection<Trade> Trades => _trades;
 
@@ -29,9 +28,9 @@ public class Position
     /**************************************************************************************/
 
     
-    public static Position Create(string symbol)
+    public static Position Create(int instrumentId)
     {
-        return new Position(symbol);
+        return new Position(instrumentId);
     }
 
 

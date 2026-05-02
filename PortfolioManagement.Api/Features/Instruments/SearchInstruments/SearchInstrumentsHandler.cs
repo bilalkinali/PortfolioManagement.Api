@@ -9,11 +9,11 @@ public sealed class SearchInstrumentsHandler
 {
     private readonly PortfolioDbContext _db;
     private readonly ILogger<SearchInstrumentsHandler> _logger;
-    private readonly MassiveProxy _proxy;
+    private readonly MassiveSearchProxy _proxy;
 
     public SearchInstrumentsHandler(
         PortfolioDbContext db,
-        MassiveProxy proxy,
+        MassiveSearchProxy proxy,
         ILogger<SearchInstrumentsHandler> logger)
     {
         _db = db;

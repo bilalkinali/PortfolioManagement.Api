@@ -189,8 +189,6 @@ function PositionTradesDataTable({ trades }: { trades: PortfolioTradeResponse[] 
 export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
     const [expandedPositionIds, setExpandedPositionIds] = React.useState<Set<number>>(() => new Set())
 
-    const currentPrice = 500; // Need to get price from API
-
     function togglePosition(positionId: number) {
         setExpandedPositionIds((current) => {
             const next = new Set(current)
@@ -216,7 +214,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
     );
 
     const marketValue = portfolio.positions.reduce(
-        (sum, position) => sum + position.quantity * currentPrice,
+        (sum, position) => sum + position.quantity * position.latestPrice,
         0
     );
 
@@ -288,7 +286,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                     <TableBody>
                         {portfolio.positions.map((position) => {
                             const invested = position.trades.reduce((sum, trade) => sum + trade.quantity * trade.price, 0);
-                            const marketValue = position.quantity * currentPrice
+                            const marketValue = position.quantity * position.latestPrice
                             const isProfit = position.realizedPnL >= 0
                             const isExpanded = expandedPositionIds.has(position.id)
 
@@ -315,7 +313,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                                             <div className="flex flex-col gap-1">
                                                 <span className="font-semibold">{position.symbol}</span>
                                                 <span className="text-xs text-muted-foreground">
-                                                    {position.status}
+                                                    {position.name}
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -329,7 +327,18 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(currentPrice)}
+                                            <div className="flex flex-col">
+                                                <span>
+                                                    {position.latestPrice !== null
+                                                        ? currencyFormatter.format(position.latestPrice)
+                                                        : "—"}
+                                                </span>
+                                                {position.latestPriceDate ? (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {dateFormatter.format(new Date(position.latestPriceDate))}
+                                                    </span>
+                                                ) : null}
+                                            </div>
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
@@ -351,7 +360,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                                         <TableRow className="hover:bg-transparent">
                                             <TableCell colSpan={8} className="px-6 pb-4 pt-0">
                                                 <div className="ml-16">
-                                                <PositionTradesDataTable trades={position.trades} />
+                                                    <PositionTradesDataTable trades={position.trades} />
                                                 </div>
                                             </TableCell>
                                         </TableRow>
