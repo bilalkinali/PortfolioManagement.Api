@@ -9,7 +9,7 @@ export type SearchInstrumentsRequest = {
 export type SearchInstrumentResult = {
     symbol: string;
     name: string;
-    exchange?: string;
+    exchangeCode?: string;
     currency?: string;
     market?: string;
     type?: string;

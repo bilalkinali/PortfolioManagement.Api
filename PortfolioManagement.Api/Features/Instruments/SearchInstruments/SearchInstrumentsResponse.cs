@@ -8,7 +8,7 @@ public sealed record SearchInstrumentResult(
     string Name,
     int? Cik,
     string? Market,
-    string? Exchange,
+    string? ExchangeCode,
     string? Currency,
     string? Type,
     decimal? LatestPrice,

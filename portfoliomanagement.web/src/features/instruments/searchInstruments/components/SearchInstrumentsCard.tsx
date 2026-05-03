@@ -136,7 +136,7 @@ export default function SearchInstrumentsCard() {
         return (
             <ItemGroup className="gap-0 rounded-md border">
                 {results.map((instrument, index) => (
-                    <div key={`${instrument.symbol}-${instrument.exchange ?? index}`}>
+                    <div key={`${instrument.symbol}-${instrument.exchangeCode ?? index}`}>
                         <Item className="flex flex-col gap-3 rounded-none border-0 p-3 sm:flex-row sm:items-center sm:justify-between">
                             <ItemContent className="min-w-0 flex-row items-center gap-3">
                                 <span className="w-12 shrink-0 rounded-md border px-2 py-0.5 text-center font-mono text-xs font-semibold">
@@ -149,13 +149,13 @@ export default function SearchInstrumentsCard() {
                                     </div>
 
                                     <div className="text-xs text-muted-foreground">
-                                        {getExchangeName(instrument.exchange) ?? instrument.market ?? "Unknown"}
+                                        {getExchangeName(instrument.exchangeCode) ?? instrument.market ?? "Unknown"}
                                     </div>
                                 </div>
                             </ItemContent>
 
                             <div className="flex items-center gap-3 sm:ml-auto">
-                                <ItemMedia className="flex items-center text-sm gap-0">
+                                <ItemMedia className="flex items-center text-sm gap-1">
                                     <span className="text-muted-foreground">{instrument.latestPriceDate}</span>
                                     <span className="w-16 text-right font-semibold">
                                         {formatCurrency(instrument.latestPrice, instrument.currency)}</span>
