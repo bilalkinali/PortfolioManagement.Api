@@ -1,5 +1,3 @@
-using PortfolioManagement.Api.Domain.Enums;
-
 namespace PortfolioManagement.Api.Domain;
 
 public class Instrument
@@ -16,7 +14,7 @@ public class Instrument
         Cik = cik;
 
         Market = market?.Trim();
-        Exchange = exchange?.Trim();
+        ExchangeCode = exchange?.Trim();
         Currency = currency?.Trim().ToUpperInvariant();
         Type = type?.Trim();
     }
@@ -30,11 +28,10 @@ public class Instrument
     public int? Cik { get; protected set; }
 
     public string? Market { get; protected set; }
-    public string? Exchange { get; protected set; }
+    public string? ExchangeCode { get; protected set; }
     public string? Currency { get; protected set; }
     public string? Type { get; protected set; }
 
-    public DataStatus DataStatus { get; protected set; } = DataStatus.Discovered;
     /// <summary>
     /// Indicates whether the instrument is actively tracked by the system,
     /// for example because it is used in a portfolio or watchlist.
@@ -52,11 +49,11 @@ public class Instrument
         string? providerSymbol = null, 
         int? cik = null,
         string? market = null, 
-        string? exchange = null, 
+        string? exchangeCode = null, 
         string? currency = null, 
         string? type = null)
     {
-        return new Instrument(symbol, name, providerSymbol, cik, market, exchange, currency, type);
+        return new Instrument(symbol, name, providerSymbol, cik, market, exchangeCode, currency, type);
     }
 
     public void UpdateMetadata(
@@ -64,7 +61,7 @@ public class Instrument
         string? providerSymbol = null, 
         int? cik = null, 
         string? market = null,
-        string? exchange = null, 
+        string? exchangeCode = null, 
         string? currency = null, 
         string? type = null)
     {
@@ -73,19 +70,17 @@ public class Instrument
         Cik = cik;
 
         Market = market?.Trim();
-        Exchange = exchange?.Trim();
+        ExchangeCode = exchangeCode?.Trim();
         Currency = currency?.Trim().ToUpperInvariant();
         Type = type?.Trim();
     }
 
-    public void Enrich(string exchange, string currency, string market, string type)
+    public void Enrich(string exchangeCode, string currency, string market, string type)
     {
-        Exchange = exchange;
+        ExchangeCode = exchangeCode;
         Currency = currency;
         Market = market;
         Type = type;
-
-        DataStatus = DataStatus.Enriched;
     }
 
     public MarketDataBar AddMarketDataBar(

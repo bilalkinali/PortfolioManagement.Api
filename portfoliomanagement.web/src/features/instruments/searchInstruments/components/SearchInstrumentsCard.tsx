@@ -16,10 +16,30 @@ export default function SearchInstrumentsCard() {
     const [isSearching, setIsSearching] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const currencyFormatter = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-    })
+    function formatCurrency(value: number, currency?: string | null) {
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: currency?.toUpperCase() ?? "USD",
+        }).format(value)
+    }
+
+    const exchangeNames: Record<string, string> = {
+        XNAS: "Nasdaq",
+        XNYS: "NYSE",
+        ARCX: "NYSE Arca",
+        XASE: "NYSE American",
+        XCSE: "Nasdaq Copenhagen",
+        XSTO: "Nasdaq Stockholm",
+        XHEL: "Nasdaq Helsinki",
+    }
+
+    function getExchangeName(exchangeCode?: string | null) {
+        if (!exchangeCode) {
+            return null
+        }
+
+        return exchangeNames[exchangeCode] ?? exchangeCode
+    }
 
     async function handleInstrumentSearch(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -123,23 +143,25 @@ export default function SearchInstrumentsCard() {
                                     {instrument.symbol}
                                 </span>
 
-                                <span className="truncate font-medium">
-                                    {instrument.name}
-                                </span>
+                                <div className="min-w-0">
+                                    <div className="truncate font-medium">
+                                        {instrument.name}
+                                    </div>
+
+                                    <div className="text-xs text-muted-foreground">
+                                        {getExchangeName(instrument.exchange) ?? instrument.market ?? "Unknown"}
+                                    </div>
+                                </div>
                             </ItemContent>
 
                             <div className="flex items-center gap-3 sm:ml-auto">
-                                <ItemMedia className="text-sm">
+                                <ItemMedia className="flex items-center text-sm gap-0">
                                     <span className="text-muted-foreground">{instrument.latestPriceDate}</span>
-                                    <span className="font-semibold">{currencyFormatter.format(instrument.latestPrice)}</span>
-                                </ItemMedia>
-
-                                <ItemMedia className="text-sm text-muted-foreground">
-                                    {instrument.exchange ?? instrument.market ?? "Unknown"}
+                                    <span className="w-16 text-right font-semibold">
+                                        {formatCurrency(instrument.latestPrice, instrument.currency)}</span>
                                 </ItemMedia>
 
                                 <ItemMedia className="text-sm">
-                                    {instrument.currency && <span>{instrument.currency}</span>}
                                     {instrument.type && (
                                         <span className="rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
                                             {instrument.type}

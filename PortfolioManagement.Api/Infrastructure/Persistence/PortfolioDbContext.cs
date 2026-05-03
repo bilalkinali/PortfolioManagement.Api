@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
-using PortfolioManagement.Api.Domain.Enums;
 using PortfolioManagement.Api.Infrastructure.Auth;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
