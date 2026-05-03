@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { IconFolderCode } from "@tabler/icons-react"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 
 export default function EmptyPortfolio() {
@@ -6,7 +7,7 @@ export default function EmptyPortfolio() {
       <Empty className="border border-gray-300 bg-white">
           <EmptyHeader>
               <EmptyMedia variant="icon">
-                  
+                  <IconFolderCode />
               </EmptyMedia>
               <EmptyTitle>No positions yet</EmptyTitle>
               <EmptyDescription>

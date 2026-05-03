@@ -10,6 +10,7 @@ import { ChevronDownIcon, ChevronRightIcon, PencilIcon, Trash2Icon } from "lucid
 
 import { type PortfolioResponse, type PortfolioTradeResponse } from '@/features/portfolios/details/api/getPortfolio';
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -221,19 +222,22 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
     const profitLoss = marketValue - invested;
 
     return (
-        <Card>
-            <CardHeader className="border-b">
-                <div className="flex items-start justify-between gap-6">
-                    <div>
-                        <CardTitle>{portfolio.name}</CardTitle>
-
-                        {portfolio.description ? (
-                            <CardDescription>{portfolio.description}</CardDescription>
-                        ) : null}
-                    </div>
+        <Card className="gap-2">
+            <CardHeader>
+                <div>
+                    <CardTitle>{portfolio.name}</CardTitle>
+                    <CardDescription>{portfolio.description}</CardDescription>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3">
+                <CardAction>
+                    <Badge variant="secondary">
+                        {new Date(portfolio.createdAt).toDateString()}
+                    </Badge>
+                </CardAction>
+            </CardHeader>
+            
+            <CardContent>
+                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3 mb-6 text-center">
                     <div className="rounded-md bg-muted p-4">
                         <h1 className="text-sm font-medium text-muted-foreground">Invested</h1>
                         <p className="mt-2 text-xl font-semibold tabular-nums">
@@ -260,14 +264,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                         </p>
                     </div>
                 </div>
-
-                <CardAction className="rounded-md bg-muted px-3 py-1 text-sm font-medium">
-                    {portfolio.positions.length} positions
-                </CardAction>
-            </CardHeader>
-
-            <CardContent className="px-0">
-                <Table className="min-w-[760px]">
+                <Table className="px-0 min-w-[760px]">
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-muted/50">
                             <TableHead className="w-12 px-6">

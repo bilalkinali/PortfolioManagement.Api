@@ -64,13 +64,13 @@ export default function PortfolioDetailPage() {
     }
 
     if (!portfolio) {
-        return <EmptyPortfolio />
+        return <p>{error}</p>
     }
 
     return (
         <>
-            {portfolio.positions.length === 0 ? <EmptyPortfolio /> : null}
             <PortfolioCard portfolio={portfolio} />
+            {portfolio.positions.length === 0 ? <EmptyPortfolio /> : null}
         </>
   )
 }
