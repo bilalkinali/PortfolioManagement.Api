@@ -5,7 +5,7 @@ export type AddTradeRequest = {
     executedDate: string;
 };
 
-export async function addTrade(portfolioId: string, request: AddTradeRequest): Promise<void> {
+export async function addTrade(portfolioId: number, request: AddTradeRequest): Promise<void> {
     const response = await fetch(`/api/portfolios/${portfolioId}/trades`, {
         method: 'POST',
         headers: {

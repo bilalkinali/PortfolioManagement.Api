@@ -1,16 +1,16 @@
 import { useState, useRef } from 'react';
-import CreatePortfolioForm from './CreatePortfolioForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { createPortfolio as createPortfolioRequest } from '../api/createPortfolio';
-import type { CreatePortfolioRequest } from '../api/createPortfolio';
+import AddTradeForm from './AddTradeForm';
+import { addTrade as addTradeRequest } from '../api/addTrade'
+import type { AddTradeRequest } from '../api/addTrade'
 
-type CreatePortfolioDialogProps = {
+type AddTradeDialogProps = {
     onSuccess: () => void;
+    portfolioId: number;
 }
-
-export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDialogProps) {
+export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialogProps) {
     const [open, setOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,17 +31,18 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
     }
 
     async function handleSubmit(
-        name: string,
-        description: string) {
+        symbol: string,
+        quantity: number,
+        price: number,
+        executedDate: string) {
 
         setErrorMessage(null);
         setIsSubmitting(true);
 
-        const request: CreatePortfolioRequest = { name, description };
+        const request: AddTradeRequest = { symbol, quantity, price, executedDate };
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Debug spinner
-            await createPortfolioRequest(request);
+            await addTradeRequest(portfolioId, request);
 
             setOpen(false);
             onSuccess();
@@ -50,7 +51,7 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
             if (e instanceof Error) {
                 setErrorMessage("Couldn't connect to server");
             } else {
-                setErrorMessage("Creation failed");
+                setErrorMessage("Add Trade failed");
             }
         } finally {
             setIsSubmitting(false);
@@ -60,21 +61,21 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button>Create Portfolio</Button>
+                <Button>Add a Trade</Button>
             </DialogTrigger>
 
             <DialogContent
                 onInteractOutside={(e) => e.preventDefault()}
-                onEscapeKeyDown={(e) => { if (isSubmitting) e.preventDefault(); }}
+                onEscapeKeyDown={(e) => { if (isSubmitting) e.preventDefault();}}
             >
                 <DialogHeader>
-                    <DialogTitle>Create a portfolio</DialogTitle>
+                    <DialogTitle>Add a Trade</DialogTitle>
                     <DialogDescription>
-                        Please enter the details for your new portfolio.
+                        Register a trade to be added as a Position
                     </DialogDescription>
                 </DialogHeader>
 
-                <CreatePortfolioForm
+                <AddTradeForm
                     ref={formRef}
                     onSubmit={handleSubmit}
                     isSubmitting={isSubmitting}
@@ -94,15 +95,15 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
                         disabled={isSubmitting}>
                         {isSubmitting ?
                             <>
-                                Creating...
+                                Adding...
                                 <Spinner className="mr-2" />
                             </>
-                            : "Create"
+                            : "Add Trade"
                         }
                     </Button>
                 </DialogFooter>
 
             </DialogContent>
         </Dialog>
-    );
+    )
 }
