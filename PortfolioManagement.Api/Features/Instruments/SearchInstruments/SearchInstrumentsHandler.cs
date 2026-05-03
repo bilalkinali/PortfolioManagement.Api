@@ -56,6 +56,16 @@ public sealed class SearchInstrumentsHandler
 
         await SaveMissingMassiveInstruments(massiveResponse.Results);
 
+        /*
+         Instruments with no latest price is not returned using localDB
+         Calling external API should include fetching price as well, as it
+         wont be in localDB.
+        */
+
+        _logger.LogInformation(
+            "Returning saved data from Massive API without price for tickers: {Tickers}.",
+            string.Join(", ", massiveResponse.Results.Select(result => result.Ticker)));
+
         return new SearchInstrumentsResponse(
             massiveResponse.Results
                 .Where(ticker =>
@@ -79,28 +89,7 @@ public sealed class SearchInstrumentsHandler
         var pattern = $"%{query}%";
         var startsWithPattern = $"{query}%";
 
-        //var instruments = await _db.Instruments
-        //    .AsNoTracking()
-        //    .Where(i =>
-        //        EF.Functions.ILike(i.Symbol, pattern) ||
-        //        EF.Functions.ILike(i.Name, pattern))
-        //    .OrderBy(i =>
-        //        EF.Functions.ILike(i.Symbol, startsWithPattern) ? 0 :
-        //        EF.Functions.ILike(i.Name, startsWithPattern) ? 1 :
-        //        2)
-        //    .ThenBy(i => i.Symbol)
-        //    .Take(limit)
-        //    .Select(i => new SearchInstrumentResult(
-        //        i.Symbol,
-        //        i.Name,
-        //        i.Cik,
-        //        i.Market,
-        //        i.Exchange,
-        //        i.Currency,
-        //        i.Type))
-        //    .ToListAsync();
-
-        return await _db.Instruments
+        var instruments = await _db.Instruments
             .AsNoTracking()
             .Where(i =>
                 EF.Functions.ILike(i.Symbol, pattern) ||
@@ -142,6 +131,9 @@ public sealed class SearchInstrumentsHandler
                 x.LatestBar != null ? x.LatestBar.Close : null,
                 x.LatestBar != null ? x.LatestBar.Date : null))
             .ToListAsync();
+
+        // Now doesn't return instruments with no latest price.
+        return instruments.Where(i => i.LatestPrice != null).ToList();
     }
 
 
