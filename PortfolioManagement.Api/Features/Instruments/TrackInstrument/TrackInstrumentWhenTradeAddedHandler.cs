@@ -30,6 +30,8 @@ public sealed class TrackInstrumentWhenTradeAddedHandler
         // Get latest price? If not tracked before, price may be stale
         // After tracking, background worker should update prices
 
+        // Decided to do this in AddTrade slice, since it's an action within that slice
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

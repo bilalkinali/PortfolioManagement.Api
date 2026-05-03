@@ -53,7 +53,6 @@ public class AddTradeHandler
     public async Task Handle(AddTradeRequest request, int portfolioId, string userId)
     {
         var instrument = await _dbContext.Instruments
-            .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == request.InstrumentId);
 
         if (instrument is null)
@@ -73,9 +72,12 @@ public class AddTradeHandler
 
         var trade = portfolio.AddTrade(instrument.Id, request.Quantity, request.Price, request.ExecutedDate);
 
-        await _dbContext.SaveChangesAsync();
+        if (!instrument.IsTracked)
+        {
+            instrument.MarkAsTracked();
+        }
 
-        await _domainEventDispatcher.Dispatch(new TradeAddedEvent(instrument.Id), CancellationToken.None);
+        await _dbContext.SaveChangesAsync();
     }
 
 }

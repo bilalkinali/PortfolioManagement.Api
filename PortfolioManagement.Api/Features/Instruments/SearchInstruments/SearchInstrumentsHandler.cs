@@ -56,23 +56,22 @@ public sealed class SearchInstrumentsHandler
 
         await SaveMissingMassiveInstruments(massiveResponse.Results);
 
-        var results = massiveResponse.Results
-            .Where(ticker =>
-                !string.IsNullOrWhiteSpace(ticker.Ticker) &&
-                !string.IsNullOrWhiteSpace(ticker.Name))
-            .Select(ticker => new SearchInstrumentResult(
-                ticker.Ticker!.Trim().ToUpperInvariant(),
-                ticker.Name!,
-                null,
-                ticker.Market,
-                ticker.PrimaryExchange,
-                ticker.CurrencyName,
-                ticker.Type,
-                null,
-                null))
-            .ToList();
-
-        return new SearchInstrumentsResponse(results);
+        return new SearchInstrumentsResponse(
+            massiveResponse.Results
+                .Where(ticker =>
+                    !string.IsNullOrWhiteSpace(ticker.Ticker) &&
+                    !string.IsNullOrWhiteSpace(ticker.Name))
+                .Select(ticker => new SearchInstrumentResult(
+                    ticker.Ticker!.Trim().ToUpperInvariant(),
+                    ticker.Name!,
+                    null,
+                    ticker.Market,
+                    ticker.PrimaryExchange,
+                    ticker.CurrencyName,
+                    ticker.Type,
+                    null,
+                    null))
+                .ToList());
     }
 
     private async Task<List<SearchInstrumentResult>> SearchLocalDatabase(string query, int limit)
