@@ -15,7 +15,6 @@ using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Shared.Events;
 using System.Net.Http.Headers;
-using PortfolioManagement.Api.Features.Instruments.TrackInstrument;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -51,7 +50,7 @@ public static class DependencyInjection
         services.AddScoped<SearchInstrumentsHandler>();
         services.AddScoped<MassiveSearchProxy>();
         services.AddScoped<IValidator<SearchInstrumentsRequest>, SearchInstrumentsValidator>();
-        services.AddScoped<IDomainEventHandler<TradeAddedEvent>, TrackInstrumentWhenTradeAddedHandler>();
+        //services.AddScoped<IDomainEventHandler<TradeAddedEvent>, TrackInstrumentWhenTradeAddedHandler>();
 
         // Stock History
         services.AddScoped<GetStockHistoryHandler>();

@@ -72,11 +72,6 @@ public class AddTradeHandler
 
         var trade = portfolio.AddTrade(instrument.Id, request.Quantity, request.Price, request.ExecutedDate);
 
-        if (!instrument.IsTracked)
-        {
-            instrument.MarkAsTracked();
-        }
-
         await _dbContext.SaveChangesAsync();
     }
 

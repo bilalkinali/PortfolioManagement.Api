@@ -40,7 +40,6 @@ public class Instrument
     /// for example because it is used in a portfolio or watchlist.
     /// Tracked instruments are included in scheduled market data updates.
     /// </summary>
-    public bool IsTracked { get; protected set; }
     public IReadOnlyCollection<MarketDataBar> MarketDataBars => _marketDataBars.AsReadOnly();
 
 
@@ -77,11 +76,6 @@ public class Instrument
         Exchange = exchange?.Trim();
         Currency = currency?.Trim().ToUpperInvariant();
         Type = type?.Trim();
-    }
-
-    public void MarkAsTracked()
-    {
-        IsTracked = true;
     }
 
     public void Enrich(string exchange, string currency, string market, string type)
