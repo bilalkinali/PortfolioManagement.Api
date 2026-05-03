@@ -94,7 +94,7 @@ public class GetPortfolioQuery(PortfolioDbContext db)
                     p.Instrument.Symbol,
                     p.Instrument.Name,
                     p.Instrument.Currency,
-                    p.Instrument.Exchange,
+                    p.Instrument.ExchangeCode,
                     latestBar?.Close,
                     latestBar?.Date,
                     p.Trades.Select(t => new GetPortfolioTradeResponse(

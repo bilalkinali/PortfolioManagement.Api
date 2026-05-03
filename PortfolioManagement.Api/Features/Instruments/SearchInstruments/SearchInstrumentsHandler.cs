@@ -106,7 +106,7 @@ public sealed class SearchInstrumentsHandler
                 i.Name,
                 i.Cik,
                 i.Market,
-                i.Exchange,
+                Exchange = i.ExchangeCode,
                 i.Currency,
                 i.Type,
                 LatestBar = _db.MarketDataBars
@@ -171,13 +171,13 @@ public sealed class SearchInstrumentsHandler
                 name: result.Name!,
                 cik: null,
                 market: result.Market,
-                exchange: result.PrimaryExchange,
+                exchangeCode: result.PrimaryExchange,
                 currency: result.CurrencyName,
                 type: result.Type);
 
 
             _logger.LogInformation(
-                "Added instrument from Massive. Symbol: {Symbol}, Name: {Name}, Market: {Market}, Exchange: {Exchange}, Currency: {Currency}, Type: {Type}",
+                "Added instrument from Massive. Symbol: {Symbol}, Name: {Name}, Market: {Market}, ExchangeCode: {ExchangeCode}, Currency: {Currency}, Type: {Type}",
                 symbol,
                 result.Name,
                 result.Market,
