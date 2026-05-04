@@ -1,16 +1,15 @@
+import { apiFetch } from '@/features/auth/shared/apiClient';
+
 export type AddTradeRequest = {
-    symbol: string;
+    instrumentId: number;
     quantity: number;
     price: number;
     executedDate: string;
 };
 
-export async function addTrade(portfolioId: number, request: AddTradeRequest): Promise<void> {
-    const response = await fetch(`/api/portfolios/${portfolioId}/trades`, {
+export async function addTrade(request: AddTradeRequest, portfolioId: number): Promise<void> {
+    const response = await apiFetch(`/api/portfolios/${portfolioId}/trades`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify(request),
     });
 

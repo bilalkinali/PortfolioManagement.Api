@@ -31,7 +31,7 @@ export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialo
     }
 
     async function handleSubmit(
-        symbol: string,
+        instrumentId: number,
         quantity: number,
         price: number,
         executedDate: string) {
@@ -39,10 +39,10 @@ export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialo
         setErrorMessage(null);
         setIsSubmitting(true);
 
-        const request: AddTradeRequest = { symbol, quantity, price, executedDate };
+        const request: AddTradeRequest = { instrumentId, quantity, price, executedDate };
 
         try {
-            await addTradeRequest(portfolioId, request);
+            await addTradeRequest(request, portfolioId);
 
             setOpen(false);
             onSuccess();
@@ -61,7 +61,7 @@ export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialo
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button>Add a Trade</Button>
+                <Button variant="outline" size="sm">Add a Trade</Button>
             </DialogTrigger>
 
             <DialogContent

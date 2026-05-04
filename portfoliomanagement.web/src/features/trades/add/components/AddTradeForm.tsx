@@ -7,11 +7,17 @@ type AddTradeFormProps = {
     isSubmitting: boolean;
     errorMessage: string | null;
     onSubmit: (
-        symbol: string,
+        instrumentId: number,
         quantity: number,
         price: number,
         executedDate: string
     ) => Promise<void>;
+}
+
+type SelectedInstrument = {
+    id: number;
+    symbol: string;
+    name: string;
 }
 
 export default function AddTradeForm({
@@ -20,7 +26,7 @@ export default function AddTradeForm({
     isSubmitting,
     errorMessage
 }: AddTradeFormProps) {
-    const [symbol, setSymbol] = useState("");
+    const [selectedInstrument, setSelectedInstrument] = useState<SelectedInstrument | null>(null);
     const [quantity, setQuantity] = useState("");
     const [price, setPrice] = useState("");
     const [executedDate, setExecutedDate] = useState("");
@@ -28,8 +34,12 @@ export default function AddTradeForm({
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
+        if (!selectedInstrument) {
+            return;
+        }
+
         await onSubmit(
-            symbol,
+            selectedInstrument.id,
             Number(quantity),
             Number(price),
             executedDate
@@ -40,14 +50,18 @@ export default function AddTradeForm({
         <form ref={ref} onSubmit={handleSubmit}>
             <FieldGroup>
                 <Field>
-                    <FieldLabel htmlFor="trade-symbol">Symbol *</FieldLabel>
+                    <FieldLabel htmlFor="trade-instrument">Symbol *</FieldLabel>
                     <Input
-                        id="trade-symbol"
-                        type="text"
-                        value={symbol}
+                        id="trade-instrument"
+                        type="number"
+                        value={selectedInstrument?.symbol ?? ""}
                         placeholder="AAPL"
                         disabled={isSubmitting}
-                        onChange={(e) => setSymbol(e.target.value)}
+                        onChange={(e) => setSelectedInstrument({
+                            id: 1,
+                            symbol: e.target.value.toUpperCase(),
+                            name: ""
+                        })}
                         required />
                 </Field>
                 <Field>

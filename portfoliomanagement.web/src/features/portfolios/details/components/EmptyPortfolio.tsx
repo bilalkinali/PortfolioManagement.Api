@@ -1,8 +1,13 @@
-import { Button } from '@/components/ui/button'
 import { IconFolderCode } from "@tabler/icons-react"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import AddTradeDialog from "@/features/trades/add/components/AddTradeDialog"
 
-export default function EmptyPortfolio() {
+type EmptyPortfolioProps = {
+    portfolioId: number;
+    onSuccess: () => void;
+}
+
+export default function EmptyPortfolio({ onSuccess, portfolioId }: EmptyPortfolioProps) {
   return (
       <Empty className="border border-gray-300 bg-white">
           <EmptyHeader>
@@ -15,9 +20,9 @@ export default function EmptyPortfolio() {
               </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-              <Button variant="outline" size="sm">
-                  Add a trade
-              </Button>
+              <AddTradeDialog
+                  onSuccess={onSuccess}
+                  portfolioId={portfolioId} />
           </EmptyContent>
       </Empty>
   )
