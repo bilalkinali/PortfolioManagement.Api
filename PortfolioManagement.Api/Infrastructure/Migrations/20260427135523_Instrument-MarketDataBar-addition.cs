@@ -26,7 +26,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Symbol = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: true),
-                    Exchange = table.Column<string>(type: "text", nullable: true),
+                    ExchangeCode = table.Column<string>(type: "text", nullable: true),
                     Currency = table.Column<string>(type: "text", nullable: true),
                     AssetType = table.Column<string>(type: "text", nullable: true)
                 },
