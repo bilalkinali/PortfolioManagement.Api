@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import AddTradeDialog from "@/features/trades/add/components/AddTradeDialog"
 
 type PortfolioCardProps = {
     portfolio: PortfolioResponse
@@ -233,6 +234,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                     <Badge variant="secondary">
                         {new Date(portfolio.createdAt).toDateString()}
                     </Badge>
+                    <AddTradeDialog portfolioId={portfolio.id} onSuccess={() => undefined} />
                 </CardAction>
             </CardHeader>
             

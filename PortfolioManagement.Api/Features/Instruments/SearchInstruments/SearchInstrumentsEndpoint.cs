@@ -9,9 +9,10 @@ public static class SearchInstrumentsEndpoint
         app.MapGet("/api/instruments/search", async (
             [AsParameters] SearchInstrumentsRequest request,
             IValidator<SearchInstrumentsRequest> validator,
-            SearchInstrumentsHandler searchInstrumentsHandler) =>
+            SearchInstrumentsHandler searchInstrumentsHandler,
+            CancellationToken cancellationToken) =>
         {
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
             if (!validationResult.IsValid)
             {
@@ -20,7 +21,7 @@ public static class SearchInstrumentsEndpoint
 
             try
             {
-                var result = await searchInstrumentsHandler.Handle(request);
+                var result = await searchInstrumentsHandler.Handle(request, cancellationToken);
 
                 return result is null
                     ? Results.InternalServerError("Server is unreachable at the moment.")

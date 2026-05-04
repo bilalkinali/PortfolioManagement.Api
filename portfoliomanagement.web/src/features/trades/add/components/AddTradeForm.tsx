@@ -1,8 +1,10 @@
-import { useState, type FormEvent, type RefObject } from "react"
+import { useState, useEffect, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
 import { ChevronsUpDown } from "lucide-react"
+import { searchInstruments } from "@/features/instruments/searchInstruments/api/searchInstruments"
+import type { SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
 import {
     Command,
     CommandEmpty,
@@ -29,25 +31,16 @@ type AddTradeFormProps = {
     ) => Promise<void>;
 }
 
-type SelectedInstrument = {
-    id: number;
-    symbol: string;
-    name: string;
-}
-
-const instruments: SelectedInstrument[] = [
-    { id: 3, symbol: "AAPL", name: "Apple Inc." },
-    { id: 2, symbol: "GOOGL", name: "Alphabet Inc." },
-    { id: 1, symbol: "NVDA", name: "NVIDIA Corporation" }
-]
-
 export default function AddTradeForm({
     ref,
     onSubmit,
     isSubmitting,
     errorMessage
 }: AddTradeFormProps) {
-    const [selectedInstrument, setSelectedInstrument] = useState<SelectedInstrument | null>(null);
+    const [instrumentSearch, setInstrumentSearch] = useState("");
+    const [instruments, setInstruments] = useState<SearchInstrumentResult[]>([]);
+    const [isLoadingInstruments, setIsLoadingInstruments] = useState(false);
+    const [selectedInstrument, setSelectedInstrument] = useState<SearchInstrumentResult | null>(null);
     const [quantity, setQuantity] = useState("");
     const [price, setPrice] = useState("");
     const [executedDate, setExecutedDate] = useState("");
@@ -68,6 +61,51 @@ export default function AddTradeForm({
         );
     }
 
+    useEffect(() => {
+        const query = instrumentSearch.trim();
+
+        if (!instrumentPopoverOpen) {
+            return;
+        }
+
+        if (query.length < 3) {
+            setInstruments([]);
+            return;
+        }
+
+        const controller = new AbortController(); // Like CancellationToken in .NET
+        const searchDebounceMs = 600; // Delay search until user stops typing for x ms
+
+        const timeoutId = window.setTimeout(async () => {
+            try {
+                setIsLoadingInstruments(true);
+
+                const results = await searchInstruments(
+                    query,
+                    10,
+                    undefined,
+                    controller.signal
+                );
+
+                setInstruments(results);
+            } catch (error) {
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    return;
+                }
+
+                console.error(error);
+                setInstruments([]);
+            } finally {
+                setIsLoadingInstruments(false);
+            }
+        }, searchDebounceMs); // <-- debounce delay
+
+        return () => {
+            controller.abort();
+            window.clearTimeout(timeoutId);
+        };
+    }, [instrumentSearch, instrumentPopoverOpen]);
+
     return (
         <form ref={ref} onSubmit={handleSubmit}>
             <FieldGroup>
@@ -75,7 +113,14 @@ export default function AddTradeForm({
                     <FieldLabel>Symbol *</FieldLabel>
                     <Popover
                         open={instrumentPopoverOpen}
-                        onOpenChange={setInstrumentPopoverOpen}
+                        onOpenChange={(open) => {
+                            setInstrumentPopoverOpen(open);
+
+                            if (open) {
+                                setInstrumentSearch("");
+                                setInstruments([]);
+                            }
+                        }}
                     >
                         <PopoverTrigger asChild>
                             <Button
@@ -94,10 +139,28 @@ export default function AddTradeForm({
 
                         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
                             <Command>
-                                <CommandInput placeholder="Search instrument..." />
+                                <CommandInput
+                                    placeholder="Search instrument..."
+                                    value={instrumentSearch}
+                                    onValueChange={setInstrumentSearch}
+                                />
 
                                 <CommandList>
-                                    <CommandEmpty>No instruments found.</CommandEmpty>
+                                    {isLoadingInstruments && (
+                                        <div className="p-3 text-sm text-muted-foreground">
+                                            Searching...
+                                        </div>
+                                    )}
+
+                                    {!isLoadingInstruments && instruments.length === 0 && instrumentSearch.trim().length >= 3 && (
+                                        <CommandEmpty>No instruments found.</CommandEmpty>
+                                    )}
+
+                                    {!isLoadingInstruments && instrumentSearch.trim().length < 3 && (
+                                        <div className="p-3 text-sm text-muted-foreground">
+                                            Type at least 3 characters.
+                                        </div>
+                                    )}
 
                                     <CommandGroup>
                                         {instruments.map((instrument) => (
@@ -106,6 +169,7 @@ export default function AddTradeForm({
                                                 value={`${instrument.symbol} ${instrument.name}`}
                                                 onSelect={() => {
                                                     setSelectedInstrument(instrument);
+                                                    setInstrumentSearch(`${instrument.symbol} - ${instrument.name}`);
                                                     setInstrumentPopoverOpen(false);
                                                 }}
                                             >

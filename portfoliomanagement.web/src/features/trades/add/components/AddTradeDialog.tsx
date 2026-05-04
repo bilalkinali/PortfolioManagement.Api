@@ -81,7 +81,8 @@ export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialo
                     ref={formRef}
                     onSubmit={handleSubmit}
                     isSubmitting={isSubmitting}
-                    errorMessage={errorMessage} />
+                    errorMessage={errorMessage}
+                />
 
                 <DialogFooter>
                     <Button
