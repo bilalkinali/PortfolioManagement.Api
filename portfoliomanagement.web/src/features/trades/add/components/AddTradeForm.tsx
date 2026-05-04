@@ -1,6 +1,14 @@
 import { useState, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList
+} from "@/components/ui/command"
 
 type AddTradeFormProps = {
     ref: RefObject<HTMLFormElement | null>;
@@ -19,6 +27,12 @@ type SelectedInstrument = {
     symbol: string;
     name: string;
 }
+
+const instruments: SelectedInstrument[] = [
+    { id: 1, symbol: "AAPL", name: "Apple Inc." },
+    { id: 2, symbol: "MSFT", name: "Microsoft Corporation" },
+    { id: 3, symbol: "NVDA", name: "NVIDIA Corporation" }
+]
 
 export default function AddTradeForm({
     ref,
@@ -51,18 +65,50 @@ export default function AddTradeForm({
             <FieldGroup>
                 <Field>
                     <FieldLabel htmlFor="trade-instrument">Symbol *</FieldLabel>
-                    <Input
-                        id="trade-instrument"
-                        type="number"
-                        value={selectedInstrument?.symbol ?? ""}
-                        placeholder="AAPL"
-                        disabled={isSubmitting}
-                        onChange={(e) => setSelectedInstrument({
-                            id: 1,
-                            symbol: e.target.value.toUpperCase(),
-                            name: ""
-                        })}
-                        required />
+                    <Command className="rounded-md border">
+                        <CommandInput
+                            placeholder={selectedInstrument?.symbol ?? "Select an instrument"}
+                            disabled={isSubmitting}
+                        />
+                        <CommandList>
+                            <CommandEmpty>No instruments found.</CommandEmpty>
+
+                            <CommandGroup>
+                                {instruments.map((instrument) => (
+                                    <CommandItem
+                                        key={instrument.id}
+                                        value={`${instrument.symbol} ${instrument.name}`}
+                                        onSelect={() => setSelectedInstrument(instrument)}
+                                    >
+                                        <span className="w-14 font-mono font-semibold">
+                                            {instrument.symbol}
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            {instrument.name}
+                                        </span>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+
+                    {selectedInstrument && (
+                        <p className="text-muted-foreground text-sm">
+                            Selected: {selectedInstrument.symbol} - {selectedInstrument.name}
+                        </p>
+                    )}
+                    {/*<Input*/}
+                    {/*    id="trade-instrument"*/}
+                    {/*    type="number"*/}
+                    {/*    value={selectedInstrument?.symbol ?? ""}*/}
+                    {/*    placeholder="AAPL"*/}
+                    {/*    disabled={isSubmitting}*/}
+                    {/*    onChange={(e) => setSelectedInstrument({*/}
+                    {/*        id: 1,*/}
+                    {/*        symbol: e.target.value.toUpperCase(),*/}
+                    {/*        name: ""*/}
+                    {/*    })}*/}
+                    {/*    required />*/}
                 </Field>
                 <Field>
                     <FieldLabel htmlFor="trade-quantity">Quantity *</FieldLabel>
@@ -88,9 +134,9 @@ export default function AddTradeForm({
                     <FieldLabel htmlFor="trade-date">Date *</FieldLabel>
                     <Input
                         id="trade-date"
-                        type="text"
+                        type="date"
                         value={executedDate}
-                        placeholder="100"
+                        placeholder="2018-08-18"
                         disabled={isSubmitting}
                         onChange={(e) => setExecutedDate(e.target.value)} />
                 </Field>
