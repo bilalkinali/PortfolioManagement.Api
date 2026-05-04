@@ -36,9 +36,9 @@ type SelectedInstrument = {
 }
 
 const instruments: SelectedInstrument[] = [
-    { id: 1, symbol: "AAPL", name: "Apple Inc." },
+    { id: 7485, symbol: "AAPL", name: "Apple Inc." },
     { id: 2, symbol: "MSFT", name: "Microsoft Corporation" },
-    { id: 3, symbol: "NVDA", name: "NVIDIA Corporation" }
+    { id: 7483, symbol: "NVDA", name: "NVIDIA Corporation" }
 ]
 
 export default function AddTradeForm({
@@ -88,14 +88,11 @@ export default function AddTradeForm({
                                 {selectedInstrument
                                     ? `${selectedInstrument.symbol} - ${selectedInstrument.name}`
                                     : "Select an instrument"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                <ChevronsUpDown className="opacity-50" />
                             </Button>
                         </PopoverTrigger>
 
-                        <PopoverContent
-                            align="start"
-                            className="w-[var(--radix-popover-trigger-width)] p-0"
-                        >
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
                             <Command>
                                 <CommandInput placeholder="Search instrument..." />
 
@@ -133,7 +130,7 @@ export default function AddTradeForm({
                         id="trade-quantity"
                         type="number"
                         value={quantity}
-                        placeholder="100"
+                        placeholder="0"
                         disabled={isSubmitting}
                         onChange={(e) => setQuantity(e.target.value)} />
                 </Field>

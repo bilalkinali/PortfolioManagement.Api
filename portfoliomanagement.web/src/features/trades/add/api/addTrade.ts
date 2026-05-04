@@ -17,6 +17,4 @@ export async function addTrade(request: AddTradeRequest, portfolioId: number): P
         const errorData = await response.json();
         throw new Error(errorData.title || 'Trade addition failed');
     }
-
-    return response.json() as Promise<void>;
 }

@@ -48,8 +48,10 @@ export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialo
             onSuccess();
 
         } catch (e: unknown) {
+            console.error("Add trade failed", e);
+
             if (e instanceof Error) {
-                setErrorMessage("Couldn't connect to server");
+                setErrorMessage(e.message);
             } else {
                 setErrorMessage("Add Trade failed");
             }

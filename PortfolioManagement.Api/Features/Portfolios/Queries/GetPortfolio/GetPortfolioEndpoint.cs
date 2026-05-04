@@ -50,16 +50,39 @@ public class GetPortfolioQuery(PortfolioDbContext db)
     {
         var portfolio = await db.Portfolios
             .AsNoTracking()
-            .Include(p => p.Positions)
-                .ThenInclude(pos => pos.Instrument)
-            .Include(pos => pos.Positions)
-                .ThenInclude(pos => pos.Trades)
+            .AsSplitQuery()
+                .Include(p => p.Positions)
+                    .ThenInclude(pos => pos.Instrument)
+                .Include(p => p.Positions)
+                    .ThenInclude(pos => pos.Trades)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == portfolioId);
 
         if (portfolio is null)
         {
             throw new KeyNotFoundException("Portfolio not found.");
         }
+
+        var instrumentIds = portfolio.Positions
+            .Select(p => p.InstrumentId)
+            .Distinct()
+            .ToList();
+
+        var latestBars = await db.MarketDataBars
+            .AsNoTracking()
+            .Where(b =>
+                instrumentIds.Contains(b.InstrumentId) &&
+                b.Period == MarketDataPeriod.Daily)
+            .GroupBy(b => b.InstrumentId)
+            .Select(g => g
+                .OrderByDescending(b => b.Date)
+                .Select(b => new
+                {
+                    b.InstrumentId,
+                    b.Close,
+                    b.Date
+                })
+                .First())
+            .ToDictionaryAsync(b => b.InstrumentId);
 
         var getPortfolioResponse = new GetPortfolioResponse
         (
@@ -69,18 +92,7 @@ public class GetPortfolioQuery(PortfolioDbContext db)
             portfolio.CreatedAt,
             portfolio.Positions.Select(p =>
             {
-                var latestBar = db.MarketDataBars
-                    .AsNoTracking()
-                    .Where(b =>
-                        b.InstrumentId == p.InstrumentId &&
-                        b.Period == MarketDataPeriod.Daily)
-                    .OrderByDescending(b => b.Date)
-                    .Select(b => new
-                    {
-                        b.Close,
-                        b.Date
-                    })
-                    .FirstOrDefault();
+                latestBars.TryGetValue(p.InstrumentId, out var latestBar);
 
                 return new GetPortfolioPositionResponse(
                     p.Id,
@@ -102,10 +114,10 @@ public class GetPortfolioQuery(PortfolioDbContext db)
                         t.IsBuy,
                         t.Quantity,
                         t.Price,
-                        t.ExecutedDate)).ToList()
+                        t.ExecutedDate
+                    )).ToList()
                 );
-            })
-            .ToList()
+            }).ToList()
         );
 
         return getPortfolioResponse;
