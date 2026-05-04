@@ -36,9 +36,9 @@ type SelectedInstrument = {
 }
 
 const instruments: SelectedInstrument[] = [
-    { id: 7485, symbol: "AAPL", name: "Apple Inc." },
-    { id: 2, symbol: "MSFT", name: "Microsoft Corporation" },
-    { id: 7483, symbol: "NVDA", name: "NVIDIA Corporation" }
+    { id: 3, symbol: "AAPL", name: "Apple Inc." },
+    { id: 2, symbol: "GOOGL", name: "Alphabet Inc." },
+    { id: 1, symbol: "NVDA", name: "NVIDIA Corporation" }
 ]
 
 export default function AddTradeForm({

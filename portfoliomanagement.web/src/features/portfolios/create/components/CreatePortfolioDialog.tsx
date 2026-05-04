@@ -60,7 +60,7 @@ export default function CreatePortfolioDialog({ onSuccess }: CreatePortfolioDial
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button>Create Portfolio</Button>
+                <Button variant="outline">Create Portfolio</Button>
             </DialogTrigger>
 
             <DialogContent
