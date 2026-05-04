@@ -1,6 +1,8 @@
 import { useState, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Button } from "@/components/ui/button"
+import { ChevronsUpDown } from "lucide-react"
 import {
     Command,
     CommandEmpty,
@@ -9,6 +11,11 @@ import {
     CommandItem,
     CommandList
 } from "@/components/ui/command"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 
 type AddTradeFormProps = {
     ref: RefObject<HTMLFormElement | null>;
@@ -44,6 +51,7 @@ export default function AddTradeForm({
     const [quantity, setQuantity] = useState("");
     const [price, setPrice] = useState("");
     const [executedDate, setExecutedDate] = useState("");
+    const [instrumentPopoverOpen, setInstrumentPopoverOpen] = useState(false);
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -64,54 +72,63 @@ export default function AddTradeForm({
         <form ref={ref} onSubmit={handleSubmit}>
             <FieldGroup>
                 <Field>
-                    <FieldLabel htmlFor="trade-instrument">Symbol *</FieldLabel>
-                    <Command className="rounded-md border">
-                        <CommandInput
-                            placeholder={selectedInstrument?.symbol ?? "Select an instrument"}
-                            disabled={isSubmitting}
-                        />
-                        <CommandList>
-                            <CommandEmpty>No instruments found.</CommandEmpty>
+                    <FieldLabel>Symbol *</FieldLabel>
+                    <Popover
+                        open={instrumentPopoverOpen}
+                        onOpenChange={setInstrumentPopoverOpen}
+                    >
+                        <PopoverTrigger asChild>
+                            <Button
+                                id="trade-instrument"
+                                type="button"
+                                variant="outline"
+                                disabled={isSubmitting}
+                                className="w-full justify-between font-normal"
+                            >
+                                {selectedInstrument
+                                    ? `${selectedInstrument.symbol} - ${selectedInstrument.name}`
+                                    : "Select an instrument"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
 
-                            <CommandGroup>
-                                {instruments.map((instrument) => (
-                                    <CommandItem
-                                        key={instrument.id}
-                                        value={`${instrument.symbol} ${instrument.name}`}
-                                        onSelect={() => setSelectedInstrument(instrument)}
-                                    >
-                                        <span className="w-14 font-mono font-semibold">
-                                            {instrument.symbol}
-                                        </span>
-                                        <span className="text-muted-foreground">
-                                            {instrument.name}
-                                        </span>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
+                        <PopoverContent
+                            align="start"
+                            className="w-[var(--radix-popover-trigger-width)] p-0"
+                        >
+                            <Command>
+                                <CommandInput placeholder="Search instrument..." />
 
-                    {selectedInstrument && (
-                        <p className="text-muted-foreground text-sm">
-                            Selected: {selectedInstrument.symbol} - {selectedInstrument.name}
-                        </p>
-                    )}
-                    {/*<Input*/}
-                    {/*    id="trade-instrument"*/}
-                    {/*    type="number"*/}
-                    {/*    value={selectedInstrument?.symbol ?? ""}*/}
-                    {/*    placeholder="AAPL"*/}
-                    {/*    disabled={isSubmitting}*/}
-                    {/*    onChange={(e) => setSelectedInstrument({*/}
-                    {/*        id: 1,*/}
-                    {/*        symbol: e.target.value.toUpperCase(),*/}
-                    {/*        name: ""*/}
-                    {/*    })}*/}
-                    {/*    required />*/}
+                                <CommandList>
+                                    <CommandEmpty>No instruments found.</CommandEmpty>
+
+                                    <CommandGroup>
+                                        {instruments.map((instrument) => (
+                                            <CommandItem
+                                                key={instrument.id}
+                                                value={`${instrument.symbol} ${instrument.name}`}
+                                                onSelect={() => {
+                                                    setSelectedInstrument(instrument);
+                                                    setInstrumentPopoverOpen(false);
+                                                }}
+                                            >
+                                                <span className="w-14 font-mono font-semibold">
+                                                    {instrument.symbol}
+                                                </span>
+                                                <span className="text-muted-foreground">
+                                                    {instrument.name}
+                                                </span>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                    
                 </Field>
                 <Field>
-                    <FieldLabel htmlFor="trade-quantity">Quantity *</FieldLabel>
+                    <FieldLabel>Quantity *</FieldLabel>
                     <Input
                         id="trade-quantity"
                         type="number"
@@ -121,17 +138,19 @@ export default function AddTradeForm({
                         onChange={(e) => setQuantity(e.target.value)} />
                 </Field>
                 <Field>
-                    <FieldLabel htmlFor="trade-price">Price *</FieldLabel>
+                    <FieldLabel>Price *</FieldLabel>
                     <Input
                         id="trade-price"
                         type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="0.00"
                         value={price}
-                        placeholder="100"
                         disabled={isSubmitting}
                         onChange={(e) => setPrice(e.target.value)} />
                 </Field>
                 <Field>
-                    <FieldLabel htmlFor="trade-date">Date *</FieldLabel>
+                    <FieldLabel>Date *</FieldLabel>
                     <Input
                         id="trade-date"
                         type="date"
