@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 import EmptyPortfolio from '@/features/portfolios/details/components/EmptyPortfolio'
 import { getPortfolio, type PortfolioResponse } from '@/features/portfolios/details/api/getPortfolio'
 import PortfolioCard from '../components/PortfolioCard'
+import PortfolioDetailSkeleton from '../components/PortfolioDetailSkeleton'
 
 export default function PortfolioDetailPage() {
     const { portfolioId } = useParams<{ portfolioId: string }>()
@@ -36,6 +37,8 @@ export default function PortfolioDetailPage() {
                 setIsLoading(true)
                 setError(null)
 
+
+
                 const result = await getPortfolio(id)
 
                 console.log(JSON.stringify(result, null, 2))
@@ -63,7 +66,7 @@ export default function PortfolioDetailPage() {
     }, [portfolioId, refreshKey])
 
     if (isLoading) {
-        return <p>Loading portfolio...</p>
+        return <PortfolioDetailSkeleton />
     }
 
     if (error) {
@@ -76,7 +79,10 @@ export default function PortfolioDetailPage() {
 
     return (
         <>
-            <PortfolioCard portfolio={portfolio} />
+            <PortfolioCard
+                portfolio={portfolio}
+                onSuccess={() => setRefreshKey((current) => current + 1)}
+            />
 
             {portfolio.positions.length === 0 ? (
                 <EmptyPortfolio

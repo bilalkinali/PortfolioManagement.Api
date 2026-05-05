@@ -16,7 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import AddTradeDialog from "@/features/trades/add/components/AddTradeDialog"
 
 type PortfolioCardProps = {
-    portfolio: PortfolioResponse
+    portfolio: PortfolioResponse;
+    onSuccess: () => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -188,7 +189,7 @@ function PositionTradesDataTable({ trades }: { trades: PortfolioTradeResponse[] 
     )
 }
 
-export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
+export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardProps) {
     const [expandedPositionIds, setExpandedPositionIds] = React.useState<Set<number>>(() => new Set())
 
     function togglePosition(positionId: number) {
@@ -229,12 +230,10 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                     <CardTitle>{portfolio.name}</CardTitle>
                     <CardDescription>{portfolio.description}</CardDescription>
                 </div>
-
                 <CardAction>
                     <Badge variant="secondary">
                         {new Date(portfolio.createdAt).toDateString()}
-                    </Badge>
-                    <AddTradeDialog portfolioId={portfolio.id} onSuccess={() => undefined} />
+                    </Badge>                    
                 </CardAction>
             </CardHeader>
             
@@ -266,6 +265,9 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                         </p>
                     </div>
                 </div>
+                <div className="mb-2 text-right">
+                    <AddTradeDialog portfolioId={portfolio.id} onSuccess={onSuccess} />
+                </div>
                 <Table className="px-0 min-w-[760px]">
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-muted/50">
@@ -275,10 +277,10 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                             <TableHead className="w-[220px] px-6 font-semibold">Position</TableHead>
                             <TableHead className="text-right font-semibold">Quantity</TableHead>
                             <TableHead className="text-right font-semibold">Avg. Cost</TableHead>
-                            <TableHead className="text-right font-semibold">Current Price</TableHead>
                             <TableHead className="text-right font-semibold">Invested</TableHead>
                             <TableHead className="text-right font-semibold">Market Value</TableHead>
-                            <TableHead className="px-6 text-right font-semibold">Realized P/L</TableHead>
+                            <TableHead className="text-right font-semibold">Realized P/L</TableHead>
+                            <TableHead className="px-6 text-right font-semibold">Current Price</TableHead>                           
                         </TableRow>
                     </TableHeader>
 
@@ -326,6 +328,20 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
+                                            {currencyFormatter.format(invested)}
+                                        </TableCell>
+
+                                        <TableCell className="text-right tabular-nums">
+                                            {currencyFormatter.format(marketValue)}
+                                        </TableCell>
+
+                                        <TableCell className="text-right font-medium tabular-nums">
+                                            <span className={isProfit ? "text-green-600" : "text-red-600"}>
+                                                {currencyFormatter.format(position.realizedPnL)}
+                                            </span>
+                                        </TableCell>
+
+                                        <TableCell className="px-6 text-right tabular-nums">
                                             <div className="flex flex-col">
                                                 <span>
                                                     {position.latestPrice !== null
@@ -339,20 +355,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                                                 ) : null}
                                             </div>
                                         </TableCell>
-
-                                        <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(invested)}
-                                        </TableCell>
-
-                                        <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(marketValue)}
-                                        </TableCell>
-
-                                        <TableCell className="px-6 text-right font-medium tabular-nums">
-                                            <span className={isProfit ? "text-green-600" : "text-red-600"}>
-                                                {currencyFormatter.format(position.realizedPnL)}
-                                            </span>
-                                        </TableCell>
+                                        
                                     </TableRow>
 
                                     {isExpanded ? (
