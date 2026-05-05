@@ -7,6 +7,7 @@ export type SearchInstrumentsRequest = {
 }
 
 export type SearchInstrumentResult = {
+    id: number;
     symbol: string;
     name: string;
     exchangeCode?: string;
@@ -25,7 +26,8 @@ export type SearchInstrumentsResponse = {
 export async function searchInstruments(
     query: string,
     limit?: number,
-    type?: string): Promise<SearchInstrumentResult[]> {
+    type?: string,
+    signal?: AbortSignal): Promise<SearchInstrumentResult[]> {
     const searchParams = new URLSearchParams({
         query,
     });
@@ -40,6 +42,7 @@ export async function searchInstruments(
 
     const response = await apiFetch(`/api/instruments/search?${searchParams.toString()}`, {
         method: 'GET',
+        signal
     });
 
     if (!response.ok) {

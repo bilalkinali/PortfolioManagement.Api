@@ -4,6 +4,7 @@ public sealed record SearchInstrumentsResponse(
     IReadOnlyCollection<SearchInstrumentResult> Results);
 
 public sealed record SearchInstrumentResult(
+    int Id,
     string Symbol,
     string Name,
     int? Cik,

@@ -25,7 +25,7 @@ public static class AddTradeEndpoint
                 }
 
                 await addTradeHandler.Handle(request, portfolioId, userId);
-                return Results.NoContent();
+                return Results.Created();
             }
             catch (Exception ex)
             {

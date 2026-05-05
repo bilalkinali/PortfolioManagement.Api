@@ -10,11 +10,14 @@ import { ChevronDownIcon, ChevronRightIcon, PencilIcon, Trash2Icon } from "lucid
 
 import { type PortfolioResponse, type PortfolioTradeResponse } from '@/features/portfolios/details/api/getPortfolio';
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import AddTradeDialog from "@/features/trades/add/components/AddTradeDialog"
 
 type PortfolioCardProps = {
-    portfolio: PortfolioResponse
+    portfolio: PortfolioResponse;
+    onSuccess: () => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -186,7 +189,7 @@ function PositionTradesDataTable({ trades }: { trades: PortfolioTradeResponse[] 
     )
 }
 
-export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
+export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardProps) {
     const [expandedPositionIds, setExpandedPositionIds] = React.useState<Set<number>>(() => new Set())
 
     function togglePosition(positionId: number) {
@@ -221,19 +224,21 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
     const profitLoss = marketValue - invested;
 
     return (
-        <Card>
-            <CardHeader className="border-b">
-                <div className="flex items-start justify-between gap-6">
-                    <div>
-                        <CardTitle>{portfolio.name}</CardTitle>
-
-                        {portfolio.description ? (
-                            <CardDescription>{portfolio.description}</CardDescription>
-                        ) : null}
-                    </div>
+        <Card className="gap-2">
+            <CardHeader>
+                <div>
+                    <CardTitle>{portfolio.name}</CardTitle>
+                    <CardDescription>{portfolio.description}</CardDescription>
                 </div>
-
-                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3">
+                <CardAction>
+                    <Badge variant="secondary">
+                        {new Date(portfolio.createdAt).toDateString()}
+                    </Badge>                    
+                </CardAction>
+            </CardHeader>
+            
+            <CardContent>
+                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3 mb-6 text-center">
                     <div className="rounded-md bg-muted p-4">
                         <h1 className="text-sm font-medium text-muted-foreground">Invested</h1>
                         <p className="mt-2 text-xl font-semibold tabular-nums">
@@ -260,14 +265,10 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                         </p>
                     </div>
                 </div>
-
-                <CardAction className="rounded-md bg-muted px-3 py-1 text-sm font-medium">
-                    {portfolio.positions.length} positions
-                </CardAction>
-            </CardHeader>
-
-            <CardContent className="px-0">
-                <Table className="min-w-[760px]">
+                <div className="mb-2 text-right">
+                    <AddTradeDialog portfolioId={portfolio.id} onSuccess={onSuccess} />
+                </div>
+                <Table className="px-0 min-w-[760px]">
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-muted/50">
                             <TableHead className="w-12 px-6">
@@ -276,10 +277,10 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                             <TableHead className="w-[220px] px-6 font-semibold">Position</TableHead>
                             <TableHead className="text-right font-semibold">Quantity</TableHead>
                             <TableHead className="text-right font-semibold">Avg. Cost</TableHead>
-                            <TableHead className="text-right font-semibold">Current Price</TableHead>
                             <TableHead className="text-right font-semibold">Invested</TableHead>
                             <TableHead className="text-right font-semibold">Market Value</TableHead>
-                            <TableHead className="px-6 text-right font-semibold">Realized P/L</TableHead>
+                            <TableHead className="text-right font-semibold">Realized P/L</TableHead>
+                            <TableHead className="px-6 text-right font-semibold">Current Price</TableHead>                           
                         </TableRow>
                     </TableHeader>
 
@@ -327,6 +328,20 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
+                                            {currencyFormatter.format(invested)}
+                                        </TableCell>
+
+                                        <TableCell className="text-right tabular-nums">
+                                            {currencyFormatter.format(marketValue)}
+                                        </TableCell>
+
+                                        <TableCell className="text-right font-medium tabular-nums">
+                                            <span className={isProfit ? "text-green-600" : "text-red-600"}>
+                                                {currencyFormatter.format(position.realizedPnL)}
+                                            </span>
+                                        </TableCell>
+
+                                        <TableCell className="px-6 text-right tabular-nums">
                                             <div className="flex flex-col">
                                                 <span>
                                                     {position.latestPrice !== null
@@ -340,20 +355,7 @@ export default function PortfolioCard({ portfolio }: PortfolioCardProps) {
                                                 ) : null}
                                             </div>
                                         </TableCell>
-
-                                        <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(invested)}
-                                        </TableCell>
-
-                                        <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(marketValue)}
-                                        </TableCell>
-
-                                        <TableCell className="px-6 text-right font-medium tabular-nums">
-                                            <span className={isProfit ? "text-green-600" : "text-red-600"}>
-                                                {currencyFormatter.format(position.realizedPnL)}
-                                            </span>
-                                        </TableCell>
+                                        
                                     </TableRow>
 
                                     {isExpanded ? (

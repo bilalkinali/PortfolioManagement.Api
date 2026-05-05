@@ -21,13 +21,13 @@ public sealed class SearchInstrumentsHandler
         _proxy = proxy;
     }
 
-    public async Task<SearchInstrumentsResponse?> Handle(SearchInstrumentsRequest request)
+    public async Task<SearchInstrumentsResponse?> Handle(SearchInstrumentsRequest request, CancellationToken cancellationToken)
     {
         var query = request.Query.Trim();
         var limit = request.Limit ?? 10;
         var type = request.Type ?? SearchInstrumentType.CS;
 
-        var localResults = await SearchLocalDatabase(query, limit);
+        var localResults = await SearchLocalDatabase(query, limit, cancellationToken);
 
         if (localResults.Count > 0)
         {
@@ -38,7 +38,7 @@ public sealed class SearchInstrumentsHandler
             "No local instruments found for query '{Query}'. Calling Massive API.",
             query);
 
-        var massiveResponse = await _proxy.SearchAsync(query, limit, type);
+        var massiveResponse = await _proxy.SearchAsync(query, limit, type, cancellationToken);
 
         if (massiveResponse is null)
         {
@@ -54,7 +54,7 @@ public sealed class SearchInstrumentsHandler
             return new SearchInstrumentsResponse([]);
         }
 
-        await SaveMissingMassiveInstruments(massiveResponse.Results);
+        var idBySymbol = await SaveMissingMassiveInstruments(massiveResponse.Results, cancellationToken);
 
         /*
          Instruments with no latest price is not returned using localDB
@@ -71,20 +71,26 @@ public sealed class SearchInstrumentsHandler
                 .Where(ticker =>
                     !string.IsNullOrWhiteSpace(ticker.Ticker) &&
                     !string.IsNullOrWhiteSpace(ticker.Name))
-                .Select(ticker => new SearchInstrumentResult(
-                    ticker.Ticker!.Trim().ToUpperInvariant(),
-                    ticker.Name!,
-                    null,
-                    ticker.Market,
-                    ticker.PrimaryExchange,
-                    ticker.CurrencyName,
-                    ticker.Type,
-                    null,
-                    null))
+                .Select(ticker =>
+                {
+                    var symbol = ticker.Ticker!.Trim().ToUpperInvariant();
+
+                    return new SearchInstrumentResult(
+                        idBySymbol[symbol],
+                        symbol,
+                        ticker.Name!,
+                        null,
+                        ticker.Market,
+                        ticker.PrimaryExchange,
+                        ticker.CurrencyName,
+                        ticker.Type,
+                        null,
+                        null);
+                })
                 .ToList());
     }
 
-    private async Task<List<SearchInstrumentResult>> SearchLocalDatabase(string query, int limit)
+    private async Task<List<SearchInstrumentResult>> SearchLocalDatabase(string query, int limit, CancellationToken cancellationToken)
     {
         var pattern = $"%{query}%";
         var startsWithPattern = $"{query}%";
@@ -102,6 +108,7 @@ public sealed class SearchInstrumentsHandler
             .Take(limit)
             .Select(i => new
             {
+                i.Id,
                 i.Symbol,
                 i.Name,
                 i.Cik,
@@ -121,6 +128,7 @@ public sealed class SearchInstrumentsHandler
                     .FirstOrDefault()
             })
             .Select(x => new SearchInstrumentResult(
+                x.Id,
                 x.Symbol,
                 x.Name,
                 x.Cik,
@@ -130,14 +138,16 @@ public sealed class SearchInstrumentsHandler
                 x.Type,
                 x.LatestBar != null ? x.LatestBar.Close : null,
                 x.LatestBar != null ? x.LatestBar.Date : null))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         // Now doesn't return instruments with no latest price.
         return instruments.Where(i => i.LatestPrice != null).ToList();
     }
 
 
-    private async Task SaveMissingMassiveInstruments(List<MassiveTickerResult> massiveResults)
+    private async Task<Dictionary<string, int>> SaveMissingMassiveInstruments(
+        List<MassiveTickerResult> massiveResults, 
+        CancellationToken cancellationToken)
     {
         var validResults = massiveResults
             .Where(x =>
@@ -153,7 +163,7 @@ public sealed class SearchInstrumentsHandler
         var existingSymbols = await _db.Instruments
             .Where(i => symbols.Contains(i.Symbol))
             .Select(i => i.Symbol)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var existingSymbolSet = existingSymbols.ToHashSet();
 
@@ -189,6 +199,11 @@ public sealed class SearchInstrumentsHandler
             existingSymbolSet.Add(symbol);
         }
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return await _db.Instruments
+            .Where(i => symbols.Contains(i.Symbol))
+            .Select(i => new { i.Symbol, i.Id })
+            .ToDictionaryAsync(x => x.Symbol, x => x.Id, cancellationToken);
     }
 }

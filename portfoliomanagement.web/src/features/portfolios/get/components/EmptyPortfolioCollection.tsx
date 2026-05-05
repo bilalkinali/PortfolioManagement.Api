@@ -1,6 +1,6 @@
 import { Wallet } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import CreatePortfolioDialog from '@/features/portfolios/create/components/CreatePortfolioDialog'
 
 export default function EmptyPortfolioCollection() {
     return (
@@ -15,9 +15,7 @@ export default function EmptyPortfolioCollection() {
                 </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-                <Button variant="outline" size="sm">
-                    Create Portfolio
-                </Button>
+                <CreatePortfolioDialog onSuccess={() => { }} />
             </EmptyContent>
         </Empty>
     )

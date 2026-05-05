@@ -9,7 +9,7 @@ public static class SecJsonImporter
 {
     public static async Task ImportAsync(string path)
     {
-        var connectionString = "";
+        var connectionString = "Host=localhost;Port=5432;Database=test;Username=postgres;";
 
         var options = new DbContextOptionsBuilder<PortfolioDbContext>()
             .UseNpgsql(connectionString)

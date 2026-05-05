@@ -18,7 +18,7 @@ public class MassiveSearchProxy
         _httpClient = httpClientFactory.CreateClient("Massive");
     }
 
-    public async Task<MassiveTickerResponse?> SearchAsync(string query, int limit, SearchInstrumentType type)
+    public async Task<MassiveTickerResponse?> SearchAsync(string query, int limit, SearchInstrumentType type, CancellationToken cancellationToken)
     {
 
         var queryParameters = new List<string>
@@ -40,14 +40,14 @@ public class MassiveSearchProxy
 
         _logger.LogInformation("Calling Massive API: {Url}", url);
 
-        using var response = await _httpClient.GetAsync(url);
+        using var response = await _httpClient.GetAsync(url, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             return null;
         }
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
         return JsonSerializer.Deserialize<MassiveTickerResponse>(
             content,
