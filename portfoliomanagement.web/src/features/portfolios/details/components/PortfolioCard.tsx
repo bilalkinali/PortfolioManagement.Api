@@ -266,7 +266,12 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                     </div>
                 </div>
                 <div className="mb-2 text-right">
-                    <AddTradeDialog portfolioId={portfolio.id} onSuccess={onSuccess} />
+                    <AddTradeDialog
+                        portfolioId={portfolio.id}
+                        onSuccess={onSuccess}
+                        buttonVariant="secondary"
+                        buttonSize="sm"
+                        buttonText="Add Trade" />
                 </div>
                 <Table className="px-0 min-w-[760px]">
                     <TableHeader className="bg-muted/50">

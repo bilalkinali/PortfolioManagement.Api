@@ -22,7 +22,9 @@ export default function EmptyPortfolio({ onSuccess, portfolioId }: EmptyPortfoli
           <EmptyContent>
               <AddTradeDialog
                   onSuccess={onSuccess}
-                  portfolioId={portfolioId} />
+                  portfolioId={portfolioId}
+                  buttonVariant="outline"
+                  buttonSize="sm" />
           </EmptyContent>
       </Empty>
   )

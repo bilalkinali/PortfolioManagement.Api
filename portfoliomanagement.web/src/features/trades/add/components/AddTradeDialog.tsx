@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import type { ComponentPropsWithoutRef } from 'react'; 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -6,11 +7,23 @@ import AddTradeForm from './AddTradeForm';
 import { addTrade as addTradeRequest } from '../api/addTrade'
 import type { AddTradeRequest } from '../api/addTrade'
 
+type ButtonVariant = ComponentPropsWithoutRef<typeof Button>["variant"]
+type ButtonSize = ComponentPropsWithoutRef<typeof Button>["size"]
+
 type AddTradeDialogProps = {
     onSuccess: () => void;
     portfolioId: number;
+    buttonVariant?: ButtonVariant;
+    buttonSize?: ButtonSize;
+    buttonText?: string;
 }
-export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialogProps) {
+export default function AddTradeDialog({
+    onSuccess,
+    portfolioId,
+    buttonVariant = "default",
+    buttonSize = "default",
+    buttonText = "Add a Trade"
+}: AddTradeDialogProps) {
     const [open, setOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +76,7 @@ export default function AddTradeDialog({ onSuccess, portfolioId }: AddTradeDialo
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm">Add a Trade</Button>
+                <Button variant={buttonVariant} size={buttonSize}>{buttonText}</Button>
             </DialogTrigger>
 
             <DialogContent
