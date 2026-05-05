@@ -14,5 +14,7 @@
     <Folder Include="src\features\auth\register\components\" />
     <Folder Include="src\features\instruments\searchInstruments\api\" />
     <Folder Include="src\features\instruments\searchInstruments\components\" />
+    <Folder Include="src\features\positions\" />
+    <Folder Include="src\features\trades\delete\components\" />
   </ItemGroup>
 </Project>
