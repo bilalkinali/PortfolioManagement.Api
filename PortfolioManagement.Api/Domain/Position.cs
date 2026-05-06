@@ -23,7 +23,7 @@ public class Position
     public Instrument Instrument { get; protected set; } = null!;
 
     public IReadOnlyCollection<Trade> Trades => _trades;
-
+    public bool HasTrades => _trades.Count > 0;
 
     /**************************************************************************************/
 
@@ -40,5 +40,17 @@ public class Position
         var trade = Trade.Create(quantity, price, executedDate);
         _trades.Add(trade);
         return trade;
+    }
+
+    public void DeleteTrade(int tradeId)
+    {
+        var trade = _trades.FirstOrDefault(t => t.Id == tradeId);
+
+        if (trade is null)
+        {
+            throw new InvalidOperationException("Trade does not exist");
+        }
+
+        _trades.Remove(trade);
     }
 }

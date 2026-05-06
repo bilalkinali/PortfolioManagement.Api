@@ -47,6 +47,25 @@ public class Portfolio
         return position.AddTrade(quantity, price, executedDate);
     }
 
+    public void DeleteTrade(int positionId, int tradeId, string userId)
+    {
+        AssureUserIsCreator(userId);
+
+        var position = _positions.FirstOrDefault(p => p.Id == positionId);
+
+        if (position is null)
+        {
+            throw new InvalidOperationException("Position doesn't exist");
+        }
+
+        position.DeleteTrade(tradeId);
+
+        if (!position.HasTrades)
+        {
+            _positions.Remove(position);
+        }
+    }
+
 
     public void AssureUserIsCreator(string userId)
     {
