@@ -4,8 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, D
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import AddTradeForm from './AddTradeForm';
-import { addTrade as addTradeRequest } from '../api/addTrade'
-import type { AddTradeRequest } from '../api/addTrade'
+import { addTrade, type AddTradeRequest } from '../api/addTrade'
 
 type ButtonVariant = ComponentPropsWithoutRef<typeof Button>["variant"]
 type ButtonSize = ComponentPropsWithoutRef<typeof Button>["size"]
@@ -55,7 +54,7 @@ export default function AddTradeDialog({
         const request: AddTradeRequest = { instrumentId, quantity, price, executedDate };
 
         try {
-            await addTradeRequest(request, portfolioId);
+            await addTrade(request, portfolioId);
 
             setOpen(false);
             onSuccess();

@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
     type ColumnDef,
     flexRender,
@@ -9,7 +10,9 @@ import { PencilIcon, Trash2Icon } from "lucide-react"
 import { type PortfolioTradeResponse } from '@/features/portfolios/details/api/getPortfolio';
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { deleteTrade as deleteTradeRequest } from "@/features/trades/delete/api/deleteTrade"
+import { deleteTrade } from "@/features/trades/delete/api/deleteTrade"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from '@/components/ui/spinner';
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -39,6 +42,42 @@ export default function PositionTradesDataTable({
     trades,
     onSuccess
 }: PositionTradesDataTableProps) {
+    const [tradeIdToDelete, setTradeIdToDelete] = useState<number | null>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+
+    const open = tradeIdToDelete !== null
+
+    async function handleSubmit() {
+        if (tradeIdToDelete === null)
+            return;
+
+        setIsSubmitting(true);
+
+        try {
+            await deleteTrade(portfolioId, positionId, tradeIdToDelete);
+
+            setTradeIdToDelete(null);
+            onSuccess();
+        } catch (e: unknown) {
+            console.error("Error deleting trade:", e);
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    function handleCancel() {
+        if (isSubmitting) return;
+
+        setTradeIdToDelete(null);
+    }
+
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && isSubmitting) return;
+
+        if (!nextOpen) {
+            setTradeIdToDelete(null);
+        }
+    }
 
     const tradeColumns: ColumnDef<PortfolioTradeResponse>[] = [
         {
@@ -95,21 +134,19 @@ export default function PositionTradesDataTable({
                     >
                         <PencilIcon />
                     </Button>
+
                     <Button
                         variant="destructive"
                         size="icon-xs"
                         aria-label={`Delete trade ${row.original.id}`}
-                        onClick={async () => {
-                            await deleteTradeRequest(portfolioId, positionId, row.original.id)
-                            onSuccess()
-                        }}
+                        onClick={() => setTradeIdToDelete(row.original.id)}
                     >
                         <Trash2Icon />
                     </Button>
                 </div>
             ),
             enableHiding: false,
-        },
+        }
     ]
 
 
@@ -124,8 +161,9 @@ export default function PositionTradesDataTable({
             },
         },
     })
-    const pageCount = table.getPageCount()
-    const currentPage = pageCount === 0 ? 0 : table.getState().pagination.pageIndex + 1
+
+    const pageCount = table.getPageCount();
+    const currentPage = pageCount === 0 ? 0 : table.getState().pagination.pageIndex + 1;
 
     return (
         <div className="rounded-b-md border-x border-b bg-background shadow-xs">
@@ -193,6 +231,54 @@ export default function PositionTradesDataTable({
                     </Button>
                 </div>
             </div>
+            <Dialog open={open} onOpenChange={handleOpenChange}>
+                <DialogContent
+                    onInteractOutside={(e) => {
+                        if (isSubmitting) e.preventDefault()
+                    }}
+                    onEscapeKeyDown={(e) => {
+                        if (isSubmitting) e.preventDefault()
+                    }}
+                >
+                    <DialogHeader>
+                        <DialogTitle>Delete Trade</DialogTitle>
+                        <DialogDescription>
+                            This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <span>
+                        Are you sure you want to <span className="font-semibold">delete</span> this trade?
+                    </span>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleCancel}
+                            disabled={isSubmitting}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            variant="destructive"
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    Deleting...
+                                    <Spinner className="ml-2" />
+                                </>
+                            ) : (
+                                "Delete"
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
