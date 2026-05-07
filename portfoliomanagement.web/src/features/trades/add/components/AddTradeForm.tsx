@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronsUpDown } from "lucide-react"
 import { searchInstruments, type SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
 import { formatCurrency, formatExchangeName } from "@/shared/helpers/formatters"
+import { Spinner } from "@/components/ui/spinner"
 import {
     Command,
     CommandEmpty,
@@ -70,16 +71,17 @@ export default function AddTradeForm({
 
         if (query.length < 3) {
             setInstruments([]);
+            setIsLoadingInstruments(false);
             return;
         }
 
-        const controller = new AbortController(); // Like CancellationToken in .NET
-        const searchDebounceMs = 600; // Delay search until user stops typing for x ms
+        setIsLoadingInstruments(true);
+
+        const controller = new AbortController();
+        const searchDebounceMs = 600;
 
         const timeoutId = window.setTimeout(async () => {
             try {
-                setIsLoadingInstruments(true);
-
                 const results = await searchInstruments(
                     query,
                     10,
@@ -98,7 +100,7 @@ export default function AddTradeForm({
             } finally {
                 setIsLoadingInstruments(false);
             }
-        }, searchDebounceMs); // <-- debounce delay
+        }, searchDebounceMs);
 
         return () => {
             controller.abort();
@@ -147,7 +149,9 @@ export default function AddTradeForm({
                                             </span>
 
                                             <span className="col-span-3 min-w-0 truncate text-right font-semibold tabular-nums">
-                                                {formatCurrency(selectedInstrument.latestPrice, selectedInstrument.currency)}
+                                                {selectedInstrument.latestPrice != null
+                                                    ? formatCurrency(selectedInstrument.latestPrice, selectedInstrument.currency)
+                                                    : "No price"}
                                             </span>
                                         </div>
                                     )
@@ -168,8 +172,9 @@ export default function AddTradeForm({
                                     className="max-h-72 overflow-y-auto"
                                     onWheel={(event) => event.stopPropagation()}>
                                     {isLoadingInstruments && (
-                                        <div className="p-3 text-sm text-muted-foreground">
-                                            Searching...
+                                        <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                                            <Spinner className="size-4" />
+                                            <span>Searching...</span>
                                         </div>
                                     )}
 
@@ -210,7 +215,9 @@ export default function AddTradeForm({
                                                     </div>
 
                                                     <div className="col-span-3 text-right font-semibold tabular-nums">
-                                                        {formatCurrency(selectedInstrument.latestPrice, selectedInstrument.currency)}
+                                                        {instrument.latestPrice != null
+                                                            ? formatCurrency(instrument.latestPrice, instrument.currency)
+                                                            : "No price"}
                                                     </div>
                                                 </div>
                                             </CommandItem>
