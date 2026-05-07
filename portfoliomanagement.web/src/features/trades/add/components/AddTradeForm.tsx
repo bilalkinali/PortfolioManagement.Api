@@ -3,8 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
 import { ChevronsUpDown } from "lucide-react"
-import { searchInstruments } from "@/features/instruments/searchInstruments/api/searchInstruments"
-import type { SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
+import { searchInstruments, type SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
 import {
     Command,
     CommandEmpty,
@@ -18,6 +17,29 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+})
+
+const exchangeNames: Record<string, string> = {
+    XNAS: "Nasdaq",
+    XNYS: "NYSE",
+    ARCX: "NYSE Arca",
+    XASE: "NYSE American",
+    XCSE: "Nasdaq Copenhagen",
+    XSTO: "Nasdaq Stockholm",
+    XHEL: "Nasdaq Helsinki",
+}
+
+function getExchangeName(exchangeCode?: string | null) {
+    if (!exchangeCode) {
+        return null
+    }
+
+    return exchangeNames[exchangeCode] ?? exchangeCode
+}
 
 type AddTradeFormProps = {
     ref: RefObject<HTMLFormElement | null>;
@@ -131,21 +153,42 @@ export default function AddTradeForm({
                                 className="w-full justify-between font-normal"
                             >
                                 {selectedInstrument
-                                    ? `${selectedInstrument.symbol} - ${selectedInstrument.name}`
+                                    ? 
+                                    (
+                                        <div className="grid w-full grid-cols-12 items-center gap-x-2 overflow-hidden">
+                                            <span className="col-span-2 min-w-0 truncate text-left font-semibold">
+                                                {selectedInstrument.symbol}
+                                            </span>
+
+                                            <span className="col-span-5 min-w-0 truncate text-left text-muted-foreground">
+                                                {selectedInstrument.name}
+                                            </span>
+
+                                            <span className="col-span-2 min-w-0 truncate text-left text-muted-foreground">
+                                                {getExchangeName(selectedInstrument.exchangeCode)}
+                                            </span>
+
+                                            <span className="col-span-3 min-w-0 truncate text-right font-semibold tabular-nums">
+                                                {currencyFormatter.format(selectedInstrument.latestPrice)}
+                                            </span>
+                                        </div>
+                                    )
                                     : "Select an instrument"}
                                 <ChevronsUpDown className="opacity-50" />
                             </Button>
                         </PopoverTrigger>
 
                         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                            <Command>
+                            <Command shouldFilter={false}>
                                 <CommandInput
                                     placeholder="Search instrument..."
                                     value={instrumentSearch}
                                     onValueChange={setInstrumentSearch}
                                 />
 
-                                <CommandList>
+                                <CommandList
+                                    className="max-h-72 overflow-y-auto"
+                                    onWheel={(event) => event.stopPropagation()}>
                                     {isLoadingInstruments && (
                                         <div className="p-3 text-sm text-muted-foreground">
                                             Searching...
@@ -164,21 +207,34 @@ export default function AddTradeForm({
 
                                     <CommandGroup>
                                         {instruments.map((instrument) => (
-                                            <CommandItem
+                                            <CommandItem className="pr-0"
                                                 key={instrument.id}
                                                 value={`${instrument.symbol} ${instrument.name}`}
                                                 onSelect={() => {
                                                     setSelectedInstrument(instrument);
-                                                    setInstrumentSearch(`${instrument.symbol} - ${instrument.name}`);
+                                                    setInstrumentSearch("");
                                                     setInstrumentPopoverOpen(false);
                                                 }}
                                             >
-                                                <span className="w-14 font-mono font-semibold">
-                                                    {instrument.symbol}
-                                                </span>
-                                                <span className="text-muted-foreground">
-                                                    {instrument.name}
-                                                </span>
+                                                <div className="grid w-full grid-cols-12 items-start gap-x-2">
+                                                    <div className="col-span-2 min-w-0">
+                                                        <div className="font-semibold">
+                                                            {instrument.symbol}
+                                                        </div>
+
+                                                        <div className="truncate text-xs text-muted-foreground">
+                                                            {getExchangeName(instrument.exchangeCode)}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="col-span-7 min-w-0 truncate text-muted-foreground">
+                                                        {instrument.name}
+                                                    </div>
+
+                                                    <div className="col-span-3 text-right font-semibold tabular-nums">
+                                                        {currencyFormatter.format(instrument.latestPrice)}
+                                                    </div>
+                                                </div>
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>

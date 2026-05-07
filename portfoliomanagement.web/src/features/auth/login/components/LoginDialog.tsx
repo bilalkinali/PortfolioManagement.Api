@@ -40,8 +40,6 @@ export default function LoginDialog({ onSuccess }: LoginDialogProps) {
         const request: LoginRequest = { email, password };
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Debug spinner
-
             const response = await loginRequest(request);
 
             login(response.token, {
