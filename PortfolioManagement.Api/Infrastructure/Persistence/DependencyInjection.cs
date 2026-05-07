@@ -16,6 +16,7 @@ using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Shared.Events;
 using System.Net.Http.Headers;
 using PortfolioManagement.Api.Features.Trades.DeleteTrade;
+using PortfolioManagement.Api.Features.Trades.EditTrade;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -47,6 +48,7 @@ public static class DependencyInjection
         // Trade
         services.AddScoped<AddTradeHandler>();
         services.AddScoped<DeleteTradeHandler>();
+        services.AddScoped<EditTradeHandler>();
 
         // Instruments
         services.AddScoped<SearchInstrumentsHandler>();

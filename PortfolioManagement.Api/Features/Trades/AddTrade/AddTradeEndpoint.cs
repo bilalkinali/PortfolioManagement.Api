@@ -24,7 +24,7 @@ public static class AddTradeEndpoint
                     return Results.Unauthorized();
                 }
 
-                await addTradeHandler.Handle(request, portfolioId, userId);
+                await addTradeHandler.HandleAsync(request, portfolioId, userId);
                 return Results.NoContent();
             }
             catch (Exception ex)
@@ -50,7 +50,7 @@ public class AddTradeHandler
         _domainEventDispatcher = domainEventDispatcher;
     }
 
-    public async Task Handle(AddTradeRequest request, int portfolioId, string userId)
+    public async Task HandleAsync(AddTradeRequest request, int portfolioId, string userId)
     {
         var instrument = await _dbContext.Instruments
             .FirstOrDefaultAsync(i => i.Id == request.InstrumentId);
@@ -63,11 +63,13 @@ public class AddTradeHandler
         var portfolio = await _dbContext.Portfolios
             .Include(port => port.Positions)
             .ThenInclude(pos => pos.Trades)
-            .FirstOrDefaultAsync(port => port.Id == portfolioId);
+            .FirstOrDefaultAsync(
+                port => port.Id == portfolioId &&
+                port.UserId == userId);
 
-        if (portfolio == null || portfolio.UserId != userId)
+        if (portfolio is null)
         {
-            throw new Exception("Portfolio not found or user does not have access");
+            throw new InvalidOperationException("Portfolio not found");
         }
 
         var trade = portfolio.AddTrade(instrument.Id, request.Quantity, request.Price, request.ExecutedDate);

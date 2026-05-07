@@ -42,7 +42,21 @@ public class Position
         return trade;
     }
 
+    public void EditTrade(int tradeId, int quantity, decimal price, DateOnly executedDate)
+    {
+        var trade = GetTrade(tradeId);
+
+        trade.Edit(quantity, price, executedDate);
+    }
+
     public void DeleteTrade(int tradeId)
+    {
+        var trade = GetTrade(tradeId);
+
+        _trades.Remove(trade);
+    }
+
+    private Trade GetTrade(int tradeId)
     {
         var trade = _trades.FirstOrDefault(t => t.Id == tradeId);
 
@@ -51,6 +65,6 @@ public class Position
             throw new InvalidOperationException("Trade does not exist");
         }
 
-        _trades.Remove(trade);
+        return trade;
     }
 }
