@@ -4,6 +4,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
 import { ChevronsUpDown } from "lucide-react"
 import { searchInstruments, type SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
+import { formatCurrency, formatExchangeName } from "@/shared/helpers/formatters"
 import {
     Command,
     CommandEmpty,
@@ -17,29 +18,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-})
-
-const exchangeNames: Record<string, string> = {
-    XNAS: "Nasdaq",
-    XNYS: "NYSE",
-    ARCX: "NYSE Arca",
-    XASE: "NYSE American",
-    XCSE: "Nasdaq Copenhagen",
-    XSTO: "Nasdaq Stockholm",
-    XHEL: "Nasdaq Helsinki",
-}
-
-function getExchangeName(exchangeCode?: string | null) {
-    if (!exchangeCode) {
-        return null
-    }
-
-    return exchangeNames[exchangeCode] ?? exchangeCode
-}
 
 type AddTradeFormProps = {
     ref: RefObject<HTMLFormElement | null>;
@@ -165,11 +143,11 @@ export default function AddTradeForm({
                                             </span>
 
                                             <span className="col-span-2 min-w-0 truncate text-left text-muted-foreground">
-                                                {getExchangeName(selectedInstrument.exchangeCode)}
+                                                {formatExchangeName(selectedInstrument.exchangeCode)}
                                             </span>
 
                                             <span className="col-span-3 min-w-0 truncate text-right font-semibold tabular-nums">
-                                                {currencyFormatter.format(selectedInstrument.latestPrice)}
+                                                {formatCurrency(selectedInstrument.latestPrice, selectedInstrument.currency)}
                                             </span>
                                         </div>
                                     )
@@ -223,7 +201,7 @@ export default function AddTradeForm({
                                                         </div>
 
                                                         <div className="truncate text-xs text-muted-foreground">
-                                                            {getExchangeName(instrument.exchangeCode)}
+                                                            {formatExchangeName(instrument.exchangeCode)}
                                                         </div>
                                                     </div>
 
@@ -232,7 +210,7 @@ export default function AddTradeForm({
                                                     </div>
 
                                                     <div className="col-span-3 text-right font-semibold tabular-nums">
-                                                        {currencyFormatter.format(instrument.latestPrice)}
+                                                        {formatCurrency(selectedInstrument.latestPrice, selectedInstrument.currency)}
                                                     </div>
                                                 </div>
                                             </CommandItem>

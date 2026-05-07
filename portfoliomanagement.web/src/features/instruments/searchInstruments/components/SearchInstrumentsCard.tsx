@@ -8,6 +8,7 @@ import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemSeparator } f
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { searchInstruments, type SearchInstrumentResult } from '@/features/instruments/searchInstruments/api/searchInstruments'
+import { formatCurrency, formatExchangeName } from '@/shared/helpers/formatters'
 
 export default function SearchInstrumentsCard() {
     const [query, setQuery] = useState('')
@@ -15,31 +16,6 @@ export default function SearchInstrumentsCard() {
     const [hasSearched, setHasSearched] = useState(false)
     const [isSearching, setIsSearching] = useState(false)
     const [error, setError] = useState<string | null>(null)
-
-    function formatCurrency(value: number, currency?: string | null) {
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: currency?.toUpperCase() ?? "USD",
-        }).format(value)
-    }
-
-    const exchangeNames: Record<string, string> = {
-        XNAS: "Nasdaq",
-        XNYS: "NYSE",
-        ARCX: "NYSE Arca",
-        XASE: "NYSE American",
-        XCSE: "Nasdaq Copenhagen",
-        XSTO: "Nasdaq Stockholm",
-        XHEL: "Nasdaq Helsinki",
-    }
-
-    function getExchangeName(exchangeCode?: string | null) {
-        if (!exchangeCode) {
-            return null
-        }
-
-        return exchangeNames[exchangeCode] ?? exchangeCode
-    }
 
     async function handleInstrumentSearch(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -149,7 +125,7 @@ export default function SearchInstrumentsCard() {
                                     </div>
 
                                     <div className="text-xs text-muted-foreground">
-                                        {getExchangeName(instrument.exchangeCode) ?? instrument.market ?? "Unknown"}
+                                        {formatExchangeName(instrument.exchangeCode) ?? instrument.market ?? "Unknown"}
                                     </div>
                                 </div>
                             </ItemContent>
