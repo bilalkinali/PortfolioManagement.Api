@@ -13,6 +13,7 @@ using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 using PortfolioManagement.Api.Features.Trades.DeleteTrade;
+using PortfolioManagement.Api.Features.Trades.EditTrade;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -104,5 +105,6 @@ app.MapGetStockHistoryEndpoint();
 app.MapGetPortfoliosEndpoint();
 app.MapGetPortfolioEndpoint();
 app.MapDeleteTradeEndpoint();
+app.MapEditTradeEndpoint();
 
 app.Run();

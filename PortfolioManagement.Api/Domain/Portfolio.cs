@@ -47,16 +47,20 @@ public class Portfolio
         return position.AddTrade(quantity, price, executedDate);
     }
 
+    public void EditTrade(int positionId, int tradeId, int quantity, decimal price, DateOnly executedDate, string userId)
+    {
+        AssureUserIsCreator(userId);
+
+        var position = GetPosition(positionId);
+
+        position.EditTrade(tradeId, quantity, price, executedDate);
+    }
+
     public void DeleteTrade(int positionId, int tradeId, string userId)
     {
         AssureUserIsCreator(userId);
 
-        var position = _positions.FirstOrDefault(p => p.Id == positionId);
-
-        if (position is null)
-        {
-            throw new InvalidOperationException("Position doesn't exist");
-        }
+        var position = GetPosition(positionId);
 
         position.DeleteTrade(tradeId);
 
@@ -75,6 +79,17 @@ public class Portfolio
         }
     }
 
+    private Position GetPosition(int positionId)
+    {
+        var position = _positions.FirstOrDefault(p => p.Id == positionId);
+
+        if (position is null)
+        {
+            throw new InvalidOperationException("Position doesn't exist");
+        }
+
+        return position;
+    }
 
     // Positions
     private Position AddPosition(int instrumentId)

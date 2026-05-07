@@ -26,4 +26,11 @@ public class Trade
     {
         return new Trade(quantity, price, executedDate);
     }
+
+    public void Edit(int quantity, decimal price, DateOnly executedDate)
+    {
+        Quantity = quantity;
+        Price = price;
+        ExecutedDate = executedDate;
+    }
 }

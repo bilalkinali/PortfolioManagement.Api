@@ -1,4 +1,12 @@
 import { useState } from "react"
+import { Trash2Icon } from "lucide-react"
+import { type PortfolioPositionResponse, type PortfolioTradeResponse } from '@/features/portfolios/details/api/getPortfolio';
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { deleteTrade } from "@/features/trades/delete/api/deleteTrade"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from '@/components/ui/spinner';
+import { formatCurrency } from "@/shared/helpers/formatters"
 import {
     type ColumnDef,
     flexRender,
@@ -6,18 +14,8 @@ import {
     getPaginationRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { PencilIcon, Trash2Icon } from "lucide-react"
-import { type PortfolioTradeResponse } from '@/features/portfolios/details/api/getPortfolio';
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { deleteTrade } from "@/features/trades/delete/api/deleteTrade"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog"
-import { Spinner } from '@/components/ui/spinner';
+import EditTradeDialog from "../../../trades/edit/components/EditTradeDialog";
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-})
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 4,
@@ -31,48 +29,47 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 
 type PositionTradesDataTableProps = {
     portfolioId: number
-    positionId: number
-    trades: PortfolioTradeResponse[]
+    position: PortfolioPositionResponse
     onSuccess: () => void
 }
 
 export default function PositionTradesDataTable({
     portfolioId,
-    positionId,
-    trades,
+    position,
     onSuccess
 }: PositionTradesDataTableProps) {
     const [tradeIdToDelete, setTradeIdToDelete] = useState<number | null>(null)
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const trades = position.trades
 
     const open = tradeIdToDelete !== null
 
-    async function handleSubmit() {
+    async function handleDeleteSubmit() {
         if (tradeIdToDelete === null)
             return;
 
-        setIsSubmitting(true);
+        setIsDeleting(true);
 
         try {
-            await deleteTrade(portfolioId, positionId, tradeIdToDelete);
+            await deleteTrade(portfolioId, position.id, tradeIdToDelete);
 
             setTradeIdToDelete(null);
             onSuccess();
         } catch (e: unknown) {
             console.error("Error deleting trade:", e);
         } finally {
-            setIsSubmitting(false);
+            setIsDeleting(false);
         }
     }
 
     function handleCancel() {
-        if (isSubmitting) return;
+        if (isDeleting) return;
 
         setTradeIdToDelete(null);
     }
 
     function handleOpenChange(nextOpen: boolean) {
-        if (!nextOpen && isSubmitting) return;
+        if (!nextOpen && isDeleting) return;
 
         if (!nextOpen) {
             setTradeIdToDelete(null);
@@ -99,7 +96,7 @@ export default function PositionTradesDataTable({
             header: () => <div className="text-right">Price</div>,
             cell: ({ row }) => (
                 <div className="text-right tabular-nums">
-                    {currencyFormatter.format(row.original.price)}
+                    {formatCurrency(row.original.price)}
                 </div>
             ),
         },
@@ -108,7 +105,7 @@ export default function PositionTradesDataTable({
             header: () => <div className="text-right">Total</div>,
             cell: ({ row }) => (
                 <div className="text-right tabular-nums">
-                    {currencyFormatter.format(row.original.quantity * row.original.price)}
+                    {formatCurrency(row.original.quantity * row.original.price)}
                 </div>
             ),
         },
@@ -126,14 +123,12 @@ export default function PositionTradesDataTable({
             header: () => <div className="text-right">Actions</div>,
             cell: ({ row }) => (
                 <div className="flex justify-end gap-1">
-                    <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={`Edit trade ${row.original.id}`}
-                        onClick={() => undefined}
-                    >
-                        <PencilIcon />
-                    </Button>
+                    <EditTradeDialog
+                        portfolioId={portfolioId}
+                        positionId={position.id}
+                        trade={row.original}
+                        onSuccess={onSuccess}
+                    />
 
                     <Button
                         variant="destructive"
@@ -234,10 +229,10 @@ export default function PositionTradesDataTable({
             <Dialog open={open} onOpenChange={handleOpenChange}>
                 <DialogContent
                     onInteractOutside={(e) => {
-                        if (isSubmitting) e.preventDefault()
+                        if (isDeleting) e.preventDefault()
                     }}
                     onEscapeKeyDown={(e) => {
-                        if (isSubmitting) e.preventDefault()
+                        if (isDeleting) e.preventDefault()
                     }}
                 >
                     <DialogHeader>
@@ -256,7 +251,7 @@ export default function PositionTradesDataTable({
                             type="button"
                             variant="outline"
                             onClick={handleCancel}
-                            disabled={isSubmitting}
+                            disabled={isDeleting}
                         >
                             Cancel
                         </Button>
@@ -264,10 +259,10 @@ export default function PositionTradesDataTable({
                         <Button
                             variant="destructive"
                             type="button"
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
+                            onClick={handleDeleteSubmit}
+                            disabled={isDeleting}
                         >
-                            {isSubmitting ? (
+                            {isDeleting ? (
                                 <>
                                     Deleting...
                                     <Spinner className="ml-2" />
