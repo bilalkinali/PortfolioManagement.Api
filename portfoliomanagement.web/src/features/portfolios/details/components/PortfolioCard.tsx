@@ -7,16 +7,12 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AddTradeDialog from "@/features/trades/add/components/AddTradeDialog"
 import PositionTradesDataTable from "@/features/portfolios/details/components/PositionTradesDataTable"
+import { formatCurrency } from "@/shared/helpers/formatters"
 
 type PortfolioCardProps = {
     portfolio: PortfolioResponse;
     onSuccess: () => void;
 }
-
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-})
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 4,
@@ -81,14 +77,14 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                     <div className="rounded-md bg-muted p-4">
                         <h1 className="text-sm font-medium text-muted-foreground">Invested</h1>
                         <p className="mt-2 text-xl font-semibold tabular-nums">
-                            {currencyFormatter.format(invested)}
+                            {formatCurrency(invested)}
                         </p>
                     </div>
 
                     <div className="rounded-md bg-muted p-4">
                         <h1 className="text-sm font-medium text-muted-foreground">Market Value</h1>
                         <p className="mt-2 text-xl font-semibold tabular-nums">
-                            {currencyFormatter.format(marketValue)}
+                            {formatCurrency(marketValue)}
                         </p>
                     </div>
 
@@ -99,7 +95,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                 profitLoss >= 0
                                     ? "text-green-600"
                                     : "text-red-600"}>
-                                {currencyFormatter.format(profitLoss)}
+                                {formatCurrency(profitLoss)}
                             </span>
                         </p>
                     </div>
@@ -168,20 +164,20 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(position.avgCost)}
+                                            {formatCurrency(position.avgCost, position.currency)}
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(invested)}
+                                            {formatCurrency(invested, position.currency)}
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {currencyFormatter.format(marketValue)}
+                                            {formatCurrency(marketValue, position.currency)}
                                         </TableCell>
 
                                         <TableCell className="text-right font-medium tabular-nums">
                                             <span className={isProfit ? "text-green-600" : "text-red-600"}>
-                                                {currencyFormatter.format(position.realizedPnL)}
+                                                {formatCurrency(position.realizedPnL, position.currency)}
                                             </span>
                                         </TableCell>
 
@@ -189,7 +185,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                             <div className="flex flex-col">
                                                 <span>
                                                     {position.latestPrice !== null
-                                                        ? currencyFormatter.format(position.latestPrice)
+                                                        ? formatCurrency(position.latestPrice, position.currency)
                                                         : "—"}
                                                 </span>
                                                 {position.latestPriceDate ? (
@@ -208,8 +204,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                                 <div className="ml-16">
                                                     <PositionTradesDataTable
                                                         portfolioId={portfolio.id}
-                                                        positionId={position.id}
-                                                        trades={position.trades}
+                                                        position={position}
                                                         onSuccess={onSuccess}
                                                     />
                                                 </div>
