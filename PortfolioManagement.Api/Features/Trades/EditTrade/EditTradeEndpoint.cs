@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -8,14 +9,22 @@ public static class EditTradeEndpoint
 {
     public static void MapEditTradeEndpoint(this WebApplication app)
     {
-        app.MapPut("/api/portfolios/{portfolioId}/positions/{positionId}/trades/{tradeId}", async (
+        app.MapPut("/api/portfolios/{portfolioId:int}/positions/{positionId:int}/trades/{tradeId:int}", async (
             EditTradeHandler editTradeHandler,
             EditTradeRequest request,
+            IValidator<EditTradeRequest> validator,
             ClaimsPrincipal user,
-            int portfolioId, 
-            int positionId, 
+            int portfolioId,
+            int positionId,
             int tradeId) =>
         {
+            var validationResult = await validator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
             try
             {
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -40,15 +49,32 @@ public static class EditTradeEndpoint
         }).RequireAuthorization();
     }
 }
+
 public sealed record EditTradeRequest(int Quantity, decimal Price, DateOnly ExecutedDate);
+
+public class EditTradeValidator : AbstractValidator<EditTradeRequest>
+{
+    public EditTradeValidator()
+    {
+        RuleFor(x => x.Quantity)
+            .NotEqual(0);
+
+        RuleFor(x => x.Price)
+            .GreaterThan(0);
+
+        RuleFor(x => x.ExecutedDate)
+            .NotEmpty()
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow));
+    }
+}
 
 public class EditTradeHandler(PortfolioDbContext db)
 {
     public async Task HandleAsync(
-        EditTradeRequest request, 
-        int portfolioId, 
-        int positionId, 
-        int tradeId, 
+        EditTradeRequest request,
+        int portfolioId,
+        int positionId,
+        int tradeId,
         string userId)
     {
         var portfolio = await db.Portfolios
@@ -64,7 +90,7 @@ public class EditTradeHandler(PortfolioDbContext db)
         }
 
         portfolio.EditTrade(positionId, tradeId, request.Quantity, request.Price, request.ExecutedDate, userId);
-        
+
         await db.SaveChangesAsync();
     }
 }

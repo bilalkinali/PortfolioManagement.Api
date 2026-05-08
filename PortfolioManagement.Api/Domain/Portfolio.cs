@@ -36,7 +36,6 @@ public class Portfolio
     // Trades
     public Trade AddTrade(int instrumentId, int quantity, decimal price, DateOnly executedDate)
     {
-        // input validation needed (Also handle symbol normalization, e.g. AAPL vs aapl)
         var position = _positions.FirstOrDefault(p => p.InstrumentId == instrumentId);
 
         if (position is null)

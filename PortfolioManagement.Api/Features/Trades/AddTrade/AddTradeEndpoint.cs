@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using PortfolioManagement.Api.Shared.Events;
@@ -9,12 +10,20 @@ public static class AddTradeEndpoint
 {
     public static void MapAddTradeEndpoint(this WebApplication app)
     {
-        app.MapPost("/api/portfolios/{portfolioId}/trades", async (
-            AddTradeHandler addTradeHandler, 
+        app.MapPost("/api/portfolios/{portfolioId:int}/trades", async (
+            AddTradeHandler addTradeHandler,
             AddTradeRequest request,
+            IValidator<AddTradeRequest> validator,
             ClaimsPrincipal user,
             int portfolioId) =>
         {
+            var validationResult = await validator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
             try
             {
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -38,6 +47,24 @@ public static class AddTradeEndpoint
 
 public record AddTradeRequest(int InstrumentId, int Quantity, decimal Price, DateOnly ExecutedDate);
 
+public class AddTradeValidator : AbstractValidator<AddTradeRequest>
+{
+    public AddTradeValidator()
+    {
+        RuleFor(x => x.InstrumentId)
+            .GreaterThan(0);
+
+        RuleFor(x => x.Quantity)
+            .NotEqual(0);
+
+        RuleFor(x => x.Price)
+            .GreaterThan(0);
+
+        RuleFor(x => x.ExecutedDate)
+            .NotEmpty()
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow));
+    }
+}
 
 public class AddTradeHandler
 {

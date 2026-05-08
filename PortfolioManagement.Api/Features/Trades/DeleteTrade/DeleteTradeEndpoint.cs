@@ -8,7 +8,7 @@ public static class DeleteTradeEndpoint
 {
     public static void MapDeleteTradeEndpoint(this WebApplication app)
     {
-        app.MapDelete("/api/portfolios/{portfolioId}/positions/{positionId}/trades/{tradeId}", async (
+        app.MapDelete("/api/portfolios/{portfolioId:int}/positions/{positionId:int}/trades/{tradeId:int}", async (
             DeleteTradeHandler deleteTradeHandler,
             ClaimsPrincipal user,
             int portfolioId, int positionId, int tradeId) =>
