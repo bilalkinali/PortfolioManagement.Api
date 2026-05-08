@@ -199,15 +199,13 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                     </TableRow>
 
                                     {isExpanded ? (
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableCell colSpan={8} className="px-6 pb-4 pt-0">
-                                                <div className="ml-16">
-                                                    <PositionTradesDataTable
-                                                        portfolioId={portfolio.id}
-                                                        position={position}
-                                                        onSuccess={onSuccess}
-                                                    />
-                                                </div>
+                                        <TableRow className="bg-muted/10 hover:bg-muted/10">
+                                            <TableCell colSpan={8} className="px-6 pb-5 pt-0">
+                                                <PositionTradesDataTable
+                                                    portfolioId={portfolio.id}
+                                                    position={position}
+                                                    onSuccess={onSuccess}
+                                                />
                                             </TableCell>
                                         </TableRow>
                                     ) : null}
