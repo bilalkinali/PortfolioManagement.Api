@@ -9,7 +9,7 @@ public static class EditTradeEndpoint
 {
     public static void MapEditTradeEndpoint(this WebApplication app)
     {
-        app.MapPut("/api/portfolios/{portfolioId}/positions/{positionId}/trades/{tradeId}", async (
+        app.MapPut("/api/portfolios/{portfolioId:int}/positions/{positionId:int}/trades/{tradeId:int}", async (
             EditTradeHandler editTradeHandler,
             EditTradeRequest request,
             IValidator<EditTradeRequest> validator,

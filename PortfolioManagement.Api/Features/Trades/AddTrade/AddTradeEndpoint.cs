@@ -10,7 +10,7 @@ public static class AddTradeEndpoint
 {
     public static void MapAddTradeEndpoint(this WebApplication app)
     {
-        app.MapPost("/api/portfolios/{portfolioId}/trades", async (
+        app.MapPost("/api/portfolios/{portfolioId:int}/trades", async (
             AddTradeHandler addTradeHandler,
             AddTradeRequest request,
             IValidator<AddTradeRequest> validator,
