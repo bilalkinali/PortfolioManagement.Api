@@ -6,6 +6,8 @@ public class Trade
 
     private Trade(int quantity, decimal price, DateOnly executedDate)
     {
+        Validate(quantity, price, executedDate);
+
         Quantity = quantity;
         Price = price;
         ExecutedDate = executedDate;
@@ -29,8 +31,33 @@ public class Trade
 
     public void Edit(int quantity, decimal price, DateOnly executedDate)
     {
+        Validate(quantity, price, executedDate);
+
         Quantity = quantity;
         Price = price;
         ExecutedDate = executedDate;
+    }
+
+    private static void Validate(int quantity, decimal price, DateOnly executedDate)
+    {
+        if (quantity == 0)
+        {
+            throw new ArgumentException("Trade quantity cannot be zero.", nameof(quantity));
+        }
+
+        if (price <= 0)
+        {
+            throw new ArgumentException("Trade price must be greater than zero.", nameof(price));
+        }
+
+        if (executedDate == default)
+        {
+            throw new ArgumentException("Trade executed date is required.", nameof(executedDate));
+        }
+
+        if (executedDate > DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            throw new ArgumentException("Trade executed date cannot be in the future.", nameof(executedDate));
+        }
     }
 }
