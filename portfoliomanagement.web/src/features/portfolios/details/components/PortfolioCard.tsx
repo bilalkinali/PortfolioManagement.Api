@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import AddTradeDialog from "@/features/trades/add/components/AddTradeDialog"
 import PositionTradesDataTable from "@/features/portfolios/details/components/PositionTradesDataTable"
 import { formatCurrency } from "@/shared/helpers/formatters"
+import { Wallet, LineChart, TrendingUp, TrendingDown } from 'lucide-react';
 
 type PortfolioCardProps = {
     portfolio: PortfolioResponse;
@@ -73,38 +74,49 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
             </CardHeader>
             
             <CardContent>
-                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3 mb-6 text-center">
-                    <div className="rounded-md bg-muted p-4">
-                        <h1 className="text-sm font-medium text-muted-foreground">Invested</h1>
-                        <p className="mt-2 text-xl font-semibold tabular-nums">
-                            {formatCurrency(invested)}
-                        </p>
+                <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-3 mb-6 text-center">
+                    <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
+                        <Wallet className="text-blue-600 absolute h-5 w-5 right-4 top-4" />
+                        <div>
+                            <h1 className="text-sm font-semibold">Invested</h1>
+                            <p className="mt-1 text-xl font-semibold tabular-nums">
+                                {formatCurrency(invested)}
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="rounded-md bg-muted p-4">
-                        <h1 className="text-sm font-medium text-muted-foreground">Market Value</h1>
-                        <p className="mt-2 text-xl font-semibold tabular-nums">
-                            {formatCurrency(marketValue)}
-                        </p>
+                    <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
+                        <LineChart className="text-blue-600 h-5 w-5 absolute right-4 top-4" />
+                        <div>
+                            <h1 className="text-sm font-semibold">Market Value</h1>
+                            <p className="mt-1 text-xl font-semibold tabular-nums">
+                                {formatCurrency(marketValue)}
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="rounded-md bg-muted p-4">
-                        <h1 className="text-sm font-medium text-muted-foreground">Profit / Loss</h1>
-                        <p className="mt-2 text-xl font-semibold tabular-nums">
-                            <span className={
-                                profitLoss >= 0
-                                    ? "text-green-600"
-                                    : "text-red-600"}>
-                                {formatCurrency(profitLoss)}
-                            </span>
-                        </p>
+                    <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
+                        {profitLoss >= 0 ? (
+                            <TrendingUp className="h-5 w-5 absolute right-4 top-4 text-green-600" />
+                        ) : (
+                            <TrendingDown className="h-5 w-5 absolute right-4 top-4 text-red-600" />
+                        )}                        
+                        <div>
+                            <h1 className="text-sm font-semibold">Profit / Loss</h1>
+                            <p className="mt-1 text-xl font-semibold tabular-nums">
+                                <span className={profitLoss >= 0 ? "text-green-600" : "text-red-600"}>
+                                    {formatCurrency(profitLoss)}
+                                </span>
+                            </p>
+                        </div>
                     </div>
+
                 </div>
                 <div className="mb-2 text-right">
                     <AddTradeDialog
                         portfolioId={portfolio.id}
                         onSuccess={onSuccess}
-                        buttonVariant="secondary"
+                        buttonVariant="default"
                         buttonSize="sm"
                         buttonText="Add Trade" />
                 </div>
