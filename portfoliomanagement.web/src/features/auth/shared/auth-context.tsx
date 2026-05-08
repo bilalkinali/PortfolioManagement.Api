@@ -30,8 +30,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [token, setToken] = useState<string | null>(() => getToken());
     const [user, setUser] = useState<AuthUser | null>(null);
 
+    function isTokenExpired(token: string): boolean {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const expiresAt = payload.exp * 1000;
+
+        return Date.now() >= expiresAt;
+    }
+
     useEffect(() => {
         if (!token || user) {
+            return;
+        }
+
+        if (isTokenExpired(token)) {
+            removeToken();
             return;
         }
 

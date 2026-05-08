@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import type { PortfolioTradeResponse } from '../../../portfolios/details/api/getPortfolio';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -21,7 +21,46 @@ type EditTradeFormProps = {
     onChangeState: (hasChanges: boolean) => void;
 }
 
-export default function AddTradeForm({
+type EditTradeFormErrors = {
+    quantity?: string;
+    price?: string;
+    executedDate?: string;
+}
+
+function validateTradeForm(quantity: string, price: string, executedDate: string): EditTradeFormErrors {
+    const errors: EditTradeFormErrors = {};
+    const quantityValue = Number(quantity);
+    const priceValue = Number(price);
+    const today = toDateOnlyString(new Date());
+
+    if (quantity.trim() === "") {
+        errors.quantity = "Quantity is required.";
+    } else if (!Number.isInteger(quantityValue)) {
+        errors.quantity = "Quantity must be a whole number.";
+    } else if (quantityValue === 0) {
+        errors.quantity = "Quantity cannot be zero.";
+    }
+
+    if (price.trim() === "") {
+        errors.price = "Price is required.";
+    } else if (!Number.isFinite(priceValue) || priceValue <= 0) {
+        errors.price = "Price must be greater than zero.";
+    }
+
+    if (!executedDate) {
+        errors.executedDate = "Date is required.";
+    } else if (executedDate > today) {
+        errors.executedDate = "Date cannot be in the future.";
+    }
+
+    return errors;
+}
+
+function hasValidationErrors(errors: EditTradeFormErrors) {
+    return Boolean(errors.quantity || errors.price || errors.executedDate);
+}
+
+export default function EditTradeForm({
     ref,
     trade,
     onSubmit,
@@ -32,6 +71,7 @@ export default function AddTradeForm({
     const [quantity, setQuantity] = useState(trade.quantity.toString());
     const [price, setPrice] = useState(trade.price.toString());
     const [executedDate, setExecutedDate] = useState(trade.executedDate);
+    const [validationErrors, setValidationErrors] = useState<EditTradeFormErrors>({});
     const [datePopoverOpen, setDatePopoverOpen] = useState(false)
 
     useEffect(() => {
@@ -46,6 +86,13 @@ export default function AddTradeForm({
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
+        const nextValidationErrors = validateTradeForm(quantity, price, executedDate);
+        setValidationErrors(nextValidationErrors);
+
+        if (hasValidationErrors(nextValidationErrors)) {
+            return;
+        }
+
         await onSubmit(
             Number(quantity),
             Number(price),
@@ -56,7 +103,7 @@ export default function AddTradeForm({
     return (
         <form ref={ref} onSubmit={handleSubmit}>
             <FieldGroup>
-                <Field>
+                <Field data-invalid={Boolean(validationErrors.quantity)}>
                     <FieldLabel>Quantity *</FieldLabel>
                     <Input
                         id="trade-quantity"
@@ -64,9 +111,14 @@ export default function AddTradeForm({
                         value={quantity}
                         placeholder="0"
                         disabled={isSubmitting}
-                        onChange={(e) => setQuantity(e.target.value)} />
+                        aria-invalid={Boolean(validationErrors.quantity)}
+                        onChange={(e) => {
+                            setQuantity(e.target.value)
+                            setValidationErrors((current) => ({ ...current, quantity: undefined }))
+                        }} />
+                    <FieldError>{validationErrors.quantity}</FieldError>
                 </Field>
-                <Field>
+                <Field data-invalid={Boolean(validationErrors.price)}>
                     <FieldLabel>Price *</FieldLabel>
                     <Input
                         id="trade-price"
@@ -76,9 +128,14 @@ export default function AddTradeForm({
                         placeholder="0.00"
                         value={price}
                         disabled={isSubmitting}
-                        onChange={(e) => setPrice(e.target.value)} />
+                        aria-invalid={Boolean(validationErrors.price)}
+                        onChange={(e) => {
+                            setPrice(e.target.value)
+                            setValidationErrors((current) => ({ ...current, price: undefined }))
+                        }} />
+                    <FieldError>{validationErrors.price}</FieldError>
                 </Field>
-                <Field>
+                <Field data-invalid={Boolean(validationErrors.executedDate)}>
                     <FieldLabel>Date *</FieldLabel>
 
                     <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
@@ -89,6 +146,7 @@ export default function AddTradeForm({
                                 variant="outline"
                                 disabled={isSubmitting}
                                 className="w-full justify-start text-left font-normal"
+                                aria-invalid={Boolean(validationErrors.executedDate)}
                             >
                                 <CalendarIcon className="mr-2 size-4" />
 
@@ -107,11 +165,13 @@ export default function AddTradeForm({
                                     }
 
                                     setExecutedDate(toDateOnlyString(date))
+                                    setValidationErrors((current) => ({ ...current, executedDate: undefined }))
                                     setDatePopoverOpen(false)
                                 }}
                             />
                         </PopoverContent>
                     </Popover>
+                    <FieldError>{validationErrors.executedDate}</FieldError>
                 </Field>
 
                 {errorMessage && <p className="text-destructive text-sm">{errorMessage}</p>}

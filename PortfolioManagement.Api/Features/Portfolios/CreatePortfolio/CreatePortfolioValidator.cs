@@ -10,9 +10,9 @@ public class CreatePortfolioValidator : AbstractValidator<CreatePortfolioRequest
             .NotEmpty()
             .Must(name => !string.IsNullOrWhiteSpace(name))
             .WithMessage("'{PropertyName}' must not be empty.")
-            .MaximumLength(100);
+            .MaximumLength(50);
 
         RuleFor(x => x.Description)
-            .MaximumLength(500);
+            .MaximumLength(100);
     }
 }

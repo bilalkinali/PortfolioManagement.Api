@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
 import { ChevronsUpDown, CalendarIcon } from "lucide-react"
 import { searchInstruments, type SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
@@ -33,6 +33,55 @@ type AddTradeFormProps = {
     ) => Promise<void>;
 }
 
+type AddTradeFormErrors = {
+    instrument?: string;
+    quantity?: string;
+    price?: string;
+    executedDate?: string;
+}
+
+function validateTradeForm(
+    selectedInstrument: SearchInstrumentResult | null,
+    quantity: string,
+    price: string,
+    executedDate: string
+): AddTradeFormErrors {
+    const errors: AddTradeFormErrors = {};
+    const quantityValue = Number(quantity);
+    const priceValue = Number(price);
+    const today = toDateOnlyString(new Date());
+
+    if (!selectedInstrument) {
+        errors.instrument = "Instrument is required.";
+    }
+
+    if (quantity.trim() === "") {
+        errors.quantity = "Quantity is required.";
+    } else if (!Number.isInteger(quantityValue)) {
+        errors.quantity = "Quantity must be a whole number.";
+    } else if (quantityValue === 0) {
+        errors.quantity = "Quantity cannot be zero.";
+    }
+
+    if (price.trim() === "") {
+        errors.price = "Price is required.";
+    } else if (!Number.isFinite(priceValue) || priceValue <= 0) {
+        errors.price = "Price must be greater than zero.";
+    }
+
+    if (!executedDate) {
+        errors.executedDate = "Date is required.";
+    } else if (executedDate > today) {
+        errors.executedDate = "Date cannot be in the future.";
+    }
+
+    return errors;
+}
+
+function hasValidationErrors(errors: AddTradeFormErrors) {
+    return Boolean(errors.instrument || errors.quantity || errors.price || errors.executedDate);
+}
+
 export default function AddTradeForm({
     ref,
     onSubmit,
@@ -46,13 +95,17 @@ export default function AddTradeForm({
     const [quantity, setQuantity] = useState("");
     const [price, setPrice] = useState("");
     const [executedDate, setExecutedDate] = useState("");
+    const [validationErrors, setValidationErrors] = useState<AddTradeFormErrors>({});
     const [instrumentPopoverOpen, setInstrumentPopoverOpen] = useState(false);
     const [datePopoverOpen, setDatePopoverOpen] = useState(false);
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        if (!selectedInstrument) {
+        const nextValidationErrors = validateTradeForm(selectedInstrument, quantity, price, executedDate);
+        setValidationErrors(nextValidationErrors);
+
+        if (hasValidationErrors(nextValidationErrors) || !selectedInstrument) {
             return;
         }
 
@@ -113,7 +166,7 @@ export default function AddTradeForm({
     return (
         <form ref={ref} onSubmit={handleSubmit}>
             <FieldGroup>
-                <Field>
+                <Field data-invalid={Boolean(validationErrors.instrument)}>
                     <FieldLabel>Symbol *</FieldLabel>
                     <Popover
                         open={instrumentPopoverOpen}
@@ -133,6 +186,7 @@ export default function AddTradeForm({
                                 variant="outline"
                                 disabled={isSubmitting}
                                 className="w-full justify-between font-normal"
+                                aria-invalid={Boolean(validationErrors.instrument)}
                             >
                                 {selectedInstrument
                                     ? 
@@ -197,6 +251,7 @@ export default function AddTradeForm({
                                                 value={`${instrument.symbol} ${instrument.name}`}
                                                 onSelect={() => {
                                                     setSelectedInstrument(instrument);
+                                                    setValidationErrors((current) => ({ ...current, instrument: undefined }));
                                                     setInstrumentSearch("");
                                                     setInstrumentPopoverOpen(false);
                                                 }}
@@ -229,9 +284,10 @@ export default function AddTradeForm({
                             </Command>
                         </PopoverContent>
                     </Popover>
+                    <FieldError>{validationErrors.instrument}</FieldError>
                     
                 </Field>
-                <Field>
+                <Field data-invalid={Boolean(validationErrors.quantity)}>
                     <FieldLabel>Quantity *</FieldLabel>
                     <Input
                         id="trade-quantity"
@@ -239,9 +295,14 @@ export default function AddTradeForm({
                         value={quantity}
                         placeholder="0"
                         disabled={isSubmitting}
-                        onChange={(e) => setQuantity(e.target.value)} />
+                        aria-invalid={Boolean(validationErrors.quantity)}
+                        onChange={(e) => {
+                            setQuantity(e.target.value)
+                            setValidationErrors((current) => ({ ...current, quantity: undefined }))
+                        }} />
+                    <FieldError>{validationErrors.quantity}</FieldError>
                 </Field>
-                <Field>
+                <Field data-invalid={Boolean(validationErrors.price)}>
                     <FieldLabel>Price *</FieldLabel>
                     <Input
                         id="trade-price"
@@ -251,9 +312,14 @@ export default function AddTradeForm({
                         placeholder="0.00"
                         value={price}
                         disabled={isSubmitting}
-                        onChange={(e) => setPrice(e.target.value)} />
+                        aria-invalid={Boolean(validationErrors.price)}
+                        onChange={(e) => {
+                            setPrice(e.target.value)
+                            setValidationErrors((current) => ({ ...current, price: undefined }))
+                        }} />
+                    <FieldError>{validationErrors.price}</FieldError>
                 </Field>
-                <Field>
+                <Field data-invalid={Boolean(validationErrors.executedDate)}>
                     <FieldLabel>Date *</FieldLabel>
 
                     <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
@@ -264,6 +330,7 @@ export default function AddTradeForm({
                                 variant="outline"
                                 disabled={isSubmitting}
                                 className="w-full justify-start text-left font-normal"
+                                aria-invalid={Boolean(validationErrors.executedDate)}
                             >
                                 <CalendarIcon className="mr-2 size-4" />
 
@@ -282,11 +349,13 @@ export default function AddTradeForm({
                                     }
 
                                     setExecutedDate(toDateOnlyString(date))
+                                    setValidationErrors((current) => ({ ...current, executedDate: undefined }))
                                     setDatePopoverOpen(false)
                                 }}
                             />
                         </PopoverContent>
                     </Popover>
+                    <FieldError>{validationErrors.executedDate}</FieldError>
                 </Field>
 
                 {errorMessage && <p className="text-destructive text-sm">{errorMessage}</p>}
