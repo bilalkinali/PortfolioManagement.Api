@@ -28,6 +28,10 @@ public static class EditTradeEndpoint
                 await editTradeHandler.HandleAsync(request, portfolioId, positionId, tradeId, userId);
                 return Results.NoContent();
             }
+            catch (KeyNotFoundException)
+            {
+                return Results.NotFound();
+            }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
@@ -56,11 +60,11 @@ public class EditTradeHandler(PortfolioDbContext db)
 
         if (portfolio is null)
         {
-            throw new InvalidOperationException("Portfolio not found");
+            throw new KeyNotFoundException("Portfolio not found");
         }
 
         portfolio.EditTrade(positionId, tradeId, request.Quantity, request.Price, request.ExecutedDate, userId);
-
+        
         await db.SaveChangesAsync();
     }
 }

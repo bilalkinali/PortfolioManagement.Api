@@ -2,10 +2,11 @@ import { useState, useEffect, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
-import { ChevronsUpDown } from "lucide-react"
+import { ChevronsUpDown, CalendarIcon } from "lucide-react"
 import { searchInstruments, type SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
-import { formatCurrency, formatExchangeName } from "@/shared/helpers/formatters"
+import { formatCurrency, formatExchangeName, fromDateOnlyString, toDateOnlyString } from "@/shared/helpers/formatters"
 import { Spinner } from "@/components/ui/spinner"
+import { Calendar } from "@/components/ui/calendar"
 import {
     Command,
     CommandEmpty,
@@ -46,6 +47,7 @@ export default function AddTradeForm({
     const [price, setPrice] = useState("");
     const [executedDate, setExecutedDate] = useState("");
     const [instrumentPopoverOpen, setInstrumentPopoverOpen] = useState(false);
+    const [datePopoverOpen, setDatePopoverOpen] = useState(false);
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -253,13 +255,38 @@ export default function AddTradeForm({
                 </Field>
                 <Field>
                     <FieldLabel>Date *</FieldLabel>
-                    <Input
-                        id="trade-date"
-                        type="date"
-                        value={executedDate}
-                        placeholder="2018-08-18"
-                        disabled={isSubmitting}
-                        onChange={(e) => setExecutedDate(e.target.value)} />
+
+                    <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                id="trade-date"
+                                type="button"
+                                variant="outline"
+                                disabled={isSubmitting}
+                                className="w-full justify-start text-left font-normal"
+                            >
+                                <CalendarIcon className="mr-2 size-4" />
+
+                                {executedDate || <span className="text-muted-foreground">YYYY-MM-DD</span>}
+                            </Button>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar className="rounded-lg border"
+                                mode="single"
+                                captionLayout="dropdown"
+                                selected={fromDateOnlyString(executedDate)}
+                                onSelect={(date) => {
+                                    if (!date) {
+                                        return
+                                    }
+
+                                    setExecutedDate(toDateOnlyString(date))
+                                    setDatePopoverOpen(false)
+                                }}
+                            />
+                        </PopoverContent>
+                    </Popover>
                 </Field>
 
                 {errorMessage && <p className="text-destructive text-sm">{errorMessage}</p>}

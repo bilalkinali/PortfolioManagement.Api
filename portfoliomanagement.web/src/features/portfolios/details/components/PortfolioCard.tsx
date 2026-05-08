@@ -67,7 +67,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                 </div>
                 <CardAction>
                     <Badge variant="secondary">
-                        {new Date(portfolio.createdAt).toDateString()}
+                        {dateFormatter.format(new Date(portfolio.createdAt))}
                     </Badge>                    
                 </CardAction>
             </CardHeader>
