@@ -6,8 +6,6 @@ public class Position
     
     private Position(int instrumentId)
     {
-        ValidateInstrumentId(instrumentId);
-
         InstrumentId = instrumentId;
     }
 
@@ -51,8 +49,6 @@ public class Position
 
     public void EditTrade(int tradeId, int quantity, decimal price, DateOnly executedDate)
     {
-        ValidateTradeId(tradeId);
-
         var trade = GetTrade(tradeId);
 
         trade.Edit(quantity, price, executedDate);
@@ -60,8 +56,6 @@ public class Position
 
     public void DeleteTrade(int tradeId)
     {
-        ValidateTradeId(tradeId);
-
         var trade = GetTrade(tradeId);
 
         _trades.Remove(trade);
@@ -77,21 +71,5 @@ public class Position
         }
 
         return trade;
-    }
-
-    private static void ValidateInstrumentId(int instrumentId)
-    {
-        if (instrumentId <= 0)
-        {
-            throw new ArgumentException("Instrument id must be greater than zero.", nameof(instrumentId));
-        }
-    }
-
-    private static void ValidateTradeId(int tradeId)
-    {
-        if (tradeId <= 0)
-        {
-            throw new ArgumentException("Trade id must be greater than zero.", nameof(tradeId));
-        }
     }
 }

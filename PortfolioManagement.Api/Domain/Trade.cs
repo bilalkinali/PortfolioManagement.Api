@@ -50,11 +50,6 @@ public class Trade
             throw new ArgumentException("Trade price must be greater than zero.", nameof(price));
         }
 
-        if (executedDate == default)
-        {
-            throw new ArgumentException("Trade executed date is required.", nameof(executedDate));
-        }
-
         if (executedDate > DateOnly.FromDateTime(DateTime.UtcNow))
         {
             throw new ArgumentException("Trade executed date cannot be in the future.", nameof(executedDate));

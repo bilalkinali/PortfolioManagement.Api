@@ -41,14 +41,17 @@ public static class DependencyInjection
 
         // Portfolio
         services.AddScoped<CreatePortfolioHandler>();
+        services.AddScoped<IValidator<CreatePortfolioRequest>, CreatePortfolioValidator>();
         services.AddScoped<DeletePortfolioHandler>();
         services.AddScoped<GetPortfolioQuery>();
         services.AddScoped<GetPortfoliosQuery>();
 
         // Trade
         services.AddScoped<AddTradeHandler>();
+        services.AddScoped<IValidator<AddTradeRequest>, AddTradeValidator>();
         services.AddScoped<DeleteTradeHandler>();
         services.AddScoped<EditTradeHandler>();
+        services.AddScoped<IValidator<EditTradeRequest>, EditTradeValidator>();
 
         // Instruments
         services.AddScoped<SearchInstrumentsHandler>();

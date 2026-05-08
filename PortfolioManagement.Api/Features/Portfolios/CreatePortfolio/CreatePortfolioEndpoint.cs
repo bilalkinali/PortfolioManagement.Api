@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
+using FluentValidation;
 
 namespace PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 
@@ -7,10 +8,18 @@ public static class CreatePortfolioEndpoint
     public static void MapCreatePortfolioEndpoint(this WebApplication app)
     {
         app.MapPost("/api/portfolios", async (
-            CreatePortfolioHandler createPortfolioHandler, 
+            CreatePortfolioHandler createPortfolioHandler,
             CreatePortfolioRequest request,
+            IValidator<CreatePortfolioRequest> validator,
             ClaimsPrincipal user) =>
         {
+            var validationResult = await validator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
             try
             {
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -21,7 +30,7 @@ public static class CreatePortfolioEndpoint
                 }
 
                 var response = await createPortfolioHandler.Handle(request, userId);
-                
+
                 return Results.Created($"/api/portfolios/{response.Id}", response);
             }
             catch (Exception ex)
