@@ -44,6 +44,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (isTokenExpired(token)) {
             removeToken();
+            setToken(null);
+            setUser(null);
             return;
         }
 
