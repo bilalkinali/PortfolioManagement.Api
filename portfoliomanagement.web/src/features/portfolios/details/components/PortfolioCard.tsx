@@ -163,7 +163,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                         </TableCell>
 
                                         <TableCell className="px-6">
-                                            <div className="flex flex-col gap-1">
+                                            <div className="flex flex-col">
                                                 <span className="font-semibold">{position.symbol}</span>
                                                 <span className="text-xs text-muted-foreground">
                                                     {position.name}
