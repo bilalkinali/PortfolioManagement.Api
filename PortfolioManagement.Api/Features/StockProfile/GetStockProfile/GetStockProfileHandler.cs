@@ -7,7 +7,7 @@ namespace PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
 
 public sealed class GetStockProfileHandler
 {
-    private readonly PortfolioDbContext _dbContext;
+    private readonly PortfolioDbContext _db;
     private readonly HttpClient _httpClient;
     private readonly ILogger<GetStockProfileHandler> _logger;
 
@@ -17,11 +17,11 @@ public sealed class GetStockProfileHandler
     };
 
     public GetStockProfileHandler(
-        PortfolioDbContext dbContext,
+        PortfolioDbContext db,
         IHttpClientFactory httpClientFactory,
         ILogger<GetStockProfileHandler> logger)
     {
-        _dbContext = dbContext;
+        _db = db;
         _httpClient = httpClientFactory.CreateClient("Massive");
         _logger = logger;
     }
@@ -30,7 +30,7 @@ public sealed class GetStockProfileHandler
     {
         var ticker = request.Ticker.Trim().ToUpperInvariant();
 
-        var instrument = await _dbContext.Instruments
+        var instrument = await _db.Instruments
             .FirstOrDefaultAsync(x => x.Symbol == ticker);
 
         if (instrument is null)
@@ -38,13 +38,13 @@ public sealed class GetStockProfileHandler
             return null;
         }
 
-        var profile = await _dbContext.StockProfiles
-            .FirstOrDefaultAsync(x => x.InstrumentId == instrument.Id);
+        //var profile = await _db.StockProfiles
+        //    .FirstOrDefaultAsync(x => x.InstrumentId == instrument.Id);
 
-        if (profile is not null)
-        {
-            return MapToResponse(profile);
-        }
+        //if (profile is not null)
+        //{
+        //    return MapToResponse(profile);
+        //}
 
         var url = request.Date is not null
             ? $"/v3/reference/tickers/{ticker}?date={Uri.EscapeDataString(request.Date)}"
@@ -106,8 +106,8 @@ public sealed class GetStockProfileHandler
             logoUrl: massiveTickerInfo.Branding?.LogoUrl,
             delistedUtc: massiveTickerInfo.DelistedUtc);
 
-        _dbContext.StockProfiles.Add(newProfile);
-        await _dbContext.SaveChangesAsync();
+        //_db.StockProfiles.Add(newProfile);
+        //await _db.SaveChangesAsync();
 
         return MapToResponse(newProfile);
     }

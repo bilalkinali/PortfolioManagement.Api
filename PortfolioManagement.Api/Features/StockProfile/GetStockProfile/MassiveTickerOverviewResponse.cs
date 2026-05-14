@@ -2,59 +2,48 @@ using System.Text.Json.Serialization;
 
 namespace PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
 
-public sealed class MassiveTickerOverviewResponse
+public sealed record MassiveTickerOverviewResponse(
+    [property: JsonPropertyName("request_id")] string? RequestId,
+    [property: JsonPropertyName("count")] int? Count,
+    [property: JsonPropertyName("results")] MassiveTickerOverviewResponse.TickerInfo? TickerData,
+    [property: JsonPropertyName("status")] string? Status)
 {
-    [property: JsonPropertyName("request_id")]
-    public string? RequestId { get; set; }
-    [property: JsonPropertyName("count")]
-    public int Count { get; set; }
-    [property: JsonPropertyName("results")]
-    public TickerInfo? TickerData { get; set; }
-    [property: JsonPropertyName("status")]
-    public string? Status { get; set; }
+    public sealed record TickerInfo(
+        [property: JsonPropertyName("active")] bool Active,
+        [property: JsonPropertyName("cik")] string? Cik,
+        [property: JsonPropertyName("composite_figi")] string? CompositeFigi,
+        [property: JsonPropertyName("currency_name")] string? CurrencyName,
+        [property: JsonPropertyName("description")] string? Description,
+        [property: JsonPropertyName("homepage_url")] string? HomepageUrl,
+        [property: JsonPropertyName("list_date")] string? ListDate,
+        [property: JsonPropertyName("locale")] string? Locale,
+        [property: JsonPropertyName("market")] string? Market,
+        [property: JsonPropertyName("market_cap")] decimal? MarketCap,
+        [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("phone_number")] string? PhoneNumber,
+        [property: JsonPropertyName("primary_exchange")] string? PrimaryExchange,
+        [property: JsonPropertyName("round_lot")] long? RoundLot,
+        [property: JsonPropertyName("share_class_figi")] string? ShareClassFigi,
+        [property: JsonPropertyName("share_class_shares_outstanding")] long? ShareClassSharesOutstanding,
+        [property: JsonPropertyName("sic_code")] string? SicCode,
+        [property: JsonPropertyName("sic_description")] string? SicDescription,
+        [property: JsonPropertyName("ticker")] string? Ticker,
+        [property: JsonPropertyName("ticker_root")] string? TickerRoot,
+        [property: JsonPropertyName("ticker_suffix")] string? TickerSuffix,
+        [property: JsonPropertyName("total_employees")] int? TotalEmployees,
+        [property: JsonPropertyName("type")] string? Type,
+        [property: JsonPropertyName("weighted_shares_outstanding")] long? WeightedSharesOutstanding,
+        [property: JsonPropertyName("address")] Address? Address,
+        [property: JsonPropertyName("branding")] Branding? Branding,
+        [property: JsonPropertyName("delisted_utc")] string? DelistedUtc);
 
-    public sealed class TickerInfo
-    {
-        public bool Active { get; set; }
-        public string? Cik { get; set; }
-        public string? CompositeFigi { get; set; }
-        public string? CurrencyName { get; set; }
-        public string? Description { get; set; }
-        public string? HomepageUrl { get; set; }
-        public string? ListDate { get; set; }
-        public string? Locale { get; set; }
-        public string? Market { get; set; }
-        public long? MarketCap { get; set; }
-        public string? Name { get; set; }
-        public string? PhoneNumber { get; set; }
-        public string? PrimaryExchange { get; set; }
-        public decimal? RoundLot { get; set; }
-        public string? ShareClassFigi { get; set; }
-        public long? ShareClassSharesOutstanding { get; set; }
-        public string? SicCode { get; set; }
-        public string? SicDescription { get; set; }
-        public string? Ticker { get; set; }
-        public string? TickerRoot { get; set; }
-        public string? TickerSuffix { get; set; }
-        public int? TotalEmployees { get; set; }
-        public string? Type { get; set; }
-        public long? WeightedSharesOutstanding { get; set; }
-        public Address? Address { get; set; }
-        public Branding? Branding { get; set; }
-        public string? DelistedUtc { get; set; }
-    }
+    public sealed record Address(
+        [property: JsonPropertyName("address1")] string? Address1,
+        [property: JsonPropertyName("city")] string? City,
+        [property: JsonPropertyName("state")] string? State,
+        [property: JsonPropertyName("postal_code")] string? PostalCode);
 
-    public sealed class Address
-    {
-        public string? Address1 { get; set; }
-        public string? City { get; set; }
-        public string? State { get; set; }
-        public string? PostalCode { get; set; }
-    }
-
-    public sealed class Branding
-    {
-        public string? IconUrl { get; set; }
-        public string? LogoUrl { get; set; }
-    }
+    public sealed record Branding(
+        [property: JsonPropertyName("icon_url")] string? IconUrl,
+        [property: JsonPropertyName("logo_url")] string? LogoUrl);
 }

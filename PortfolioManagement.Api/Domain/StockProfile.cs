@@ -7,8 +7,8 @@ public class StockProfile
     private StockProfile(
         int instrumentId, string ticker, bool active, string? cik, string? compositeFigi,
         string? currencyName, string? description, string? homepageUrl, string? listDate,
-        string? locale, string? market, long? marketCap, string? name, string? phoneNumber,
-        string? primaryExchange, decimal? roundLot, string? shareClassFigi,
+        string? locale, string? market, decimal? marketCap, string? name, string? phoneNumber,
+        string? primaryExchange, long? roundLot, string? shareClassFigi,
         long? shareClassSharesOutstanding, string? sicCode, string? sicDescription,
         string? tickerRoot, string? tickerSuffix, int? totalEmployees, string? type,
         long? weightedSharesOutstanding, string? addressLine1, string? city,
@@ -62,11 +62,11 @@ public class StockProfile
     public string? ListDate { get; private set; }
     public string? Locale { get; private set; }
     public string? Market { get; private set; }
-    public long? MarketCap { get; private set; }
+    public decimal? MarketCap { get; private set; }
     public string? Name { get; private set; }
     public string? PhoneNumber { get; private set; }
     public string? PrimaryExchange { get; private set; }
-    public decimal? RoundLot { get; private set; }
+    public long? RoundLot { get; private set; }
     public string? ShareClassFigi { get; private set; }
     public long? ShareClassSharesOutstanding { get; private set; }
     public string? SicCode { get; private set; }
@@ -88,8 +88,8 @@ public class StockProfile
         int instrumentId,
         string ticker, bool active, string? cik, string? compositeFigi,
         string? currencyName, string? description, string? homepageUrl, string? listDate,
-        string? locale, string? market, long? marketCap, string? name, string? phoneNumber,
-        string? primaryExchange, decimal? roundLot, string? shareClassFigi,
+        string? locale, string? market, decimal? marketCap, string? name, string? phoneNumber,
+        string? primaryExchange, long? roundLot, string? shareClassFigi,
         long? shareClassSharesOutstanding, string? sicCode, string? sicDescription,
         string? tickerRoot, string? tickerSuffix, int? totalEmployees, string? type,
         long? weightedSharesOutstanding, string? addressLine1, string? city,

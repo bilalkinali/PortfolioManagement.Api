@@ -2,6 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
 
+public sealed record GetStockProfileApiResponse(
+    [property: JsonPropertyName("request_id")] string? RequestId,
+    [property: JsonPropertyName("results")] GetStockProfileResponse? Results,
+    [property: JsonPropertyName("status")] string? Status,
+    [property: JsonPropertyName("count")] int? Count);
+
 public sealed record GetStockProfileResponse(
     [property: JsonPropertyName("active")] bool Active,
     [property: JsonPropertyName("cik")] string? Cik,
@@ -12,11 +18,11 @@ public sealed record GetStockProfileResponse(
     [property: JsonPropertyName("list_date")] string? ListDate,
     [property: JsonPropertyName("locale")] string? Locale,
     [property: JsonPropertyName("market")] string? Market,
-    [property: JsonPropertyName("market_cap")] long? MarketCap,
+    [property: JsonPropertyName("market_cap")] decimal? MarketCap,
     [property: JsonPropertyName("name")] string? Name,
     [property: JsonPropertyName("phone_number")] string? PhoneNumber,
     [property: JsonPropertyName("primary_exchange")] string? PrimaryExchange,
-    [property: JsonPropertyName("round_lot")] decimal? RoundLot,
+    [property: JsonPropertyName("round_lot")] long? RoundLot,
     [property: JsonPropertyName("share_class_figi")] string? ShareClassFigi,
     [property: JsonPropertyName("share_class_shares_outstanding")] long? ShareClassSharesOutstanding,
     [property: JsonPropertyName("sic_code")] string? SicCode,

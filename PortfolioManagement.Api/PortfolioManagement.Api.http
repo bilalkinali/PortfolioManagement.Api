@@ -56,3 +56,10 @@ Authorization: Bearer {{token}}
 GET {{PortfolioManagement.Api_HostAddress}}/api/portfolios
 Accept: application/json
 Authorization: Bearer {{token}}
+
+###
+
+@ticker = AAPL
+
+GET {{PortfolioManagement.Api_HostAddress}}/api/instruments/{{ticker}}/profile
+Accept: application/json

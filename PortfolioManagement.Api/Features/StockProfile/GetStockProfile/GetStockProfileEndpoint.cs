@@ -26,7 +26,7 @@ public static class GetStockProfileEndpoint
                     ? Results.NotFound($"No profile found for {request.Ticker}.")
                     : Results.Ok(result);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Results.InternalServerError("Server is unreachable at the moment.");
             }
