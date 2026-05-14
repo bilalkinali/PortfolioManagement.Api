@@ -11,6 +11,7 @@ using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
+using PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Shared.Events;
@@ -62,6 +63,10 @@ public static class DependencyInjection
         // Stock History
         services.AddScoped<GetStockHistoryHandler>();
         services.AddScoped<IValidator<GetStockHistoryRequest>, GetStockHistoryValidator>();
+
+        // Stock Profile
+        services.AddScoped<GetStockProfileHandler>();
+        services.AddScoped<IValidator<GetStockProfileRequest>, GetStockProfileValidator>();
         services.AddHttpClient("Massive", (sp, client) =>
         {
             var config = sp.GetRequiredService<IConfiguration>();

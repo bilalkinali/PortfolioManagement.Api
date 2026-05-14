@@ -23,7 +23,7 @@ public static class RegisterEndpoint
                 var response = await registerHandler.Handle(request);
                 return Results.Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Results.InternalServerError("Server is unreachable at the moment.");
             }
