@@ -9,7 +9,8 @@ public static class GetStockProfileEndpoint
         app.MapGet("/api/instruments/{ticker}/profile", async (
             [AsParameters] GetStockProfileRequest request,
             IValidator<GetStockProfileRequest> validator,
-            GetStockProfileHandler getStockProfileHandler) =>
+            GetStockProfileHandler getStockProfileHandler,
+            CancellationToken cancellationToken) =>
         {
             var validationResult = await validator.ValidateAsync(request);
 
@@ -20,7 +21,7 @@ public static class GetStockProfileEndpoint
 
             try
             {
-                var result = await getStockProfileHandler.Handle(request);
+                var result = await getStockProfileHandler.Handle(request, cancellationToken);
 
                 return result is null
                     ? Results.NotFound($"No profile found for {request.Ticker}.")

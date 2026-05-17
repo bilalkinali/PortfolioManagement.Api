@@ -58,6 +58,11 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
                 .WithOne()
                 .HasForeignKey<StockProfile>(x => x.InstrumentId)
                 .IsRequired();
+
+            entity.HasIndex(x => x.InstrumentId)
+                .IsUnique();
+
+            entity.HasIndex(x => x.Ticker);
         });
 
         //builder.Entity<Portfolio>(entity =>

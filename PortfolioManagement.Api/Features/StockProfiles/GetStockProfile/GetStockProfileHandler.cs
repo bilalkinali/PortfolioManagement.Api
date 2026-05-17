@@ -26,7 +26,7 @@ public sealed class GetStockProfileHandler
         _logger = logger;
     }
 
-    public async Task<GetStockProfileResponse?> Handle(GetStockProfileRequest request)
+    public async Task<GetStockProfileResponse?> Handle(GetStockProfileRequest request, CancellationToken cancellationToken)
     {
         var ticker = request.Ticker.Trim().ToUpperInvariant();
 
@@ -38,13 +38,13 @@ public sealed class GetStockProfileHandler
             return null;
         }
 
-        //var profile = await _db.StockProfiles
-        //    .FirstOrDefaultAsync(x => x.InstrumentId == instrument.Id);
+        var profile = await _db.StockProfiles
+            .FirstOrDefaultAsync(x => x.InstrumentId == instrument.Id);
 
-        //if (profile is not null)
-        //{
-        //    return MapToResponse(profile);
-        //}
+        if (profile is not null)
+        {
+            return MapToResponse(profile);
+        }
 
         var url = request.Date is not null
             ? $"/v3/reference/tickers/{ticker}?date={Uri.EscapeDataString(request.Date)}"
@@ -52,7 +52,7 @@ public sealed class GetStockProfileHandler
 
         _logger.LogInformation("Calling Massive API for ticker profile: {Ticker}", ticker);
 
-        using var response = await _httpClient.GetAsync(url);
+        using var response = await _httpClient.GetAsync(url, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -106,8 +106,8 @@ public sealed class GetStockProfileHandler
             logoUrl: massiveTickerInfo.Branding?.LogoUrl,
             delistedUtc: massiveTickerInfo.DelistedUtc);
 
-        //_db.StockProfiles.Add(newProfile);
-        //await _db.SaveChangesAsync();
+        _db.StockProfiles.Add(newProfile);
+        await _db.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(newProfile);
     }
