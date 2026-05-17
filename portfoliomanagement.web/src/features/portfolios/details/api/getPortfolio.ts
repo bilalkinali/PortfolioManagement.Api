@@ -43,17 +43,5 @@ export async function getPortfolio(portfolioId: number): Promise<PortfolioRespon
         throw new Error("Failed to fetch portfolio");
     }
 
-    const portfolio = await response.json() as PortfolioResponse;
-
-    return {
-        ...portfolio,
-        description: portfolio.description ?? null,
-        positions: portfolio.positions.map((position) => ({
-            ...position,
-            closeDate: position.closeDate ?? null,
-            currency: position.currency ?? null,
-            exchange: position.exchange ?? null,
-            trades: position.trades,
-        })),
-    };
+    return await response.json() as PortfolioResponse;
 }

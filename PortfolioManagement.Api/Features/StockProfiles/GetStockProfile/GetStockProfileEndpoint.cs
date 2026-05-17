@@ -6,7 +6,7 @@ public static class GetStockProfileEndpoint
 {
     public static void MapGetStockProfileEndpoint(this WebApplication app)
     {
-        app.MapGet("/api/instruments/{ticker}/profile", async (
+        app.MapGet("/api/instruments/{ticker}", async (
             [AsParameters] GetStockProfileRequest request,
             IValidator<GetStockProfileRequest> validator,
             GetStockProfileHandler getStockProfileHandler,
