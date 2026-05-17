@@ -16,6 +16,7 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
     public DbSet<Trade> Trades { get; set; }
     public DbSet<Instrument> Instruments { get; set; }
     public DbSet<MarketDataBar> MarketDataBars { get; set; }
+    public DbSet<StockProfile> StockProfiles { get; set; }
 
     // https://learn.microsoft.com/en-us/aspnet/core/security/authentication/customize-identity-model?view=aspnetcore-10.0
 
@@ -51,6 +52,19 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
             entity.Property(x => x.Close).HasPrecision(18, 8);
         });
 
+        builder.Entity<StockProfile>(entity =>
+        {
+            entity.HasOne(x => x.Instrument)
+                .WithOne()
+                .HasForeignKey<StockProfile>(x => x.InstrumentId)
+                .IsRequired();
+
+            entity.HasIndex(x => x.InstrumentId)
+                .IsUnique();
+
+            entity.HasIndex(x => x.Ticker);
+        });
+
         //builder.Entity<Portfolio>(entity =>
         //{
         //    entity.HasKey(x => x.Id);
@@ -63,5 +77,7 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
         //    entity.Navigation(x => x.Positions)
         //        .UsePropertyAccessMode(PropertyAccessMode.Field);
         //});
+
+        //dotnet ef migrations add MigrationName --context PortfolioDbContext --output-dir Infrastructure/Migrations
     }
 }

@@ -28,7 +28,7 @@ public static class LoginEndpoint
                     ? Results.Unauthorized()
                     : Results.Ok(result);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Results.InternalServerError("Server is unreachable at the moment.");
             }

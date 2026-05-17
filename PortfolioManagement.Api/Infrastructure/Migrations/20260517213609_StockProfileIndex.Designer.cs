@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortfolioManagement.Api.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PortfolioManagement.Api.Infrastructure.Persistence;
 namespace PortfolioManagement.Api.Infrastructure.Migrations
 {
     [DbContext(typeof(PortfolioDbContext))]
-    partial class PortfolioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260517213609_StockProfileIndex")]
+    partial class StockProfileIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -337,9 +340,6 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
 
                     b.Property<int>("InstrumentId")
                         .HasColumnType("integer");
-
-                    b.Property<DateOnly>("LastSyncedAtUtc")
-                        .HasColumnType("date");
 
                     b.Property<string>("ListDate")
                         .HasColumnType("text");
