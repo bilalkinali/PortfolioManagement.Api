@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
+namespace PortfolioManagement.Api.Features.StockProfiles.GetStockProfile.Proxy;
 
 public sealed record MassiveTickerOverviewResponse(
     [property: JsonPropertyName("request_id")] string? RequestId,

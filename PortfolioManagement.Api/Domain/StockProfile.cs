@@ -13,7 +13,7 @@ public class StockProfile
         string? tickerRoot, string? tickerSuffix, int? totalEmployees, string? type,
         long? weightedSharesOutstanding, string? addressLine1, string? city,
         string? state, string? postalCode, string? iconUrl, string? logoUrl,
-        string? delistedUtc)
+        string? delistedUtc, DateOnly lastSyncedAtUtc)
     {
         InstrumentId = instrumentId;
         Ticker = ticker.Trim().ToUpperInvariant();
@@ -47,6 +47,7 @@ public class StockProfile
         IconUrl = iconUrl;
         LogoUrl = logoUrl;
         DelistedUtc = delistedUtc;
+        LastSyncedAtUtc = lastSyncedAtUtc;
     }
 
     public int Id { get; private set; }
@@ -83,6 +84,7 @@ public class StockProfile
     public string? IconUrl { get; private set; }
     public string? LogoUrl { get; private set; }
     public string? DelistedUtc { get; private set; }
+    public DateOnly LastSyncedAtUtc { get; private set; }
 
     public static StockProfile Create(
         int instrumentId,
@@ -94,7 +96,7 @@ public class StockProfile
         string? tickerRoot, string? tickerSuffix, int? totalEmployees, string? type,
         long? weightedSharesOutstanding, string? addressLine1, string? city,
         string? state, string? postalCode, string? iconUrl, string? logoUrl,
-        string? delistedUtc)
+        string? delistedUtc, DateOnly lastSyncedAtUtc)
     {
         return new StockProfile(
             instrumentId, ticker, active, cik, compositeFigi, currencyName, description,
@@ -102,6 +104,6 @@ public class StockProfile
             primaryExchange, roundLot, shareClassFigi, shareClassSharesOutstanding,
             sicCode, sicDescription, tickerRoot, tickerSuffix, totalEmployees, type,
             weightedSharesOutstanding, addressLine1, city, state, postalCode,
-            iconUrl, logoUrl, delistedUtc);
+            iconUrl, logoUrl, delistedUtc, lastSyncedAtUtc);
     }
 }
