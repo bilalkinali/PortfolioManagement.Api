@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
+namespace PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
 
 public static class GetStockProfileEndpoint
 {

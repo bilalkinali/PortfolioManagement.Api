@@ -12,7 +12,7 @@ using PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
-using PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
+using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
 using PortfolioManagement.Api.Features.Trades.DeleteTrade;
 using PortfolioManagement.Api.Features.Trades.EditTrade;
 

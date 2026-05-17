@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
+namespace PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
 
 public sealed record GetStockProfileApiResponse(
     [property: JsonPropertyName("request_id")] string? RequestId,

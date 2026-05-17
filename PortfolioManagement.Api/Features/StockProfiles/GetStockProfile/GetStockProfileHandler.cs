@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
-namespace PortfolioManagement.Api.Features.StockProfile.GetStockProfile;
+namespace PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
 
 public sealed class GetStockProfileHandler
 {
@@ -72,7 +72,7 @@ public sealed class GetStockProfileHandler
 
         var massiveTickerInfo = apiResult.TickerData;
 
-        var newProfile = Domain.StockProfile.Create(
+        var newProfile = StockProfile.Create(
             instrumentId: instrument.Id,
             ticker: massiveTickerInfo.Ticker ?? ticker,
             active: massiveTickerInfo.Active,
@@ -112,7 +112,7 @@ public sealed class GetStockProfileHandler
         return MapToResponse(newProfile);
     }
 
-    private static GetStockProfileResponse MapToResponse(Domain.StockProfile profile)
+    private static GetStockProfileResponse MapToResponse(StockProfile profile)
     {
         return new GetStockProfileResponse(
             Active: profile.Active,

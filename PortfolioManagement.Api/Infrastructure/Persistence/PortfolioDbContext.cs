@@ -72,5 +72,7 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
         //    entity.Navigation(x => x.Positions)
         //        .UsePropertyAccessMode(PropertyAccessMode.Field);
         //});
+
+        //dotnet ef migrations add MigrationName --context PortfolioDbContext --output-dir Infrastructure/Migrations
     }
 }
