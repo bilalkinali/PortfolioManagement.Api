@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { StockProfileResponse } from "@/features/instruments/detail/api/getStockProfile"
+import StockHistoryChart from "@/features/instruments/detail/components/StockHistoryChart"
 import { formatExchangeName } from "@/shared/helpers/formatters"
 
 type StockProfileCardProps = {
@@ -57,6 +58,13 @@ export default function StockProfileCard({ profile }: StockProfileCardProps) {
             </CardHeader>
 
             <CardContent className="flex flex-col gap-6">
+                {profile.ticker && (
+                    <>
+                        <StockHistoryChart ticker={profile.ticker} currency={profile.currencyName} />
+                        <Separator />
+                    </>
+                )}
+
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <ProfileMetric
                         icon={<CircleDollarSignIcon />}

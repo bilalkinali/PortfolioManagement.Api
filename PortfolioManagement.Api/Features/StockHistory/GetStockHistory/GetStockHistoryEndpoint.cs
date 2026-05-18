@@ -6,7 +6,7 @@ public static class GetStockHistoryEndpoint
 {
     public static void MapGetStockHistoryEndpoint(this WebApplication app)
     {
-        app.MapGet("/stocks/{ticker}/history", async (
+        app.MapGet("/api/instruments/{ticker}/history", async (
             [AsParameters] GetStockHistoryRequest request,
             IValidator<GetStockHistoryRequest> validator,
             GetStockHistoryHandler getStockHistoryHandler) =>
