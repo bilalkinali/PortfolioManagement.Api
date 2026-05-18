@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getStockProfile, type StockProfileResponse } from "@/features/instruments/detail/api/getStockProfile";
 import StockProfileCard from "@/features/instruments/detail/components/StockProfileCard";
+import StockProfileCardSkeleton from "@/features/instruments/detail/components/StockProfileCardSkeleton";
 
 export default function InstrumentDetailPage() {
     const { symbol } = useParams<{ symbol: string }>();
@@ -34,9 +35,10 @@ export default function InstrumentDetailPage() {
         loadProfile();
     }, [symbol]);
 
-    if (isLoading) return <p>Loading stock profile...</p>;
+    if (isLoading) return <StockProfileCardSkeleton />;
     if (error) return <p>{error}</p>;
     if (!profile) return <p>No stock profile found.</p>;
 
     return <StockProfileCard profile={profile} />;
+    
 }
