@@ -59,7 +59,7 @@ Authorization: Bearer {{token}}
 
 ###
 
-@ticker = AAPL
+@ticker = TSLA
 
 GET {{PortfolioManagement.Api_HostAddress}}/api/instruments/{{ticker}}
 Accept: application/json

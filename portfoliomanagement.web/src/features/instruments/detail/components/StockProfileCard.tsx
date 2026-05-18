@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { StockProfileResponse } from "@/features/instruments/detail/api/getStockProfile"
+import { formatExchangeName } from "@/shared/helpers/formatters"
 
 type StockProfileCardProps = {
     profile: StockProfileResponse
@@ -28,38 +29,31 @@ export default function StockProfileCard({ profile }: StockProfileCardProps) {
 
     return (
         <Card>
-            <CardHeader className="gap-4 sm:grid-cols-[1fr_auto]">
+            <CardHeader className="mb-2 sm:grid-cols-[1fr_auto]">
                 <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
                     <StockLogo ticker={ticker} logoUrl={profile.branding?.logoUrl} />
 
-                    <div className="min-w-0">
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <div className="flex min-w-0 flex-1 justify-between">
+                        <div className="min-w-0">
+                            <CardTitle className="text-2xl">{title}</CardTitle>
+                            <CardDescription className="mt-1 flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-foreground">{ticker}</span>
+                                <span>{formatExchangeName(exchange)}</span>
+                                {profile.currencyName && <span>{profile.currencyName.toUpperCase()}</span>}
+                            </CardDescription>
+                        </div>
+
+                        <div className="mb-2 flex shrink-0 flex-wrap items-center justify-end gap-2">
                             <Badge variant={profile.active ? "secondary" : "outline"}>
                                 {profile.active ? "Active" : "Inactive"}
                             </Badge>
                             {profile.type && <Badge variant="outline">{profile.type}</Badge>}
                             {profile.locale && <Badge variant="outline">{profile.locale.toUpperCase()}</Badge>}
                         </div>
-
-                        <CardTitle className="text-2xl">{title}</CardTitle>
-                        <CardDescription className="mt-1 flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-foreground">{ticker}</span>
-                            <span>{exchange}</span>
-                            {profile.currencyName && <span>{profile.currencyName.toUpperCase()}</span>}
-                        </CardDescription>
                     </div>
                 </div>
 
-                {homepageUrl && (
-                    <CardAction>
-                        <Button variant="outline" size="sm" asChild>
-                            <a href={homepageUrl} target="_blank" rel="noreferrer">
-                                <ExternalLinkIcon data-icon="inline-start" />
-                                Website
-                            </a>
-                        </Button>
-                    </CardAction>
-                )}
+                
             </CardHeader>
 
             <CardContent className="flex flex-col gap-6">
@@ -70,6 +64,11 @@ export default function StockProfileCard({ profile }: StockProfileCardProps) {
                         value={formatMarketCap(profile.marketCap, profile.currencyName)}
                     />
                     <ProfileMetric
+                        icon={<LandmarkIcon />}
+                        label="Shares outstanding"
+                        value={formatCompactNumber(profile.weightedSharesOutstanding)}
+                    />
+                    <ProfileMetric
                         icon={<UsersIcon />}
                         label="Employees"
                         value={formatCompactNumber(profile.totalEmployees)}
@@ -78,12 +77,7 @@ export default function StockProfileCard({ profile }: StockProfileCardProps) {
                         icon={<CalendarDaysIcon />}
                         label="Listed"
                         value={formatDate(profile.listDate)}
-                    />
-                    <ProfileMetric
-                        icon={<LandmarkIcon />}
-                        label="Shares outstanding"
-                        value={formatCompactNumber(profile.weightedSharesOutstanding)}
-                    />
+                    />                    
                 </div>
 
                 <Separator />
@@ -94,8 +88,19 @@ export default function StockProfileCard({ profile }: StockProfileCardProps) {
                         <p className="text-sm leading-6 text-muted-foreground">
                             {profile.description ?? "No company description is available yet."}
                         </p>
-                    </section>
 
+                        {homepageUrl && (
+                            <CardAction className="mt-4">
+                                <Button variant="outline" size="sm" asChild>
+                                    <a href={homepageUrl} target="_blank" rel="noreferrer">
+                                        <ExternalLinkIcon data-icon="inline-start" />
+                                        Website
+                                    </a>
+                                </Button>
+                            </CardAction>
+                        )}
+                    </section>
+                    
                     <aside className="flex flex-col gap-4">
                         <DetailRow icon={<Building2Icon />} label="Industry" value={profile.sicDescription} />
                         <DetailRow icon={<GlobeIcon />} label="Market" value={profile.market} />
