@@ -4,6 +4,14 @@ import EmptyPortfolio from '@/features/portfolios/details/components/EmptyPortfo
 import { getPortfolio, type PortfolioResponse } from '@/features/portfolios/details/api/getPortfolio'
 import PortfolioCard from '../components/PortfolioCard'
 import PortfolioDetailSkeleton from '../components/PortfolioDetailSkeleton'
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator
+} from "@/components/ui/breadcrumb"
 
 export default function PortfolioDetailPage() {
     const { portfolioId } = useParams<{ portfolioId: string }>()
@@ -79,6 +87,25 @@ export default function PortfolioDetailPage() {
 
     return (
         <>
+            <div className="mb-2">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            {/* Potential enhancement: make this dynamic based on the actual URL structure of the app + collapsed list of portfolios */}
+                            <BreadcrumbLink href="/portfolios">Portfolios</BreadcrumbLink> 
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{portfolio.name}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
+
             <PortfolioCard
                 portfolio={portfolio}
                 onSuccess={() => setRefreshKey((current) => current + 1)}

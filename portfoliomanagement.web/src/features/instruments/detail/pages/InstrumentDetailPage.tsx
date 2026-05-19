@@ -3,6 +3,14 @@ import { useParams } from "react-router";
 import { getStockProfile, type StockProfileResponse } from "@/features/instruments/detail/api/getStockProfile";
 import StockProfileCard from "@/features/instruments/detail/components/StockProfileCard";
 import StockProfileCardSkeleton from "@/features/instruments/detail/components/StockProfileCardSkeleton";
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator
+} from "@/components/ui/breadcrumb"
 
 export default function InstrumentDetailPage() {
     const { symbol } = useParams<{ symbol: string }>();
@@ -39,6 +47,28 @@ export default function InstrumentDetailPage() {
     if (error) return <p>{error}</p>;
     if (!profile) return <p>No stock profile found.</p>;
 
-    return <StockProfileCard profile={profile} />;
+    return (
+        <>
+            <div className="mb-2">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                Instruments
+                            </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{profile.name ? profile.name : profile.ticker}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
+
+            <StockProfileCard profile={profile} />
+        </>
+    )
     
 }
