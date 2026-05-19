@@ -1,17 +1,26 @@
-﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Features.StockHistory.GetStockHistory.Proxy;
+using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 
 public sealed class GetStockHistoryHandler
 {
-    private readonly HttpClient _httpClient;
+    private readonly PortfolioDbContext _db;
+    private readonly MassiveStockHistoryProxy _proxy;
 
-    public GetStockHistoryHandler(IHttpClientFactory httpClientFactory)
+    public GetStockHistoryHandler(
+        PortfolioDbContext db,
+        MassiveStockHistoryProxy proxy)
     {
-        _httpClient = httpClientFactory.CreateClient("Massive");
+        _db = db;
+        _proxy = proxy;
     }
 
-    public async Task<GetStockHistoryResponse?> Handle(GetStockHistoryRequest request)
+    public async Task<GetStockHistoryResponse?> Handle(
+        GetStockHistoryRequest request,
+        CancellationToken cancellationToken)
     {
         var ticker = request.Ticker.Trim().ToUpperInvariant();
         var from = DateOnly.Parse(request.From);
@@ -20,37 +29,90 @@ public sealed class GetStockHistoryHandler
             ? "day"
             : request.Timespan.Trim().ToLowerInvariant();
 
-        // 1. Check your database here first.
-        // If you already have the data for ticker/from/to/timespan, return it.
-        //
-        // Example:
-        // var existing = await _dbContext.StockHistory...
-        // if (existing is not null) return existing;
+        var period = MapToMarketDataPeriod(timespan);
+        var instrument = await _db.Instruments
+            .FirstOrDefaultAsync(x => x.Symbol == ticker, cancellationToken);
 
-        var url = $"/v2/aggs/ticker/{ticker}/range/1/{timespan}/{from:yyyy-MM-dd}/{to:yyyy-MM-dd}";
-
-        using var response = await _httpClient.GetAsync(url);
-
-        if (!response.IsSuccessStatusCode)
+        if (instrument is not null && period is not null)
         {
-            return null;
+            var localBars = await GetLocalBarsAsync(
+                instrument.Id,
+                period.Value,
+                from,
+                to,
+                cancellationToken);
+
+            // For now: local cache wins if any bars exist.
+            // Later: check full date coverage and fetch missing ranges.
+            if (localBars.Count > 0)
+            {
+                return MapToResponse(ticker, localBars);
+            }
         }
 
-        var content = await response.Content.ReadAsStringAsync();
+        var result = await _proxy.GetHistoryAsync(
+            ticker,
+            from,
+            to,
+            timespan,
+            cancellationToken);
 
-        var result = JsonSerializer.Deserialize<GetStockHistoryResponse>(content);
-
-        if (result is null)
+        if (result?.Results is null)
         {
-            return null;
+            return result;
         }
-
-        // 2. Save to your database here before returning.
-        //
-        // Example:
-        // _dbContext.StockHistory.Add(...)
-        // await _dbContext.SaveChangesAsync();
 
         return result;
+    }
+
+    private async Task<List<StockBar>> GetLocalBarsAsync(
+        int instrumentId,
+        MarketDataPeriod period,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
+    {
+        return await _db.MarketDataBars
+            .AsNoTracking()
+            .Where(x =>
+                x.InstrumentId == instrumentId &&
+                x.Period == period &&
+                x.Date >= from &&
+                x.Date <= to)
+            .OrderBy(x => x.Date)
+            .Select(x => new StockBar(
+                x.Close,
+                x.High,
+                x.Low,
+                null,
+                x.Open,
+                new DateTimeOffset(x.Date.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).ToUnixTimeMilliseconds(),
+                x.Volume,
+                null))
+            .ToListAsync(cancellationToken);
+    }
+
+    private static GetStockHistoryResponse MapToResponse(string ticker, IReadOnlyList<StockBar> bars)
+    {
+        return new GetStockHistoryResponse(
+            Adjusted: true,
+            NextUrl: null,
+            QueryCount: bars.Count,
+            RequestId: null,
+            ResultsCount: bars.Count,
+            Status: "OK",
+            Ticker: ticker,
+            Results: bars.ToList());
+    }
+
+    private static MarketDataPeriod? MapToMarketDataPeriod(string timespan)
+    {
+        return timespan switch
+        {
+            "day" => MarketDataPeriod.Daily,
+            "week" => MarketDataPeriod.Weekly,
+            "month" => MarketDataPeriod.Monthly,
+            _ => null
+        };
     }
 }

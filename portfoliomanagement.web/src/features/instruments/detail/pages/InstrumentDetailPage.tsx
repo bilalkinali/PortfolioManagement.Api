@@ -61,7 +61,7 @@ export default function InstrumentDetailPage() {
                             </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbPage>{profile.name ? profile.name : profile.ticker}</BreadcrumbPage>
+                            <BreadcrumbPage>{profile.ticker}</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
