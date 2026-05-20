@@ -85,7 +85,8 @@ export default function StockHistoryChart({
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
-                        width={56}
+                        width={55}
+                        orientation={"right"}
                         domain={["dataMin", "dataMax"]}
                         tickFormatter={(value) => formatPriceTick(value, currency)}
                     />
