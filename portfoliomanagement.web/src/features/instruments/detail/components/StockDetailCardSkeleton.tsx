@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function StockProfileCardSkeleton() {
+export default function StockDetailCardSkeleton() {
     return (
         <Card>
             <CardHeader className="flex space-y-2">

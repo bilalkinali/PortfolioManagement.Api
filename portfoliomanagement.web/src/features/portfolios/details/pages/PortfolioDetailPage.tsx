@@ -87,7 +87,7 @@ export default function PortfolioDetailPage() {
 
     return (
         <>
-            <div className="mb-2">
+            <div className="mb-4">
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>

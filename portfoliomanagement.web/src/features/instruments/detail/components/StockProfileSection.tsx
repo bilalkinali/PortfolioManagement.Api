@@ -53,23 +53,24 @@ export default function StockProfileSection({ profile }: StockProfileSectionProp
             <Separator />
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-                <section className="flex flex-col gap-2">
-                    <h2 className="font-medium">Company profile</h2>
+                <section className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1">
+                        <h2 className="font-medium">Company profile</h2>
+                        {homepageUrl && (
+                            <CardAction className="mb-0.5">
+                                <Button variant="ghost" size="sm" asChild>
+                                    <a href={homepageUrl} target="_blank" rel="noreferrer">
+                                        <ExternalLinkIcon />
+                                    </a>
+                                </Button>
+                            </CardAction>
+                        )}
+                    </div>
 
-                    <p className="text-sm leading-6 text-muted-foreground">
+                    <p className="text-sm leading-6 text-muted-foreground mr-2">
                         {profile.description ?? "No company description is available yet."}
                     </p>
 
-                    {homepageUrl && (
-                        <CardAction className="mt-4">
-                            <Button variant="outline" size="sm" asChild>
-                                <a href={homepageUrl} target="_blank" rel="noreferrer">
-                                    <ExternalLinkIcon data-icon="inline-start" />
-                                    Website
-                                </a>
-                            </Button>
-                        </CardAction>
-                    )}
                 </section>
 
                 <aside className="flex flex-col gap-4">

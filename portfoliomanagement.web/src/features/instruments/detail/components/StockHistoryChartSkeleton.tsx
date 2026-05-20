@@ -1,13 +1,16 @@
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 
 export default function StockHistoryChartSkeleton() {
     return (
-        <section className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-64" />
-            </div>
-            <Skeleton className="h-72 w-full" />
+        <section>
+            <div className="relative flex">
+                <Skeleton className="h-72 w-full" />
+
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <Spinner />
+                </div>
+            </div>            
         </section>
     )
 }

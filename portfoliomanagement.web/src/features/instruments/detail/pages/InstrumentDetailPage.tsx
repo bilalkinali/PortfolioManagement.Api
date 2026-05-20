@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import StockDetailCard from "@/features/instruments/detail/components/StockDetailCard";
-import StockProfileCardSkeleton from "@/features/instruments/detail/components/StockProfileCardSkeleton";
+import StockDetailCardSkeleton from "@/features/instruments/detail/components/StockDetailCardSkeleton";
 import { type StockRange } from "../types/StockRange";
 import {
     getStockProfile,
@@ -128,13 +128,13 @@ export default function InstrumentDetailPage() {
         loadHistory();
     }, [symbol, rangeQuery.from, rangeQuery.to, rangeQuery.timespan]);
 
-    if (isProfileLoading) return <StockProfileCardSkeleton />;
+    if (isProfileLoading) return <StockDetailCardSkeleton />;
     if (profileError) return <p>{profileError}</p>;
     if (!profile) return <p>No stock profile found.</p>;
 
     return (
         <>
-            <div className="mb-2">
+            <div className="mb-4">
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
