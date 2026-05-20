@@ -52,7 +52,6 @@ public class StockProfile
 
     public int Id { get; private set; }
     public int InstrumentId { get; private set; }
-    public Instrument Instrument { get; private set; } = null!;
     public string Ticker { get; private set; } = null!;
     public bool Active { get; private set; }
     public string? Cik { get; private set; }

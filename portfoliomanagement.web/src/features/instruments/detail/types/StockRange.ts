@@ -1,0 +1,1 @@
+export type StockRange = "ALL" | "5Y" | "1Y" | "3M" | "1M" | "5D";

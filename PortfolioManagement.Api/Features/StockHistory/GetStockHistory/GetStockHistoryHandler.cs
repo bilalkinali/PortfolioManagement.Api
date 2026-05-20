@@ -30,13 +30,15 @@ public sealed class GetStockHistoryHandler
             : request.Timespan.Trim().ToLowerInvariant();
 
         var period = MapToMarketDataPeriod(timespan);
-        var instrument = await _db.Instruments
-            .FirstOrDefaultAsync(x => x.Symbol == ticker, cancellationToken);
+        var instrumentId = await _db.Instruments
+            .Where(x => x.Symbol == ticker)
+            .Select(x => (int?)x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (instrument is not null && period is not null)
+        if (instrumentId is not null && period is not null)
         {
             var localBars = await GetLocalBarsAsync(
-                instrument.Id,
+                instrumentId.Value,
                 period.Value,
                 from,
                 to,

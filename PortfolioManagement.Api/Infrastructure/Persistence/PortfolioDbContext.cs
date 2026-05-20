@@ -39,6 +39,10 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
 
             entity.HasIndex(x => x.ProviderSymbol)
                 .IsUnique();
+
+            entity.HasOne(x => x.StockProfile)
+                .WithOne()
+                .HasForeignKey<StockProfile>(x => x.InstrumentId);
         });
 
         builder.Entity<MarketDataBar>(entity =>
@@ -54,11 +58,6 @@ public class PortfolioDbContext : IdentityDbContext<AppUser>
 
         builder.Entity<StockProfile>(entity =>
         {
-            entity.HasOne(x => x.Instrument)
-                .WithOne()
-                .HasForeignKey<StockProfile>(x => x.InstrumentId)
-                .IsRequired();
-
             entity.HasIndex(x => x.InstrumentId)
                 .IsUnique();
 

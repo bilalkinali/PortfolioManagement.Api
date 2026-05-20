@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState, type ComponentProps } from "react"
+import { useMemo, type ComponentProps } from "react"
 import { Area, Bar, CartesianGrid, ComposedChart, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
-import { getStockHistory, type StockBar } from "@/features/instruments/detail/api/getStockHistory"
+import type { GetStockHistoryResponse, StockBar } from "@/features/instruments/detail/api/getStockHistory"
 import StockHistoryChartSkeleton from "@/features/instruments/detail/components/StockHistoryChartSkeleton"
 import { toDateOnlyString } from "@/shared/helpers/formatters"
 
 type StockHistoryChartProps = {
-    ticker: string
+    history: GetStockHistoryResponse | null
+    isLoading: boolean
+    error: string | null
     currency?: string | null
 }
 
@@ -27,65 +29,19 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export default function StockHistoryChart({ ticker, currency }: StockHistoryChartProps) {
-    const [bars, setBars] = useState<StockBar[]>([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+export default function StockHistoryChart({
+    history,
+    isLoading,
+    error,
+    currency
+}: StockHistoryChartProps) {
+    const chartData = useMemo(() => {
+        const bars = history?.results ?? [];
 
-    const dateRange = useMemo(() => {
-        const toDate = new Date()
-        const fromDate = new Date()
-
-        fromDate.setFullYear(fromDate.getFullYear() - 1)
-
-        return {
-            from: toDateOnlyString(fromDate),
-            to: toDateOnlyString(toDate),
-        }
-    }, [])
-
-    const chartData = useMemo(
-        () => bars
+        return bars
             .map(toChartPoint)
-            .sort((first, second) => first.date.localeCompare(second.date)),
-        [bars]
-    )
-
-    useEffect(() => {
-        const controller = new AbortController()
-
-        async function loadHistory() {
-            try {
-                setIsLoading(true)
-                setError(null)
-
-                const result = await getStockHistory({
-                    ticker,
-                    from: dateRange.from,
-                    to: dateRange.to,
-                    timespan: "day",
-                    signal: controller.signal,
-                })
-
-                setBars(result.results ?? [])
-            } catch (error) {
-                if (error instanceof DOMException && error.name === "AbortError") {
-                    return
-                }
-
-                setBars([])
-                setError("Failed to load stock history.")
-            } finally {
-                if (!controller.signal.aborted) {
-                    setIsLoading(false)
-                }
-            }
-        }
-
-        loadHistory()
-
-        return () => controller.abort()
-    }, [dateRange.from, dateRange.to, ticker])
+            .sort((first, second) => first.date.localeCompare(second.date));
+    }, [history?.results]);
 
     if (isLoading) {
         return <StockHistoryChartSkeleton />
@@ -93,8 +49,7 @@ export default function StockHistoryChart({ ticker, currency }: StockHistoryChar
 
     if (error) {
         return (
-            <section className="flex flex-col gap-2">
-                <h2 className="font-medium">Price history</h2>
+            <section>
                 <p className="text-sm text-destructive">{error}</p>
             </section>
         )
@@ -102,22 +57,18 @@ export default function StockHistoryChart({ ticker, currency }: StockHistoryChar
 
     if (chartData.length === 0) {
         return (
-            <section className="flex flex-col gap-2">
-                <h2 className="font-medium">Price history</h2>
-                <p className="text-sm text-muted-foreground">No historical price bars found for {ticker}.</p>
+            <section>
+                <p className="text-sm text-muted-foreground">No historical price bars found.</p>
             </section>
         )
     }
 
+    const maxVolume = chartData.length > 0
+        ? Math.max(...chartData.map(x => x.volume))
+        : 0;
+
     return (
         <section className="flex flex-col gap-3">
-            <div>
-                <h2 className="font-medium">Price history</h2>
-                <p className="text-sm text-muted-foreground">
-                    Daily close and volume from {formatShortDate(dateRange.from)} to {formatShortDate(dateRange.to)}.
-                </p>
-            </div>
-
             <ChartContainer config={chartConfig} className="h-72 w-full">
                 <ComposedChart accessibilityLayer data={chartData} margin={{ left: 0, right: 0, top: 8 }}>
                     <CartesianGrid vertical={false} />
@@ -138,7 +89,12 @@ export default function StockHistoryChart({ ticker, currency }: StockHistoryChar
                         domain={["dataMin", "dataMax"]}
                         tickFormatter={(value) => formatPriceTick(value, currency)}
                     />
-                    <YAxis yAxisId="volume" orientation="right" hide />
+                    <YAxis
+                        yAxisId="volume"
+                        orientation="right"
+                        hide
+                        domain={[0, maxVolume * 2 || 1]}
+                    />
                     <ChartTooltip
                         content={(props) => (
                             <ChartTooltipContent
@@ -163,8 +119,8 @@ export default function StockHistoryChart({ ticker, currency }: StockHistoryChar
                         yAxisId="volume"
                         dataKey="volume"
                         fill="var(--color-volume)"
-                        radius={[2, 2, 0, 0]}
-                        opacity={0.22}
+                        radius={[5, 5, 0, 0]}
+                        opacity={0.2}
                     />
                 </ComposedChart>
             </ChartContainer>
@@ -183,14 +139,6 @@ function toChartPoint(bar: StockBar): StockHistoryPoint {
 function formatAxisDate(value: string) {
     return new Intl.DateTimeFormat("en-US", {
         month: "short",
-        year: "numeric"
-    }).format(new Date(value))
-}
-
-function formatShortDate(value: string) {
-    return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
         year: "numeric",
     }).format(new Date(value))
 }

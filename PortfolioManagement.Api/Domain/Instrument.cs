@@ -32,6 +32,8 @@ public class Instrument
     public string? Currency { get; protected set; }
     public string? Type { get; protected set; }
 
+    public StockProfile? StockProfile { get; protected set; }
+
     /// <summary>
     /// Indicates whether the instrument is actively tracked by the system,
     /// for example because it is used in a portfolio or watchlist.
