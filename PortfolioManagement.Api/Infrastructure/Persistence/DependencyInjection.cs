@@ -17,6 +17,7 @@ using PortfolioManagement.Api.Shared.Events;
 using System.Net.Http.Headers;
 using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
 using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile.Proxy;
+using PortfolioManagement.Api.Features.StockHistory.GetStockHistory.Proxy;
 using PortfolioManagement.Api.Features.Trades.DeleteTrade;
 using PortfolioManagement.Api.Features.Trades.EditTrade;
 
@@ -63,6 +64,7 @@ public static class DependencyInjection
 
         // Stock History
         services.AddScoped<GetStockHistoryHandler>();
+        services.AddScoped<MassiveStockHistoryProxy>();
         services.AddScoped<IValidator<GetStockHistoryRequest>, GetStockHistoryValidator>();
 
         // Stock Profile

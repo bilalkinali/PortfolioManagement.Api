@@ -9,9 +9,10 @@ public static class GetStockHistoryEndpoint
         app.MapGet("/api/instruments/{ticker}/history", async (
             [AsParameters] GetStockHistoryRequest request,
             IValidator<GetStockHistoryRequest> validator,
-            GetStockHistoryHandler getStockHistoryHandler) =>
+            GetStockHistoryHandler getStockHistoryHandler,
+            CancellationToken cancellationToken) =>
         {
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
             if (!validationResult.IsValid)
             {
@@ -20,7 +21,7 @@ public static class GetStockHistoryEndpoint
 
             try
             {
-                var result = await getStockHistoryHandler.Handle(request);
+                var result = await getStockHistoryHandler.Handle(request, cancellationToken);
 
                 return result is null
                     ? Results.NotFound($"No data found for {request.Ticker}.")

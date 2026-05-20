@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
 using PortfolioManagement.Api.Infrastructure.Persistence;
-using System.Text.Json;
 using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile.Proxy;
 
 namespace PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
@@ -26,19 +25,15 @@ public sealed class GetStockProfileHandler
         var ticker = request.Ticker.Trim().ToUpperInvariant();
 
         var instrument = await _db.Instruments
-            .FirstOrDefaultAsync(x => x.Symbol == ticker, cancellationToken);
+            .Include(i => i.StockProfile)
+            .FirstOrDefaultAsync(i => i.Symbol == ticker, cancellationToken);
 
         if (instrument is null)
-        {
             return null;
-        }
-
-        var profile = await _db.StockProfiles
-            .FirstOrDefaultAsync(x => x.InstrumentId == instrument.Id, cancellationToken);
-
-        if (profile is not null)
+        
+        if (instrument.StockProfile is not null)
         {
-            return MapToResponse(profile);
+            return MapToResponse(instrument.StockProfile);
         }
 
         var massiveTickerInfo = await _proxy.GetProfileFromProxyAsync(ticker, cancellationToken);
