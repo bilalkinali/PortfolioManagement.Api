@@ -10,6 +10,7 @@ public static class DeleteTradeEndpoint
     {
         app.MapDelete("/api/portfolios/{portfolioId:int}/positions/{positionId:int}/trades/{tradeId:int}", async (
             DeleteTradeHandler deleteTradeHandler,
+            CancellationToken cancellationToken,
             ClaimsPrincipal user,
             int portfolioId, int positionId, int tradeId) =>
         {
@@ -22,7 +23,7 @@ public static class DeleteTradeEndpoint
                     return Results.Unauthorized();
                 }
 
-                await deleteTradeHandler.Handle(portfolioId, positionId, tradeId, userId);
+                await deleteTradeHandler.Handle(portfolioId, positionId, tradeId, userId, cancellationToken);
                 return Results.NoContent();
             }
             catch (Exception ex)
@@ -36,21 +37,28 @@ public static class DeleteTradeEndpoint
 
 public class DeleteTradeHandler(PortfolioDbContext db)
 {
-    public async Task Handle(int portfolioId, int positionId, int tradeId, string userId)
+    public async Task Handle(
+        int portfolioId,
+        int positionId,
+        int tradeId,
+        string userId,
+        CancellationToken cancellationToken)
     {
         var portfolio = await db.Portfolios
-            .Where(p => p.Id == portfolioId)
-                .Include(p => p.Positions)
-                    .ThenInclude(p => p.Trades)
-            .FirstOrDefaultAsync();
+            .Include(p => p.Positions)
+            .ThenInclude(pos => pos.Trades)
+            .FirstOrDefaultAsync(
+                p => p.Id == portfolioId &&
+                     p.UserId == userId,
+                cancellationToken);
 
         if (portfolio is null)
         {
-            throw new InvalidOperationException("Portfolio not found");
+            throw new KeyNotFoundException("Portfolio not found.");
         }
 
-        portfolio.DeleteTrade(positionId, tradeId, userId);
+        portfolio.DeleteTrade(positionId, tradeId);
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
     }
 }

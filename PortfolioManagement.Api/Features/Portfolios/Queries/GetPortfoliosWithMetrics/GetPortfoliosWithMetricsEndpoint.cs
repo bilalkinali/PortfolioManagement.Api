@@ -62,7 +62,7 @@ public class GetPortfoliosWithMetricsQuery(PortfolioDbContext db)
                 p.Positions.Select(pos => new GetPositionsWithMetricsResponse(
                     pos.Id,
                     pos.Quantity,
-                    pos.AvgCost,
+                    pos.AverageCostBasis,
                     pos.RealizedPnL,
                     pos.Status,
                     pos.OpenDate,
