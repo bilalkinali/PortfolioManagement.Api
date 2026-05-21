@@ -61,8 +61,6 @@ public class Position
     {
         var trade = Trade.Create(quantity, price, executedDate);
 
-        EnsureTradeDoesNotCrossZero(trade);
-
         _trades.Add(trade);
 
         return trade;
@@ -72,21 +70,7 @@ public class Position
     {
         var trade = GetTrade(tradeId);
 
-        var oldQuantity = trade.Quantity;
-        var oldPrice = trade.Price;
-        var oldExecutedDate = trade.ExecutedDate;
-
         trade.Edit(quantity, price, executedDate);
-
-        try
-        {
-            EnsurePositionNeverCrossesZero();
-        }
-        catch
-        {
-            trade.Edit(oldQuantity, oldPrice, oldExecutedDate);
-            throw;
-        }
     }
 
     public void DeleteTrade(int tradeId)
@@ -94,16 +78,6 @@ public class Position
         var trade = GetTrade(tradeId);
 
         _trades.Remove(trade);
-
-        try
-        {
-            EnsurePositionNeverCrossesZero();
-        }
-        catch
-        {
-            _trades.Add(trade);
-            throw;
-        }
     }
 
     private Trade GetTrade(int tradeId)
@@ -112,53 +86,10 @@ public class Position
             ?? throw new InvalidOperationException("Trade does not exist.");
     }
 
-    private void EnsureTradeDoesNotCrossZero(Trade trade)
-    {
-        if (!HasTrades)
-        {
-            return;
-        }
-
-        var currentQuantity = Quantity;
-        var newQuantity = currentQuantity + trade.Quantity;
-
-        if (currentQuantity > 0 && newQuantity < 0)
-        {
-            throw new InvalidOperationException("Trade cannot switch position directly from long to short. Close the long position first.");
-        }
-
-        if (currentQuantity < 0 && newQuantity > 0)
-        {
-            throw new InvalidOperationException("Trade cannot switch position directly from short to long. Close the short position first.");
-        }
-    }
-
-    private void EnsurePositionNeverCrossesZero()
-    {
-        var quantity = 0;
-
-        foreach (var trade in OrderedTrades())
-        {
-            var newQuantity = quantity + trade.Quantity;
-
-            if (quantity > 0 && newQuantity < 0)
-            {
-                throw new InvalidOperationException("Position history cannot cross directly from long to short.");
-            }
-
-            if (quantity < 0 && newQuantity > 0)
-            {
-                throw new InvalidOperationException("Position history cannot cross directly from short to long.");
-            }
-
-            quantity = newQuantity;
-        }
-    }
-
     private PositionMetrics CalculateMetrics()
     {
         var quantity = 0;
-        var averageEntryPrice = 0m;
+        var averageCostBasis = 0m;
         var realizedPnL = 0m;
 
         foreach (var trade in OrderedTrades())
@@ -166,7 +97,7 @@ public class Position
             if (quantity == 0)
             {
                 quantity = trade.Quantity;
-                averageEntryPrice = trade.Price;
+                averageCostBasis = trade.Price;
                 continue;
             }
 
@@ -179,36 +110,43 @@ public class Position
                 var currentAbsQuantity = Math.Abs(quantity);
                 var tradeAbsQuantity = Math.Abs(trade.Quantity);
 
-                averageEntryPrice =
-                    ((currentAbsQuantity * averageEntryPrice) + (tradeAbsQuantity * trade.Price))
+                averageCostBasis =
+                    ((currentAbsQuantity * averageCostBasis) + (tradeAbsQuantity * trade.Price))
                     / (currentAbsQuantity + tradeAbsQuantity);
 
                 quantity += trade.Quantity;
                 continue;
             }
 
-            var closingQuantity = Math.Abs(trade.Quantity);
+            var closingQuantity = Math.Min(Math.Abs(quantity), Math.Abs(trade.Quantity));
 
             if (quantity > 0)
             {
-                // Long position closed/reduced by selling.
-                realizedPnL += closingQuantity * (trade.Price - averageEntryPrice);
+                // Closing/reducing long by selling.
+                realizedPnL += closingQuantity * (trade.Price - averageCostBasis);
             }
             else
             {
-                // Short position closed/reduced by buying.
-                realizedPnL += closingQuantity * (averageEntryPrice - trade.Price);
+                // Closing/reducing short by buying.
+                realizedPnL += closingQuantity * (averageCostBasis - trade.Price);
             }
 
+            var previousQuantity = quantity;
             quantity += trade.Quantity;
 
             if (quantity == 0)
             {
-                averageEntryPrice = 0m;
+                averageCostBasis = 0m;
             }
+            else if (Math.Abs(trade.Quantity) > Math.Abs(previousQuantity))
+            {
+                // Trade crossed zero and opened the opposite direction.
+                averageCostBasis = trade.Price;
+            }
+            // else: partial close, averageCostBasis stays unchanged
         }
 
-        return new PositionMetrics(quantity, averageEntryPrice, realizedPnL);
+        return new PositionMetrics(quantity, averageCostBasis, realizedPnL);
     }
 
     private IEnumerable<Trade> OrderedTrades()

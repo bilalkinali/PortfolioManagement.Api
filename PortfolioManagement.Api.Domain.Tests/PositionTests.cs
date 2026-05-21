@@ -133,11 +133,17 @@ public class PositionTests
     }
 
     [Fact]
-    public void Long_position_rejects_sell_that_crosses_zero()
+    public void Long_position_allows_sell_that_crosses_zero_and_opens_short_position()
     {
         var position = Position.Create(1, 10, 100m, Jan1, out _);
 
-        Assert.Throws<InvalidOperationException>(() => position.AddTrade(-15, 110m, Jan2));
+        var trade = position.AddTrade(-15, 110m, Jan2);
+
+        Assert.Contains(trade, position.Trades);
+        Assert.Equal(-5, position.Quantity);
+        Assert.Equal("Short", position.Status);
+        Assert.Equal(110m, position.AverageCostBasis);
+        Assert.Equal(100m, position.RealizedPnL);
     }
 
     [Fact]
@@ -152,27 +158,38 @@ public class PositionTests
     }
 
     [Fact]
-    public void Short_position_rejects_buy_that_crosses_zero()
+    public void Short_position_allows_buy_that_crosses_zero_and_opens_long_position()
     {
         var position = Position.Create(1, -10, 100m, Jan1, out _);
 
-        Assert.Throws<InvalidOperationException>(() => position.AddTrade(15, 90m, Jan2));
+        var trade = position.AddTrade(15, 90m, Jan2);
+
+        Assert.Contains(trade, position.Trades);
+        Assert.Equal(5, position.Quantity);
+        Assert.Equal("Long", position.Status);
+        Assert.Equal(90m, position.AverageCostBasis);
+        Assert.Equal(100m, position.RealizedPnL);
     }
 
     [Fact]
-    public void EditTrade_rejects_change_that_makes_ordered_history_cross_zero()
+    public void EditTrade_allows_change_that_makes_ordered_history_cross_zero()
     {
         var position = Position.Create(1, 10, 100m, Jan1, out var openingTrade);
         var reducingTrade = position.AddTrade(-5, 110m, Jan2);
         DomainTestIds.SetId(openingTrade, 1);
         DomainTestIds.SetId(reducingTrade, 2);
 
-        Assert.Throws<InvalidOperationException>(() => position.EditTrade(2, -15, 110m, Jan2));
-        Assert.Equal(-5, reducingTrade.Quantity);
+        position.EditTrade(2, -15, 110m, Jan2);
+
+        Assert.Equal(-15, reducingTrade.Quantity);
+        Assert.Equal(-5, position.Quantity);
+        Assert.Equal("Short", position.Status);
+        Assert.Equal(110m, position.AverageCostBasis);
+        Assert.Equal(100m, position.RealizedPnL);
     }
 
     [Fact]
-    public void DeleteTrade_rejects_change_that_makes_remaining_ordered_history_cross_zero()
+    public void DeleteTrade_allows_remaining_ordered_history_to_cross_zero()
     {
         var position = Position.Create(1, 10, 100m, Jan1, out var openingTrade);
         var laterBuy = position.AddTrade(5, 120m, Jan2);
@@ -181,7 +198,12 @@ public class PositionTests
         DomainTestIds.SetId(laterBuy, 2);
         DomainTestIds.SetId(sell, 3);
 
-        Assert.Throws<InvalidOperationException>(() => position.DeleteTrade(2));
-        Assert.Contains(laterBuy, position.Trades);
+        position.DeleteTrade(2);
+
+        Assert.DoesNotContain(laterBuy, position.Trades);
+        Assert.Equal(-2, position.Quantity);
+        Assert.Equal("Short", position.Status);
+        Assert.Equal(130m, position.AverageCostBasis);
+        Assert.Equal(300m, position.RealizedPnL);
     }
 }
