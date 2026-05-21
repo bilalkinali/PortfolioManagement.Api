@@ -93,7 +93,7 @@ public sealed record GetPortfoliosWithMetricsResponse(
 public sealed record GetPositionsWithMetricsResponse(
     int Id,
     int Quantity,
-    decimal AvgCost,
+    decimal AverageCostBasis,
     decimal RealizedPnL,
     string Status,
     DateOnly OpenDate,

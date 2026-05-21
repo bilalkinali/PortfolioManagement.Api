@@ -97,7 +97,7 @@ public class GetPortfolioQuery(PortfolioDbContext db)
                 return new GetPortfolioPositionResponse(
                     p.Id,
                     p.Quantity,
-                    p.AvgCost,
+                    p.AverageCostBasis,
                     p.RealizedPnL,
                     p.Status,
                     p.OpenDate,
@@ -137,7 +137,7 @@ public record GetPortfolioPositionResponse
 (
     int Id,
     int Quantity,
-    decimal AvgCost,
+    decimal AverageCostBasis,
     decimal RealizedPnL,
     string Status,
     DateOnly OpenDate,

@@ -11,7 +11,7 @@ export type PortfolioResponse = {
 export type PortfolioPositionResponse = {
     id: number;
     quantity: number;
-    avgCost: number;
+    averageCostBasis: number;
     realizedPnL: number;
     status: string;
     openDate: string;

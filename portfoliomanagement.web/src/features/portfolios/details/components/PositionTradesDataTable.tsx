@@ -115,7 +115,7 @@ export default function PositionTradesDataTable({
             header: () => <div className="text-right">Total</div>,
             cell: ({ row }) => (
                 <div className="text-right tabular-nums">
-                    {formatCurrency(row.original.quantity * row.original.price)}
+                    {formatCurrency(Math.abs(row.original.quantity) * row.original.price)}
                 </div>
             ),
         },

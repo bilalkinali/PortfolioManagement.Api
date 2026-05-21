@@ -42,6 +42,13 @@ public static class EditTradeEndpoint
             {
                 return Results.NotFound();
             }
+            catch (InvalidOperationException ex)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["trade"] = [ex.Message]
+                });
+            }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
