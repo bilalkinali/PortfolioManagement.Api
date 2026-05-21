@@ -89,7 +89,7 @@ public class AddTradeHandler
 
         var portfolio = await _dbContext.Portfolios
             .Include(port => port.Positions)
-            .ThenInclude(pos => pos.Trades)
+                .ThenInclude(pos => pos.Trades)
             .FirstOrDefaultAsync(
                 port => port.Id == portfolioId &&
                 port.UserId == userId);

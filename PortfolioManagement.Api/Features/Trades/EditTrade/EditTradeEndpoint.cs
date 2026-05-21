@@ -13,6 +13,7 @@ public static class EditTradeEndpoint
             EditTradeHandler editTradeHandler,
             EditTradeRequest request,
             IValidator<EditTradeRequest> validator,
+            CancellationToken cancellationToken,
             ClaimsPrincipal user,
             int portfolioId,
             int positionId,
@@ -34,12 +35,19 @@ public static class EditTradeEndpoint
                     return Results.Unauthorized();
                 }
 
-                await editTradeHandler.HandleAsync(request, portfolioId, positionId, tradeId, userId);
+                await editTradeHandler.HandleAsync(request, portfolioId, positionId, tradeId, userId, cancellationToken);
                 return Results.NoContent();
             }
             catch (KeyNotFoundException)
             {
                 return Results.NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["trade"] = [ex.Message]
+                });
             }
             catch (Exception ex)
             {
@@ -75,22 +83,29 @@ public class EditTradeHandler(PortfolioDbContext db)
         int portfolioId,
         int positionId,
         int tradeId,
-        string userId)
+        string userId,
+        CancellationToken cancellationToken)
     {
         var portfolio = await db.Portfolios
             .Include(p => p.Positions)
-                .ThenInclude(pos => pos.Trades)
+            .ThenInclude(pos => pos.Trades)
             .FirstOrDefaultAsync(
                 p => p.Id == portfolioId &&
-                p.UserId == userId);
+                     p.UserId == userId,
+                cancellationToken);
 
         if (portfolio is null)
         {
-            throw new KeyNotFoundException("Portfolio not found");
+            throw new KeyNotFoundException("Portfolio not found.");
         }
 
-        portfolio.EditTrade(positionId, tradeId, request.Quantity, request.Price, request.ExecutedDate, userId);
+        portfolio.EditTrade(
+            positionId,
+            tradeId,
+            request.Quantity,
+            request.Price,
+            request.ExecutedDate);
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
     }
 }

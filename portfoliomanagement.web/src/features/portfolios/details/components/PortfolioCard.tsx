@@ -42,22 +42,18 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
         })
     }
 
-    const invested = portfolio.positions.reduce(
+    const costBasis = portfolio.positions.reduce(
         (sum, position) =>
-            sum +
-            position.trades.reduce(
-                (tradeSum, trade) => tradeSum + trade.quantity * trade.price,
-                0
-            ),
+            sum + Math.abs(position.quantity) * position.averageCostBasis,
         0
     );
 
     const marketValue = portfolio.positions.reduce(
-        (sum, position) => sum + position.quantity * position.latestPrice,
+        (sum, position) => sum + position.quantity * (position.latestPrice ?? 0),
         0
     );
 
-    const profitLoss = marketValue - invested;
+    const profitLoss = marketValue - costBasis;
 
     return (
         <Card className="gap-2">
@@ -80,7 +76,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                         <div>
                             <h1 className="text-sm font-semibold">Invested</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
-                                {formatCurrency(invested)}
+                                {formatCurrency(costBasis)}
                             </p>
                         </div>
                     </div>
@@ -128,7 +124,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                             </TableHead>
                             <TableHead className="w-[220px] px-6 font-semibold">Position</TableHead>
                             <TableHead className="text-right font-semibold">Quantity</TableHead>
-                            <TableHead className="text-right font-semibold">Avg. Cost</TableHead>
+                            <TableHead className="text-right font-semibold">Average Cost Basis</TableHead>
                             <TableHead className="text-right font-semibold">Invested</TableHead>
                             <TableHead className="text-right font-semibold">Market Value</TableHead>
                             <TableHead className="text-right font-semibold">Realized P/L</TableHead>
@@ -138,8 +134,8 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
 
                     <TableBody>
                         {portfolio.positions.map((position) => {
-                            const invested = position.trades.reduce((sum, trade) => sum + trade.quantity * trade.price, 0);
-                            const marketValue = position.quantity * position.latestPrice
+                            const costBasis = Math.abs(position.quantity) * position.averageCostBasis;
+                            const marketValue = position.quantity * (position.latestPrice ?? 0)
                             const isProfit = position.realizedPnL >= 0
                             const isExpanded = expandedPositionIds.has(position.id)
 
@@ -176,11 +172,11 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {formatCurrency(position.avgCost, position.currency)}
+                                            {formatCurrency(position.averageCostBasis, position.currency)}
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {formatCurrency(invested, position.currency)}
+                                            {formatCurrency(costBasis, position.currency)}
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">

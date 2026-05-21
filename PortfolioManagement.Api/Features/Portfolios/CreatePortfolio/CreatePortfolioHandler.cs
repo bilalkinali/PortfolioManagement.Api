@@ -19,14 +19,6 @@ public class CreatePortfolioHandler(PortfolioDbContext db)
             portfolio.Description, 
             portfolio.CreatedAt,
             portfolio.UserId);
-        
-        // Log the properties of the CreatePortfolioResponse for debugging
-        Console.WriteLine("CreatePortfolioResponse properties:");
-        foreach (var prop in response.GetType().GetProperties())
-        {
-            Console.WriteLine($"{prop.Name}: {prop.GetValue(response)}");
-        }
-        
 
         return response;
     }

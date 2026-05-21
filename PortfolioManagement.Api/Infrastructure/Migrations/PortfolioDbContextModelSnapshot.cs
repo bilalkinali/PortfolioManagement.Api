@@ -198,7 +198,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
                     b.HasIndex("Symbol")
                         .IsUnique();
 
-                    b.ToTable("Instruments");
+                    b.ToTable("Instruments", (string)null);
                 });
 
             modelBuilder.Entity("PortfolioManagement.Api.Domain.MarketDataBar", b =>
@@ -242,7 +242,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
                     b.HasIndex("InstrumentId", "Period", "Date")
                         .IsUnique();
 
-                    b.ToTable("MarketDataBars");
+                    b.ToTable("MarketDataBars", (string)null);
                 });
 
             modelBuilder.Entity("PortfolioManagement.Api.Domain.Portfolio", b =>
@@ -271,7 +271,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Portfolios");
+                    b.ToTable("Portfolios", (string)null);
                 });
 
             modelBuilder.Entity("PortfolioManagement.Api.Domain.Position", b =>
@@ -294,7 +294,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
 
                     b.HasIndex("PortfolioId");
 
-                    b.ToTable("Positions");
+                    b.ToTable("Positions", (string)null);
                 });
 
             modelBuilder.Entity("PortfolioManagement.Api.Domain.StockProfile", b =>
@@ -412,7 +412,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
 
                     b.HasIndex("Ticker");
 
-                    b.ToTable("StockProfiles");
+                    b.ToTable("StockProfiles", (string)null);
                 });
 
             modelBuilder.Entity("PortfolioManagement.Api.Domain.Trade", b =>
@@ -439,7 +439,7 @@ namespace PortfolioManagement.Api.Infrastructure.Migrations
 
                     b.HasIndex("PositionId");
 
-                    b.ToTable("Trades");
+                    b.ToTable("Trades", (string)null);
                 });
 
             modelBuilder.Entity("PortfolioManagement.Api.Infrastructure.Auth.AppUser", b =>

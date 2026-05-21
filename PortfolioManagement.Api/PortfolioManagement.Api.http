@@ -59,6 +59,13 @@ Authorization: Bearer {{token}}
 
 ###
 
+
+GET {{PortfolioManagement.Api_HostAddress}}/api/portfolios/metrics
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyOTk5ZmM4Zi03N2M4LTQzZGUtODBkZi1lNWEwMzAxOTVlYTIiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJCaWxhbCIsImxhc3ROYW1lIjoiS2luYWxpIiwiZXhwIjoxNzc5MzY2NzA0LCJpc3MiOiJQb3J0Zm9saW9NYW5hZ2VtZW50LkFwaSIsImF1ZCI6IlBvcnRmb2xpb01hbmFnZW1lbnQuQ2xpZW50In0.5MH6piUehXr02g4abNKNbg1Ja-k-mu27LNk_7Zl2tj4
+
+###
+
 @ticker = TSLA
 
 GET {{PortfolioManagement.Api_HostAddress}}/api/instruments/{{ticker}}

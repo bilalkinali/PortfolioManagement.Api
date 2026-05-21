@@ -5,10 +5,10 @@ namespace PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 
 public class DeletePortfolioHandler(PortfolioDbContext db)
 {
-    public async Task Handle(int id, string userId)
+    public async Task Handle(int id, string userId, CancellationToken cancellationToken)
     {
         var portfolio = await db.Portfolios
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId, cancellationToken);
 
         if (portfolio == null)
         {
@@ -16,6 +16,6 @@ public class DeletePortfolioHandler(PortfolioDbContext db)
         }
         
         db.Portfolios.Remove(portfolio);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
     }
 }

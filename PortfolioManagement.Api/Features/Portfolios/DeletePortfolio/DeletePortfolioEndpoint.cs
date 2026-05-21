@@ -9,6 +9,7 @@ public static class DeletePortfolioEndpoint
         app.MapDelete("/api/portfolios/{portfolioId:int}", async (
             int portfolioId,
             DeletePortfolioHandler deletePortfolioHandler,
+            CancellationToken cancellationToken,
             ClaimsPrincipal user) =>
         {
             try
@@ -20,7 +21,7 @@ public static class DeletePortfolioEndpoint
                     return Results.Unauthorized();
                 }
 
-                await deletePortfolioHandler.Handle(portfolioId, userId);
+                await deletePortfolioHandler.Handle(portfolioId, userId, cancellationToken);
 
                 return Results.NoContent();
             }
