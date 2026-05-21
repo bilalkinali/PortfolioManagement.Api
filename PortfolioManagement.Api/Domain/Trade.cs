@@ -1,6 +1,4 @@
-﻿namespace PortfolioManagement.Api.Domain;
-
-public class Trade
+﻿public class Trade
 {
     protected Trade() { }
 
@@ -14,15 +12,18 @@ public class Trade
     }
 
     public int Id { get; protected set; }
-    public bool IsBuy => Quantity > 0;
+
+    // Positive = buy, negative = sell
     public int Quantity { get; protected set; }
+
     public decimal Price { get; protected set; }
     public DateOnly ExecutedDate { get; protected set; }
     public int PositionId { get; protected set; }
 
+    public bool IsBuy => Quantity > 0;
+    public bool IsSell => Quantity < 0;
 
-    /**************************************************************************************/
-
+    public decimal TradeValue => Math.Abs(Quantity) * Price;
 
     public static Trade Create(int quantity, decimal price, DateOnly executedDate)
     {

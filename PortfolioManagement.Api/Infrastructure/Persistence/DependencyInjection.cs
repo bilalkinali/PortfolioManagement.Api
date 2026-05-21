@@ -10,16 +10,17 @@ using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
+using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfoliosWithMetrics;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
+using PortfolioManagement.Api.Features.StockHistory.GetStockHistory.Proxy;
+using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
+using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile.Proxy;
 using PortfolioManagement.Api.Features.Trades.AddTrade;
+using PortfolioManagement.Api.Features.Trades.DeleteTrade;
+using PortfolioManagement.Api.Features.Trades.EditTrade;
 using PortfolioManagement.Api.Infrastructure.Auth;
 using PortfolioManagement.Api.Shared.Events;
 using System.Net.Http.Headers;
-using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
-using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile.Proxy;
-using PortfolioManagement.Api.Features.StockHistory.GetStockHistory.Proxy;
-using PortfolioManagement.Api.Features.Trades.DeleteTrade;
-using PortfolioManagement.Api.Features.Trades.EditTrade;
 
 namespace PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<DeletePortfolioHandler>();
         services.AddScoped<GetPortfolioQuery>();
         services.AddScoped<GetPortfoliosQuery>();
+        services.AddScoped<GetPortfoliosWithMetricsQuery>();
 
         // Trade
         services.AddScoped<AddTradeHandler>();
