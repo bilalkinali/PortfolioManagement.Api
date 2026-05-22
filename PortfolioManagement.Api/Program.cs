@@ -11,7 +11,7 @@ using PortfolioManagement.Api.Features.Auth.Me;
 using PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
-using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfoliosWithMetrics;
+using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfoliosOverview;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
 using PortfolioManagement.Api.Features.Trades.DeleteTrade;

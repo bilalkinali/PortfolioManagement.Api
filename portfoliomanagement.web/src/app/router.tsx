@@ -4,6 +4,7 @@ import AppLayout from '@/app/layout/AppLayout'
 import { useAuth } from '@/features/auth/shared/auth-context'
 import PortfolioDetailPage from '@/features/portfolios/details/pages/PortfolioDetailPage'
 import InstrumentDetailPage from '../features/instruments/detail/pages/InstrumentDetailPage'
+import PortfoliosPage from '../features/portfolios/get/pages/PortfoliosPage'
 
 function ProtectedRoute() {
     const { isLoggedIn } = useAuth()
@@ -25,15 +26,19 @@ export const router = createBrowserRouter([
             },
             {
                 path: '/instruments/:symbol',
-                element: <InstrumentDetailPage />,
+                element: <InstrumentDetailPage />
             },
             {
                 element: <ProtectedRoute />,
                 children: [
                     {
                         path: '/portfolios/:portfolioId',
-                        element: <PortfolioDetailPage />,
+                        element: <PortfolioDetailPage />
                     },
+                    {
+                        path: '/portfolios',
+                        element: <PortfoliosPage />
+                    }
                 ],
             },
             {
