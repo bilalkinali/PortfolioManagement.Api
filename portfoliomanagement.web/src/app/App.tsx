@@ -12,6 +12,13 @@ function App() {
                     Test Instrument: Apple Inc. (AAPL)
                 </Link>
             </Button>
+
+            <Button asChild>
+                <Link to="/portfolios">
+                    Portfolios
+                </Link>
+            </Button>
+
             <SearchInstrumentsCard />
             <PortfolioSection />            
         </>

@@ -9,7 +9,7 @@ public static class GetPortfoliosOverviewEndpoint
 {
     public static void MapGetPortfoliosWithMetricsEndpoint(this WebApplication app)
     {
-        app.MapGet("/api/portfolios/metrics", async (
+        app.MapGet("/api/portfolios/overview", async (
             GetPortfoliosOverviewQuery query,
             ClaimsPrincipal user,
             CancellationToken cancellationToken) =>
