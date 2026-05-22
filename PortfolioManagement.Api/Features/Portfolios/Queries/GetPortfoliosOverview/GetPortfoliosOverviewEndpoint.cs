@@ -174,12 +174,12 @@ public sealed record GetPortfoliosOverviewResponse(
     DateTimeOffset CreatedAt,
     int PositionCount,
     int OpenPositionCount,
-    decimal TotalInvested,
-    decimal TotalMarketValue,
-    decimal TotalUnrealizedPnL,
+    decimal TotalCostBasis,
+    decimal TotalMarketValue,//
+    decimal TotalUnrealizedPnL,//
     decimal TotalRealizedPnL,
-    decimal TotalPnL,
-    decimal TotalPnLPercentage,
+    decimal TotalPnL,//
+    decimal TotalPnLPercentage,//
     IReadOnlyCollection<PortfolioPositionSummaryResponse> Positions
 );
 
@@ -192,10 +192,10 @@ public sealed record PortfolioPositionSummaryResponse(
     int Quantity,
     decimal AverageCostBasis,
     decimal RealizedPnL,
-    decimal? LatestPrice,
+    decimal? LatestPrice,//
     decimal CostBasis,
-    decimal? MarketValue,
-    decimal? UnrealizedPnL,
-    decimal? UnrealizedPnLPercentage,
+    decimal? MarketValue,//
+    decimal? UnrealizedPnL,//
+    decimal? UnrealizedPnLPercentage,//
     string Status
 );
