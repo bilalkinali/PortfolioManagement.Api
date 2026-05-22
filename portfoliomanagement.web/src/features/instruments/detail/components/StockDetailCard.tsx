@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
     Card,
@@ -7,36 +7,47 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import StockProfileSection from "./StockProfileSection";
-import type { StockProfileResponse } from "../api/getStockProfile";
-import type { GetStockHistoryResponse } from "../api/getStockHistory";
+import StockDetailCardSkeleton from "./StockDetailCardSkeleton";
 import StockHistoryChart from "./StockHistoryChart";
+import {
+    getStockProfile,
+    type StockProfileResponse,
+} from "../api/getStockProfile";
 import { formatExchangeName } from "@/shared/helpers/formatters";
-import StockRangeSelector from "./StockRangeSelector";
-import { type StockRange } from "../types/StockRange";
 
 type StockDetailCardProps = {
-    profile: StockProfileResponse;
-    history: GetStockHistoryResponse | null;
-    selectedRange: StockRange;
-    onRangeChange: (range: StockRange) => void;
-    isHistoryLoading: boolean;
-    historyError: string | null;
-    historyFrom: string;
-    historyTo: string;
+    symbol: string;
 };
 
-export default function StockDetailCard({
-    profile,
-    history,
-    selectedRange,
-    onRangeChange,
-    isHistoryLoading,
-    historyError,
-    historyFrom,
-    historyTo,
-}: StockDetailCardProps) {
+export default function StockDetailCard({ symbol }: StockDetailCardProps) {
+    const [profile, setProfile] = useState<StockProfileResponse | null>(null);
+    const [isProfileLoading, setIsProfileLoading] = useState(true);
+    const [profileError, setProfileError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function loadProfile() {
+            try {
+                setIsProfileLoading(true);
+                setProfileError(null);
+
+                const result = await getStockProfile(symbol);
+                setProfile(result);
+            } catch {
+                setProfileError("Failed to load stock profile");
+            } finally {
+                setIsProfileLoading(false);
+            }
+        }
+
+        loadProfile();
+    }, [symbol]);
+    
+
+    if (isProfileLoading) return <StockDetailCardSkeleton />;
+    if (profileError) return <p>{profileError}</p>;
+    if (!profile) return <p>No stock profile found.</p>;
+
     const title = profile.name ?? profile.ticker ?? "Unknown instrument";
     const ticker = profile.ticker ?? "N/A";
     const exchange = profile.primaryExchange ?? profile.market ?? "Unknown market";
@@ -75,35 +86,13 @@ export default function StockDetailCard({
                 </div>
             </CardHeader>
 
-            <CardContent className="flex flex-col gap-6">
-                <section className="flex flex-col gap-3">
-
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <h2 className="font-medium">Price history</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Daily close and volume from {formatShortDate(historyFrom)} to {formatShortDate(historyTo)}.
-                            </p>
-                        </div>
-
-                        <StockRangeSelector
-                            selectedRange={selectedRange}
-                            onRangeChange={onRangeChange}
-                        />
-                    </div>
-
-                    <StockHistoryChart
-                        history={history}
-                        isLoading={isHistoryLoading}
-                        error={historyError}
-                        currency={profile.currencyName}
-                    />
-                </section>
-
-                <Separator />
+            <CardContent className="space-y-6">
+                <StockHistoryChart
+                    symbol={symbol}
+                    currency={profile.currencyName}
+                />
 
                 <StockProfileSection profile={profile} />
-
             </CardContent>
         </Card>
     );
@@ -136,12 +125,4 @@ function StockLogo({ ticker, logoUrl }: StockLogoProps) {
 
 function getTickerMark(ticker: string) {
     return ticker.slice(0, 3).toUpperCase();
-}
-
-function formatShortDate(value: string) {
-    return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    }).format(new Date(value))
 }

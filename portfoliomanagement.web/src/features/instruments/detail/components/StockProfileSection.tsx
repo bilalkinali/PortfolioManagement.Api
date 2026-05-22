@@ -24,6 +24,9 @@ export default function StockProfileSection({ profile }: StockProfileSectionProp
 
     return (
         <div className="flex flex-col gap-6">
+
+            <Separator />
+
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <ProfileMetric
                     icon={<CircleDollarSignIcon />}
