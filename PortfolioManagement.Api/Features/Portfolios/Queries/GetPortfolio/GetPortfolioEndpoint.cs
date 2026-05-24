@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using PortfolioManagement.Api.Domain;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
@@ -18,7 +17,7 @@ public static class GetPortfolioEndpoint
             {
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                if (userId == null)
+                if (userId is null)
                 {
                     return Results.Unauthorized();
                 }
@@ -44,17 +43,17 @@ public static class GetPortfolioEndpoint
     }
 }
 
-public class GetPortfolioQuery(PortfolioDbContext db)
+public sealed class GetPortfolioQuery(PortfolioDbContext db)
 {
     public async Task<GetPortfolioResponse> GetPortfolioAsync(int portfolioId, string userId)
     {
         var portfolio = await db.Portfolios
             .AsNoTracking()
             .AsSplitQuery()
-                .Include(p => p.Positions)
-                    .ThenInclude(pos => pos.Instrument)
-                .Include(p => p.Positions)
-                    .ThenInclude(pos => pos.Trades)
+            .Include(p => p.Positions)
+                .ThenInclude(pos => pos.Instrument)
+            .Include(p => p.Positions)
+                .ThenInclude(pos => pos.Trades)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == portfolioId);
 
         if (portfolio is null)
@@ -69,94 +68,158 @@ public class GetPortfolioQuery(PortfolioDbContext db)
 
         var latestBars = await db.MarketDataBars
             .AsNoTracking()
-            .Where(b =>
-                instrumentIds.Contains(b.InstrumentId) &&
-                b.Period == MarketDataPeriod.Daily)
+            .Where(b => instrumentIds.Contains(b.InstrumentId))
             .GroupBy(b => b.InstrumentId)
             .Select(g => g
                 .OrderByDescending(b => b.Date)
                 .Select(b => new
                 {
                     b.InstrumentId,
-                    b.Close,
-                    b.Date
+                    LatestPrice = b.Close,
+                    LatestPriceDate = b.Date
                 })
                 .First())
             .ToDictionaryAsync(b => b.InstrumentId);
 
-        var getPortfolioResponse = new GetPortfolioResponse
-        (
-            portfolio.Id,
-            portfolio.Name,
-            portfolio.Description,
-            portfolio.CreatedAt,
-            portfolio.Positions.Select(p =>
+        var positions = portfolio.Positions
+            .Select(position =>
             {
-                latestBars.TryGetValue(p.InstrumentId, out var latestBar);
+                latestBars.TryGetValue(position.InstrumentId, out var latestBar);
 
-                return new GetPortfolioPositionResponse(
-                    p.Id,
-                    p.Quantity,
-                    p.AverageCostBasis,
-                    p.RealizedPnL,
-                    p.Status,
-                    p.OpenDate,
-                    p.CloseDate,
-                    p.InstrumentId,
-                    p.Instrument.Symbol,
-                    p.Instrument.Name,
-                    p.Instrument.Currency,
-                    p.Instrument.ExchangeCode,
-                    latestBar?.Close,
-                    latestBar?.Date,
-                    p.Trades.Select(t => new GetPortfolioTradeResponse(
+                var hasLatestPrice = latestBar is not null;
+                var latestPrice = latestBar?.LatestPrice;
+
+                var costBasis = Math.Abs(position.Quantity) * position.AverageCostBasis;
+
+                decimal? marketValue = hasLatestPrice
+                    ? position.Quantity * latestPrice!.Value
+                    : null;
+
+                decimal? unrealizedPnL = hasLatestPrice
+                    ? CalculateUnrealizedPnL(
+                        position.Quantity,
+                        position.AverageCostBasis,
+                        latestPrice!.Value)
+                    : null;
+
+                decimal? unrealizedPnLPercentage = costBasis > 0 && unrealizedPnL is not null
+                    ? unrealizedPnL.Value / costBasis * 100
+                    : null;
+
+                var trades = position.Trades
+                    .OrderByDescending(t => t.ExecutedDate)
+                    .Select(t => new GetPortfolioPositionTradeResponse(
                         t.Id,
                         t.IsBuy,
                         t.Quantity,
                         t.Price,
-                        t.ExecutedDate
-                    )).ToList()
-                );
-            }).ToList()
-        );
+                        t.ExecutedDate))
+                    .ToList();
 
-        return getPortfolioResponse;
+                return new GetPortfolioPositionResponse(
+                    position.Id,
+                    position.InstrumentId,
+                    position.Instrument.Symbol,
+                    position.Instrument.Name,
+                    position.Instrument.Currency,
+                    position.Quantity,
+                    position.AverageCostBasis,
+                    position.RealizedPnL,
+                    latestPrice,
+                    latestBar?.LatestPriceDate,
+                    costBasis,
+                    marketValue,
+                    unrealizedPnL,
+                    unrealizedPnLPercentage,
+                    position.Status,
+                    trades);
+            })
+            .ToList();
+
+        var totalCostBasis = positions.Sum(p => p.CostBasis);
+        var totalMarketValue = positions.Sum(p => p.MarketValue ?? 0);
+        var totalUnrealizedPnL = positions.Sum(p => p.UnrealizedPnL ?? 0);
+        var totalRealizedPnL = positions.Sum(p => p.RealizedPnL);
+        var totalPnL = totalRealizedPnL + totalUnrealizedPnL;
+
+        var totalPnLPercentage = totalCostBasis > 0
+            ? totalPnL / totalCostBasis * 100
+            : 0;
+
+        return new GetPortfolioResponse(
+            portfolio.Id,
+            portfolio.Name,
+            portfolio.Description,
+            portfolio.CreatedAt,
+            portfolio.Positions.Count,
+            portfolio.Positions.Count(p => p.Quantity != 0),
+            totalCostBasis,
+            totalMarketValue,
+            totalUnrealizedPnL,
+            totalRealizedPnL,
+            totalPnL,
+            totalPnLPercentage,
+            positions);
+    }
+
+    private static decimal CalculateUnrealizedPnL(
+        int quantity,
+        decimal averageCostBasis,
+        decimal latestPrice)
+    {
+        if (quantity > 0)
+        {
+            return quantity * (latestPrice - averageCostBasis);
+        }
+
+        if (quantity < 0)
+        {
+            return Math.Abs(quantity) * (averageCostBasis - latestPrice);
+        }
+
+        return 0;
     }
 }
 
-public record GetPortfolioResponse
-(
+public sealed record GetPortfolioResponse(
     int Id,
     string Name,
     string? Description,
     DateTimeOffset CreatedAt,
+    int PositionCount,
+    int OpenPositionCount,
+    decimal TotalCostBasis,
+    decimal TotalMarketValue,
+    decimal TotalUnrealizedPnL,
+    decimal TotalRealizedPnL,
+    decimal TotalPnL,
+    decimal TotalPnLPercentage,
     IReadOnlyCollection<GetPortfolioPositionResponse> Positions
 );
 
-public record GetPortfolioPositionResponse
-(
+public sealed record GetPortfolioPositionResponse(
     int Id,
-    int Quantity,
-    decimal AverageCostBasis,
-    decimal RealizedPnL,
-    string Status,
-    DateOnly OpenDate,
-    DateOnly? CloseDate,
     int InstrumentId,
     string Symbol,
     string Name,
     string? Currency,
-    string? Exchange,
+    int Quantity,
+    decimal AverageCostBasis,
+    decimal RealizedPnL,
     decimal? LatestPrice,
     DateOnly? LatestPriceDate,
-    IReadOnlyCollection<GetPortfolioTradeResponse> Trades
+    decimal CostBasis,
+    decimal? MarketValue,
+    decimal? UnrealizedPnL,
+    decimal? UnrealizedPnLPercentage,
+    string Status,
+    IReadOnlyCollection<GetPortfolioPositionTradeResponse> Trades
 );
 
-public record GetPortfolioTradeResponse
-(
-    int Id, 
-    bool IsBuy, 
-    int Quantity, 
-    decimal Price, 
+public sealed record GetPortfolioPositionTradeResponse(
+    int Id,
+    bool IsBuy,
+    int Quantity,
+    decimal Price,
     DateOnly ExecutedDate
 );

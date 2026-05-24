@@ -10,7 +10,7 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb"
-import PortfolioCardMini from "../components/PortfolioCardMini";
+import PortfolioCardOverview from "../components/PortfolioCardOverview";
 
 export default function PortfoliosPage() {
     const [portfolios, setPortfolios] = useState<PortfoliosOverviewResponse[]>([])
@@ -45,6 +45,10 @@ export default function PortfoliosPage() {
         return <p>Portfolios not found.</p>
     }
 
+    if (portfolios.length === 0) {
+        return <EmptyPortfolioCollection />
+    }
+
     return (
         <>
             <Breadcrumb className="mb-4">
@@ -59,7 +63,11 @@ export default function PortfoliosPage() {
                 </BreadcrumbList>
             </Breadcrumb>
 
-            {portfolios.length === 0 && <EmptyPortfolioCollection />}
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-2">
+                {portfolios.length > 0 && portfolios.map((portfolio) => (
+                    <PortfolioCardOverview key={portfolio.id} portfolio={portfolio} />
+                ))}
+            </div >
         </>
     );
 }
