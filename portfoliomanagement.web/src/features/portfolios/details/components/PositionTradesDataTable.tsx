@@ -103,7 +103,7 @@ export default function PositionTradesDataTable({
         },
         {
             accessorKey: "price",
-            header: () => <div className="text-right">Price</div>,
+            header: () => <div className="text-right">Cost</div>,
             cell: ({ row }) => (
                 <div className="text-right tabular-nums">
                     {formatCurrency(row.original.price)}

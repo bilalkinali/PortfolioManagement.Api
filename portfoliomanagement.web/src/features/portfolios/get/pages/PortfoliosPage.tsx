@@ -63,7 +63,7 @@ export default function PortfoliosPage() {
                 </BreadcrumbList>
             </Breadcrumb>
 
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-2">
                 {portfolios.length > 0 && portfolios.map((portfolio) => (
                     <PortfolioCardOverview key={portfolio.id} portfolio={portfolio} />
                 ))}

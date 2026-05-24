@@ -1,3 +1,4 @@
+//import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router'
@@ -55,6 +56,11 @@ export default function PortfolioCardOverview({ portfolio }: PortfolioCardOvervi
                     : "text-right text-red-600"}>
                     {portfolio.totalPnLPercentage.toFixed(2)}%
                 </p>
+
+                <div className="mt-4 mb-4 border-t" />
+
+
+
             </CardContent>
             <CardFooter className="flex justify-center">
                 <Button variant="secondary" asChild>

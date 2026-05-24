@@ -42,19 +42,6 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
         })
     }
 
-    const costBasis = portfolio.positions.reduce(
-        (sum, position) =>
-            sum + Math.abs(position.quantity) * position.averageCostBasis,
-        0
-    );
-
-    const marketValue = portfolio.positions.reduce(
-        (sum, position) => sum + position.quantity * (position.latestPrice ?? 0),
-        0
-    );
-
-    const profitLoss = marketValue - costBasis;
-
     return (
         <Card className="gap-2">
             <CardHeader>
@@ -64,7 +51,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                 </div>
                 <CardAction>
                     <Badge variant="secondary">
-                        {dateFormatter.format(new Date(portfolio.createdAt))}
+                        Created: {dateFormatter.format(new Date(portfolio.createdAt))}
                     </Badge>                    
                 </CardAction>
             </CardHeader>
@@ -74,9 +61,9 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                     <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
                         <Wallet className="text-blue-600 absolute h-5 w-5 right-4 top-4" />
                         <div>
-                            <h1 className="text-sm font-semibold">Invested</h1>
+                            <h1 className="text-sm font-semibold">Total Cost Basis</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
-                                {formatCurrency(costBasis)}
+                                {formatCurrency(portfolio.totalCostBasis)}
                             </p>
                         </div>
                     </div>
@@ -86,13 +73,13 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                         <div>
                             <h1 className="text-sm font-semibold">Market Value</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
-                                {formatCurrency(marketValue)}
+                                {formatCurrency(portfolio.totalMarketValue)}
                             </p>
                         </div>
                     </div>
 
                     <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
-                        {profitLoss >= 0 ? (
+                        {portfolio.totalPnL >= 0 ? (
                             <TrendingUp className="h-5 w-5 absolute right-4 top-4 text-green-600" />
                         ) : (
                             <TrendingDown className="h-5 w-5 absolute right-4 top-4 text-red-600" />
@@ -100,9 +87,12 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                         <div>
                             <h1 className="text-sm font-semibold">Profit / Loss</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
-                                <span className={profitLoss >= 0 ? "text-green-600" : "text-red-600"}>
-                                    {formatCurrency(profitLoss)}
-                                </span>
+                                <span className={portfolio.totalPnL >= 0 ? "text-green-600" : "text-red-600"}>
+                                    {formatCurrency(portfolio.totalPnL)}
+                                    <span className={portfolio.totalPnLPercentage >= 0 ? "ml-1 text-sm text-green-600" : "ml-1 text-sm text-red-600"}>
+                                        ({portfolio.totalPnLPercentage.toFixed(2)}%)
+                                    </span>
+                                </span>                                
                             </p>
                         </div>
                     </div>
@@ -124,19 +114,18 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                             </TableHead>
                             <TableHead className="w-[220px] px-6 font-semibold">Position</TableHead>
                             <TableHead className="text-right font-semibold">Quantity</TableHead>
-                            <TableHead className="text-right font-semibold">Average Cost Basis</TableHead>
-                            <TableHead className="text-right font-semibold">Invested</TableHead>
+                            <TableHead className="text-right font-semibold">Average Cost</TableHead>
+                            <TableHead className="text-right font-semibold">Cost Basis</TableHead>
                             <TableHead className="text-right font-semibold">Market Value</TableHead>
                             <TableHead className="text-right font-semibold">Realized P/L</TableHead>
-                            <TableHead className="px-6 text-right font-semibold">Current Price</TableHead>                           
+                            <TableHead className="text-right font-semibold">Unrealized P/L</TableHead>
+                            <TableHead className="text-right font-semibold">P/L %</TableHead>
+                            <TableHead className="px-6 text-right font-semibold">Latest Price</TableHead>                           
                         </TableRow>
                     </TableHeader>
 
                     <TableBody>
                         {portfolio.positions.map((position) => {
-                            const costBasis = Math.abs(position.quantity) * position.averageCostBasis;
-                            const marketValue = position.quantity * (position.latestPrice ?? 0)
-                            const isProfit = position.realizedPnL >= 0
                             const isExpanded = expandedPositionIds.has(position.id)
 
                             return (
@@ -176,16 +165,29 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {formatCurrency(costBasis, position.currency)}
+                                            {formatCurrency(position.costBasis, position.currency)}
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {formatCurrency(marketValue, position.currency)}
+                                            {formatCurrency(position.marketValue, position.currency)}
                                         </TableCell>
 
                                         <TableCell className="text-right font-medium tabular-nums">
-                                            <span className={isProfit ? "text-green-600" : "text-red-600"}>
+                                            <span className={position.realizedPnL >= 0 ? "text-green-600" : "text-red-600"}>
                                                 {formatCurrency(position.realizedPnL, position.currency)}
+                                            </span>
+                                        </TableCell>
+
+                                        <TableCell className="text-right font-medium tabular-nums">
+                                            <span className={position.unrealizedPnL >= 0 ? "text-green-600" : "text-red-600"}>
+                                                {formatCurrency(position.unrealizedPnL, position.currency)}
+                                                
+                                            </span>                                            
+                                        </TableCell>
+
+                                        <TableCell className="text-right font-medium tabular-nums">
+                                            <span className={position.unrealizedPnLPercentage >= 0 ? "text-green-600" : "text-red-600"}>
+                                                {position.unrealizedPnLPercentage.toFixed(2)}%
                                             </span>
                                         </TableCell>
 
@@ -208,7 +210,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
 
                                     {isExpanded ? (
                                         <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                            <TableCell colSpan={8} className="px-6 pb-5 pt-0">
+                                            <TableCell colSpan={10} className="px-6 pb-5 pt-0">
                                                 <PositionTradesDataTable
                                                     portfolioId={portfolio.id}
                                                     position={position}

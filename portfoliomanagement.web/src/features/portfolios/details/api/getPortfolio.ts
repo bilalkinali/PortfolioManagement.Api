@@ -5,24 +5,33 @@ export type PortfolioResponse = {
     name: string;
     description: string | null;
     createdAt: string;
+    positionCount: number;
+    openPositionCount: number;
+    totalCostBasis: number;
+    totalMarketValue: number;
+    totalUnrealizedPnL: number;
+    totalRealizedPnL: number;
+    totalPnL: number;
+    totalPnLPercentage: number;
     positions: PortfolioPositionResponse[];
 }
 
 export type PortfolioPositionResponse = {
     id: number;
-    quantity: number;
-    averageCostBasis: number;
-    realizedPnL: number;
-    status: string;
-    openDate: string;
-    closeDate: string | null;
     instrumentId: number;
     symbol: string;
     name: string;
     currency: string | null;
-    exchange: string | null;
+    quantity: number;
+    averageCostBasis: number;
+    realizedPnL: number;
     latestPrice: number | null;
     latestPriceDate: string | null;
+    costBasis: number;
+    marketValue: number | null;
+    unrealizedPnL: number | null;
+    unrealizedPnLPercentage: number | null;
+    status: string;
     trades: PortfolioTradeResponse[];
 }
 
