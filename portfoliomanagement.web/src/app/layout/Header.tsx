@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react"
+import { useNavigate } from 'react-router'
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 import { searchInstruments, type SearchInstrumentResult } from "@/features/instruments/searchInstruments/api/searchInstruments"
 import { formatCurrency, formatExchangeName } from "@/shared/helpers/formatters"
@@ -8,6 +9,7 @@ import LoginDialog from "@/features/auth/login/components/LoginDialog"
 import RegisterDialog from "@/features/auth/register/components/RegisterDialog"
 import { useAuth } from "@/features/auth/shared/auth-context"
 import { Spinner } from "@/components/ui/spinner"
+import { SearchIcon } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -30,6 +32,7 @@ export default function Header() {
     const [isLoadingInstruments, setIsLoadingInstruments] = useState(false);
 
     const searchRef = useRef<HTMLDivElement>(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         const query = instrumentSearch.trim();
@@ -85,7 +88,8 @@ export default function Header() {
 
                 <Popover open={searchOpen}>
                     <PopoverPrimitive.Anchor asChild>
-                        <div ref={searchRef} className="w-96">
+                        <div ref={searchRef} className="relative w-96">
+                            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 id="search-instrument"
                                 type="text"
@@ -95,7 +99,7 @@ export default function Header() {
                                     setSearchOpen(true)
                                 }}
                                 onFocus={() => setSearchOpen(true)}
-                                className="w-full"
+                                className="w-full pl-9"
                                 placeholder="Search Apple, MSFT, Novo..."
                                 disabled={isSearching}
                             />
@@ -103,9 +107,9 @@ export default function Header() {
                     </PopoverPrimitive.Anchor>
 
                     <PopoverContent
-                        align="start"
-                        sideOffset={8}
-                        className="w-96 p-0"
+                        align="center"
+                        sideOffset={6}
+                        className="w-128 p-0"
                         onOpenAutoFocus={(e) => e.preventDefault()}
                         onInteractOutside={(e) => {
                             const target = e.target as Node
@@ -114,7 +118,7 @@ export default function Header() {
                                 e.preventDefault()
                                 return
                             }
-                            //setInstrumentSearch("") Handle non empty search on close?
+                            setInstrumentSearch("")
                             setSearchOpen(false)
                         }}
                         onEscapeKeyDown={() => setSearchOpen(false)}
@@ -158,11 +162,10 @@ export default function Header() {
                                             <CommandItem className="pr-0"
                                                 key={instrument.id}
                                                 value={`${instrument.symbol} ${instrument.name}`}
-                                                onSelect={() => {
-                                                    //setSelectedInstrument(instrument);
-                                                    //setValidationErrors((current) => ({ ...current, instrument: undefined }));
+                                                onSelect={() => {                                                  
                                                     setInstrumentSearch("");
                                                     setSearchOpen(false);
+                                                    navigate(`/instruments/${instrument.symbol}`);
                                                 }}
                                             >
                                                 <div className="grid w-full grid-cols-12 items-start gap-x-2">
