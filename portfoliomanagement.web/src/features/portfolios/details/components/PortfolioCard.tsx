@@ -88,11 +88,11 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                             <h1 className="text-sm font-semibold">Profit / Loss</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
                                 <span className={portfolio.totalPnL >= 0 ? "text-green-600" : "text-red-600"}>
-                                    {formatCurrency(portfolio.totalPnL)}
-                                    <span className={portfolio.totalPnLPercentage >= 0 ? "ml-1 text-sm text-green-600" : "ml-1 text-sm text-red-600"}>
-                                        ({portfolio.totalPnLPercentage.toFixed(2)}%)
-                                    </span>
-                                </span>                                
+                                    {formatCurrency(portfolio.totalPnL)}                                    
+                                </span>                          
+                                <span className={portfolio.totalPnLPercentage >= 0 ? "block text-sm text-green-600" : "block text-sm text-red-600"}>
+                                    ({portfolio.totalPnLPercentage.toFixed(2)}%)
+                                </span>
                             </p>
                         </div>
                     </div>
