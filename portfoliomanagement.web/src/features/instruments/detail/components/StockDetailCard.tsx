@@ -10,10 +10,7 @@ import {
 import StockProfileSection from "./StockProfileSection";
 import StockDetailCardSkeleton from "./StockDetailCardSkeleton";
 import StockHistoryChart from "./StockHistoryChart";
-import {
-    getStockProfile,
-    type StockProfileResponse,
-} from "../api/getStockProfile";
+import { getStockProfile, type StockProfileResponse } from "../api/getStockProfile";
 import { formatExchangeName } from "@/shared/helpers/formatters";
 
 type StockDetailCardProps = {
