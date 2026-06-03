@@ -25,6 +25,14 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
     day: "numeric",
 })
 
+function getPnLClassName(value: number | null) {
+    if (value == null || value === 0) {
+        return "text-muted-foreground";
+    }
+
+    return value > 0 ? "text-green-600" : "text-red-600";
+}
+
 export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardProps) {
     const [expandedPositionIds, setExpandedPositionIds] = React.useState<Set<number>>(() => new Set())
 
@@ -169,25 +177,30 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                         </TableCell>
 
                                         <TableCell className="text-right tabular-nums">
-                                            {formatCurrency(position.marketValue, position.currency)}
+                                            {position.marketValue !== null
+                                                ? formatCurrency(position.marketValue, position.currency)
+                                                : "N/A"}
                                         </TableCell>
 
                                         <TableCell className="text-right font-medium tabular-nums">
-                                            <span className={position.realizedPnL >= 0 ? "text-green-600" : "text-red-600"}>
+                                            <span className={getPnLClassName(position.realizedPnL)}>
                                                 {formatCurrency(position.realizedPnL, position.currency)}
                                             </span>
                                         </TableCell>
 
                                         <TableCell className="text-right font-medium tabular-nums">
-                                            <span className={position.unrealizedPnL >= 0 ? "text-green-600" : "text-red-600"}>
-                                                {formatCurrency(position.unrealizedPnL, position.currency)}
-                                                
+                                            <span className={getPnLClassName(position.unrealizedPnL)}>
+                                                {position.unrealizedPnL !== null
+                                                    ? formatCurrency(position.unrealizedPnL, position.currency)
+                                                    : "N/A"}
                                             </span>                                            
                                         </TableCell>
 
                                         <TableCell className="text-right font-medium tabular-nums">
-                                            <span className={position.unrealizedPnLPercentage >= 0 ? "text-green-600" : "text-red-600"}>
-                                                {position.unrealizedPnLPercentage.toFixed(2)}%
+                                            <span className={getPnLClassName(position.unrealizedPnLPercentage)}>
+                                                {position.unrealizedPnLPercentage !== null
+                                                    ? `${position.unrealizedPnLPercentage.toFixed(2)}%`
+                                                    : "N/A"}
                                             </span>
                                         </TableCell>
 

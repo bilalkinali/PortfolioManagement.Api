@@ -2,7 +2,11 @@ import { Wallet } from 'lucide-react'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import CreatePortfolioDialog from '@/features/portfolios/create/components/CreatePortfolioDialog'
 
-export default function EmptyPortfolioCollection() {
+type EmptyPortfolioCollectionProps = {
+    onSuccess?: () => void;
+}
+
+export default function EmptyPortfolioCollection({ onSuccess }: EmptyPortfolioCollectionProps) {
     return (
         <Empty className="border border-gray-300 bg-white">
             <EmptyHeader>
@@ -15,7 +19,7 @@ export default function EmptyPortfolioCollection() {
                 </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-                <CreatePortfolioDialog onSuccess={() => { }} />
+                <CreatePortfolioDialog onSuccess={onSuccess ?? (() => { })} />
             </EmptyContent>
         </Empty>
     )

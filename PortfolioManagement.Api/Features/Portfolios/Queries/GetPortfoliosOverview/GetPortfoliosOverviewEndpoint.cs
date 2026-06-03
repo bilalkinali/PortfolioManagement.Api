@@ -125,6 +125,7 @@ public class GetPortfoliosOverviewQuery(PortfolioDbContext db)
                 var totalUnrealizedPnL = positions.Sum(p => p.UnrealizedPnL ?? 0);
                 var totalRealizedPnL = positions.Sum(p => p.RealizedPnL);
                 var totalPnL = totalRealizedPnL + totalUnrealizedPnL;
+                var missingPricePositionCount = positions.Count(p => p.Quantity != 0 && p.LatestPrice is null);
 
                 var totalPnLPercentage = totalCostBasis > 0
                     ? totalPnL / totalCostBasis * 100
@@ -143,6 +144,7 @@ public class GetPortfoliosOverviewQuery(PortfolioDbContext db)
                     totalRealizedPnL,
                     totalPnL,
                     totalPnLPercentage,
+                    missingPricePositionCount,
                     positions);
             })
             .ToList();
@@ -180,6 +182,7 @@ public sealed record GetPortfoliosOverviewResponse(
     decimal TotalRealizedPnL,
     decimal TotalPnL,//
     decimal TotalPnLPercentage,//
+    int MissingPricePositionCount,
     IReadOnlyCollection<PortfolioPositionSummaryResponse> Positions
 );
 

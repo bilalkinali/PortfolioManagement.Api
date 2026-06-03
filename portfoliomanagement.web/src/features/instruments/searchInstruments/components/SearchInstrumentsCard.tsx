@@ -134,7 +134,10 @@ export default function SearchInstrumentsCard() {
                                 <ItemMedia className="flex items-center text-sm gap-1">
                                     <span className="text-muted-foreground">{instrument.latestPriceDate}</span>
                                     <span className="w-16 text-right font-semibold">
-                                        {formatCurrency(instrument.latestPrice, instrument.currency)}</span>
+                                        {instrument.latestPrice !== null
+                                            ? formatCurrency(instrument.latestPrice, instrument.currency)
+                                            : "N/A"}
+                                    </span>
                                 </ItemMedia>
 
                                 <ItemMedia className="text-sm">
