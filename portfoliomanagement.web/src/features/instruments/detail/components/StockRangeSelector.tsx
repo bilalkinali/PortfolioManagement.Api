@@ -7,7 +7,7 @@ type StockRangeSelectorProps = {
     onRangeChange: (range: StockRange) => void;
 };
 
-const ranges: StockRange[] = ["5D", "1M", "3M", "1Y", "5Y", "ALL"];
+const ranges: StockRange[] = ["5D", "1M", "3M", "6M", "1Y", "5Y", "10Y", "ALL"];
 
 export default function StockRangeSelector({
     selectedRange,

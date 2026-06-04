@@ -1,1 +1,1 @@
-export type StockRange = "5D" | "1M" | "3M" | "1Y" | "5Y" | "ALL";
+export type StockRange = "5D" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "10Y" | "ALL";

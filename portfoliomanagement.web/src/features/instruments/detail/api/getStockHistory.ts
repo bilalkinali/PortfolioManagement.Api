@@ -27,6 +27,7 @@ type GetStockHistoryParams = {
     from: string
     to: string
     timespan?: string
+    range?: string
     signal?: AbortSignal
 }
 
@@ -35,6 +36,7 @@ export async function getStockHistory({
     from,
     to,
     timespan = "day",
+    range,
     signal,
 }: GetStockHistoryParams): Promise<GetStockHistoryResponse> {
     const searchParams = new URLSearchParams({
@@ -42,6 +44,10 @@ export async function getStockHistory({
         to,
         timespan,
     })
+
+    if (range) {
+        searchParams.set("range", range)
+    }
 
     const response = await apiFetch(`/api/instruments/${ticker}/history?${searchParams.toString()}`, {
         method: "GET",

@@ -6,4 +6,5 @@ public sealed class GetStockHistoryRequest
     public string From { get; init; } = null!;
     public string To { get; init; } = null!;
     public string? Timespan { get; init; }
+    public string? Range { get; init; }
 }
