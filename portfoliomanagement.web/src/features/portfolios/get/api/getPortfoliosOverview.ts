@@ -3,16 +3,17 @@ import { apiFetch } from '@/features/auth/shared/apiClient';
 export type PortfoliosOverviewResponse = {
     id: number;
     name: string;
-    description: string;
+    description: string | null;
     createdAt: string;
     positionCount: number;
-    openPositionsCount: number;
+    openPositionCount: number;
     totalCostBasis: number;
     totalMarketValue: number;
     totalUnrealizedPnL: number;
     totalRealizedPnL: number;
     totalPnL: number;
     totalPnLPercentage: number;
+    missingPricePositionCount: number;
     positions: PortfolioPositionSummaryResponse[];
 }
 
@@ -21,15 +22,15 @@ export type PortfolioPositionSummaryResponse = {
     instrumentId: number,
     symbol: string;
     name: string;
-    currency: string;
+    currency: string | null;
     quantity: number;
     averageCostBasis: number;
     realizedPnL: number;
-    latestPrice: number;
+    latestPrice: number | null;
     costBasis: number;
-    marketValue: number;
-    unrealizedPnL: number;
-    unrealizedPnLPercentage: number;
+    marketValue: number | null;
+    unrealizedPnL: number | null;
+    unrealizedPnLPercentage: number | null;
     status: string;
 }
 

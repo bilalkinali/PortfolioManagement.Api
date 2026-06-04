@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getPortfolios, type PortfolioResponse } from '@/features/portfolios/get/api/getPortfolios'
 import { useAuth } from '@/features/auth/shared/auth-context'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,7 @@ export default function PortfolioSection() {
 
     const { user } = useAuth();
 
-    async function loadPortfolios() {
+    const loadPortfolios = useCallback(async () => {
         try {
             setIsLoading(true);
 
@@ -23,7 +23,7 @@ export default function PortfolioSection() {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [])
 
     useEffect(() => {
         if (!user) {
@@ -32,7 +32,7 @@ export default function PortfolioSection() {
         }
 
         loadPortfolios();
-    }, [user])
+    }, [loadPortfolios, user])
 
     return (
         <section className="mt-6">
@@ -65,7 +65,7 @@ export default function PortfolioSection() {
         }
 
         if (portfolios.length === 0)
-            return <EmptyPortfolioCollection />
+            return <EmptyPortfolioCollection onSuccess={loadPortfolios} />
 
         return (
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
