@@ -25,11 +25,10 @@ public sealed class GetStockHistoryHandler
         var ticker = request.Ticker.Trim().ToUpperInvariant();
         var from = DateOnly.Parse(request.From);
         var to = DateOnly.Parse(request.To);
-        var timespan = string.IsNullOrWhiteSpace(request.Timespan)
-            ? "day"
-            : request.Timespan.Trim().ToLowerInvariant();
+        var timespan = StockHistoryRangeRules.ResolveTimespan(request.Range, request.Timespan);
+        var period = StockHistoryRangeRules.ResolvePeriod(request.Range, request.Timespan);
+        var isRangeRequest = !string.IsNullOrWhiteSpace(request.Range);
 
-        var period = MapToMarketDataPeriod(timespan);
         var instrumentId = await _db.Instruments
             .Where(x => x.Symbol == ticker)
             .Select(x => (int?)x.Id)
@@ -37,12 +36,19 @@ public sealed class GetStockHistoryHandler
 
         if (instrumentId is not null && period is not null)
         {
-            var localBars = await GetLocalBarsAsync(
-                instrumentId.Value,
-                period.Value,
-                from,
-                to,
-                cancellationToken);
+            var localBars = isRangeRequest
+                ? await GetAggregatedLocalBarsAsync(
+                    instrumentId.Value,
+                    period.Value,
+                    from,
+                    to,
+                    cancellationToken)
+                : await GetLocalBarsAsync(
+                    instrumentId.Value,
+                    period.Value,
+                    from,
+                    to,
+                    cancellationToken);
 
             // For now: local cache wins if any bars exist.
             // Later: check full date coverage and fetch missing ranges.
@@ -65,6 +71,33 @@ public sealed class GetStockHistoryHandler
         }
 
         return result;
+    }
+
+    private async Task<List<StockBar>> GetAggregatedLocalBarsAsync(
+        int instrumentId,
+        MarketDataPeriod period,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
+    {
+        var dailyBars = await _db.MarketDataBars
+            .AsNoTracking()
+            .Where(x =>
+                x.InstrumentId == instrumentId &&
+                x.Period == MarketDataPeriod.Daily &&
+                x.Date >= from &&
+                x.Date <= to)
+            .OrderBy(x => x.Date)
+            .Select(x => new StockHistoryDailyBar(
+                x.Date,
+                x.Open,
+                x.High,
+                x.Low,
+                x.Close,
+                x.Volume))
+            .ToListAsync(cancellationToken);
+
+        return StockHistoryBarAggregator.Aggregate(dailyBars, period);
     }
 
     private async Task<List<StockBar>> GetLocalBarsAsync(
@@ -107,14 +140,4 @@ public sealed class GetStockHistoryHandler
             Results: bars.ToList());
     }
 
-    private static MarketDataPeriod? MapToMarketDataPeriod(string timespan)
-    {
-        return timespan switch
-        {
-            "day" => MarketDataPeriod.Daily,
-            "week" => MarketDataPeriod.Weekly,
-            "month" => MarketDataPeriod.Monthly,
-            _ => null
-        };
-    }
 }

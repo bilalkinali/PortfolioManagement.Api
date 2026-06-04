@@ -6,6 +6,7 @@ import {
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart";
+import { Button } from "@/components/ui/button";
 import {
     getStockHistory,
     type StockBar,
@@ -14,6 +15,7 @@ import {
 import StockHistoryChartSkeleton from "@/features/instruments/detail/components/StockHistoryChartSkeleton";
 import StockRangeSelector from "@/features/instruments/detail/components/StockRangeSelector";
 import { type StockRange } from "@/features/instruments/detail/types/StockRange";
+import { cn } from "@/lib/utils";
 import { toDateOnlyString } from "@/shared/helpers/formatters";
 
 type StockHistoryChartProps = {
@@ -44,6 +46,7 @@ export default function StockHistoryChart({
 }: StockHistoryChartProps) {
     const [history, setHistory] = useState<GetStockHistoryResponse | null>(null);
     const [selectedRange, setSelectedRange] = useState<StockRange>("1Y");
+    const [showVolume, setShowVolume] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +66,7 @@ export default function StockHistoryChart({
                     from: rangeQuery.from,
                     to: rangeQuery.to,
                     timespan: rangeQuery.timespan,
+                    range: rangeQuery.range,
                 });
 
                 setHistory(result);
@@ -75,7 +79,7 @@ export default function StockHistoryChart({
         }
 
         loadHistory();
-    }, [symbol, rangeQuery.from, rangeQuery.to, rangeQuery.timespan]);
+    }, [symbol, rangeQuery.from, rangeQuery.to, rangeQuery.timespan, rangeQuery.range]);
 
     const chartData = useMemo(() => {
         const bars = history?.results ?? [];
@@ -91,15 +95,22 @@ export default function StockHistoryChart({
                 <div>
                     <h3 className="text-base font-semibold">Price history</h3>
                     <p className="text-sm text-muted-foreground">
-                        Daily close and volume from {formatLongDate(rangeQuery.from)} to{" "}
+                        {getCandleTimespanLabel(selectedRange)} candles from {formatLongDate(rangeQuery.from)} to{" "}
                         {formatLongDate(rangeQuery.to)}.
                     </p>
                 </div>
 
-                <StockRangeSelector
-                    selectedRange={selectedRange}
-                    onRangeChange={setSelectedRange}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                    <VolumeToggle
+                        isSelected={showVolume}
+                        onToggle={() => setShowVolume((value) => !value)}
+                    />
+
+                    <StockRangeSelector
+                        selectedRange={selectedRange}
+                        onRangeChange={setSelectedRange}
+                    />
+                </div>
             </div>
 
             {isLoading && <StockHistoryChartSkeleton />}
@@ -115,25 +126,83 @@ export default function StockHistoryChart({
             )}
 
             {!isLoading && !error && chartData.length > 0 && (
-                <HistoryChartContent chartData={chartData} currency={currency} />
+                <HistoryChartContent
+                    chartData={chartData}
+                    currency={currency}
+                    showVolume={showVolume}
+                />
             )}
         </section>
+    );
+}
+
+type VolumeToggleProps = {
+    isSelected: boolean;
+    onToggle: () => void;
+};
+
+function VolumeToggle({ isSelected, onToggle }: VolumeToggleProps) {
+    return (
+        <Button
+            type="button"
+            variant={isSelected ? "secondary" : "outline"}
+            size="xs"
+            aria-pressed={isSelected}
+            onClick={onToggle}
+            className="gap-1.5"
+        >
+            <span
+                aria-hidden="true"
+                className={cn(
+                    "flex h-3.5 items-end gap-0.5 rounded-sm border px-1 py-0.5 transition-colors",
+                    isSelected ? "border-transparent bg-muted" : "border-border"
+                )}
+            >
+                <span
+                    className={cn(
+                        "w-1 rounded-full transition-all",
+                        isSelected ? "h-1.5 bg-chart-3" : "h-1 bg-muted-foreground/40"
+                    )}
+                />
+                <span
+                    className={cn(
+                        "w-1 rounded-full transition-all",
+                        isSelected ? "h-2.5 bg-chart-3" : "h-1.5 bg-muted-foreground/40"
+                    )}
+                />
+                <span
+                    className={cn(
+                        "w-1 rounded-full transition-all",
+                        isSelected ? "h-2 bg-chart-3" : "h-1 bg-muted-foreground/40"
+                    )}
+                />
+            </span>
+            <span className={isSelected ? "text-foreground" : "text-muted-foreground"}>
+                Volume
+            </span>
+        </Button>
     );
 }
 
 type HistoryChartContentProps = {
     chartData: StockHistoryPoint[];
     currency?: string | null;
+    showVolume: boolean;
 };
 
 function HistoryChartContent({
     chartData,
     currency,
+    showVolume,
 }: HistoryChartContentProps) {
     const maxVolume = Math.max(...chartData.map((x) => x.volume));
 
     return (
-        <ChartContainer config={chartConfig} className="h-72 w-full">
+        <ChartContainer
+            config={chartConfig}
+            className="h-72 w-full select-none"
+            onMouseDown={(event) => event.preventDefault()}
+        >
             <ComposedChart
                 accessibilityLayer
                 data={chartData}
@@ -165,7 +234,7 @@ function HistoryChartContent({
                     yAxisId="volume"
                     orientation="right"
                     hide
-                    domain={[0, maxVolume * 2 || 1]}
+                    domain={[0, maxVolume * 3 || 1]}
                 />
 
                 <ChartTooltip
@@ -175,7 +244,7 @@ function HistoryChartContent({
                             indicator="line"
                             label={props.label}
                             labelFormatter={(value) => formatLongDate(String(value))}
-                            payload={formatTooltipPayload(props.payload, currency)}
+                            payload={formatTooltipPayload(props.payload, currency, showVolume)}
                         />
                     )}
                 />
@@ -195,7 +264,8 @@ function HistoryChartContent({
                     dataKey="volume"
                     fill="var(--color-volume)"
                     radius={[5, 5, 0, 0]}
-                    opacity={0.2}
+                    opacity={showVolume ? 0.1 : 0}
+                    isAnimationActive={false}
                 />
             </ComposedChart>
         </ChartContainer>
@@ -224,11 +294,17 @@ function getRangeQuery(range: StockRange) {
         case "3M":
             fromDate.setMonth(fromDate.getMonth() - 3);
             break;
+        case "6M":
+            fromDate.setMonth(fromDate.getMonth() - 6);
+            break;
         case "1Y":
             fromDate.setFullYear(fromDate.getFullYear() - 1);
             break;
         case "5Y":
             fromDate.setFullYear(fromDate.getFullYear() - 5);
+            break;
+        case "10Y":
+            fromDate.setFullYear(fromDate.getFullYear() - 10);
             break;
         case "ALL":
             fromDate.setFullYear(1990, 0, 1);
@@ -239,7 +315,20 @@ function getRangeQuery(range: StockRange) {
         from: toDateOnlyString(fromDate),
         to: toDateOnlyString(toDate),
         timespan: "day",
+        range: range === "5D" ? undefined : range,
     };
+}
+
+function getCandleTimespanLabel(range: StockRange) {
+    switch (range) {
+        case "5Y":
+            return "Weekly";
+        case "10Y":
+        case "ALL":
+            return "Monthly";
+        default:
+            return "Daily";
+    }
 }
 
 function formatAxisDate(value: string) {
@@ -271,9 +360,12 @@ type ChartTooltipContentPayload =
 
 function formatTooltipPayload(
     payload: ChartTooltipContentPayload,
-    currency?: string | null
+    currency?: string | null,
+    showVolume = true
 ): ChartTooltipContentPayload {
-    return payload?.map((item) => {
+    return payload
+        ?.filter((item) => showVolume || (item.dataKey !== "volume" && item.name !== "volume"))
+        .map((item) => {
         if (
             (item.dataKey !== "close" && item.name !== "close") ||
             typeof item.value !== "number"

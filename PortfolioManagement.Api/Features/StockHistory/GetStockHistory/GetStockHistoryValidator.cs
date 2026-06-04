@@ -36,6 +36,10 @@ public sealed class GetStockHistoryValidator : AbstractValidator<GetStockHistory
         RuleFor(x => x.Timespan)
             .Must(BeValidTimespan)
             .WithMessage("Invalid timespan. Allowed values: minute, hour, day, week, month.");
+
+        RuleFor(x => x.Range)
+            .Must(StockHistoryRangeRules.IsValidRange)
+            .WithMessage("Invalid range. Allowed values: 1M, 3M, 6M, 1Y, 5Y, 10Y, ALL.");
     }
 
     private static bool BeValidDate(string value)
