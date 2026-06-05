@@ -104,6 +104,63 @@ function getTradeMarketValue(shares: number, latestPrice: number | null) {
     return shares * latestPrice
 }
 
+type TradeRealizedGainDisplay = {
+    costBasisUsed: number | null
+    realizedGain: number | null
+    realizedGainPercentage: number | null
+}
+
+function getTradeRealizedGainDisplays(trades: PortfolioTradeResponse[]) {
+    const displaysByTradeId: Record<number, TradeRealizedGainDisplay> = {}
+    let runningQuantity = 0
+    let runningCostBasis = 0
+
+    const chronologicalTrades = [...trades].sort((left, right) => {
+        const dateComparison = left.executedDate.localeCompare(right.executedDate)
+
+        if (dateComparison !== 0) {
+            return dateComparison
+        }
+
+        return left.id - right.id
+    })
+
+    for (const trade of chronologicalTrades) {
+        if (trade.type === "Buy") {
+            displaysByTradeId[trade.id] = {
+                costBasisUsed: null,
+                realizedGain: null,
+                realizedGainPercentage: null,
+            }
+
+            runningQuantity += trade.shares
+            runningCostBasis += trade.shares * trade.price
+            continue
+        }
+
+        const averageCostBeforeSell = runningQuantity > 0 ? runningCostBasis / runningQuantity : 0
+        const costBasisUsed = trade.shares * averageCostBeforeSell
+        const sellAmount = trade.shares * trade.price
+        const realizedGain = sellAmount - costBasisUsed
+
+        displaysByTradeId[trade.id] = {
+            costBasisUsed,
+            realizedGain,
+            realizedGainPercentage: costBasisUsed > 0 ? (realizedGain / costBasisUsed) * 100 : null,
+        }
+
+        runningQuantity -= trade.shares
+        runningCostBasis -= costBasisUsed
+
+        if (runningQuantity <= 0) {
+            runningQuantity = 0
+            runningCostBasis = 0
+        }
+    }
+
+    return displaysByTradeId
+}
+
 function formatDateOnly(value: string) {
     return value.replaceAll("-", "/")
 }
@@ -145,14 +202,14 @@ function AddTransactionRow({
                 onSave()
             }}
         >
-            <TableCell className="min-w-36">
+            <TableCell className="px-1.5">
                 <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
                             variant="outline"
                             disabled={isSaving}
-                            className="w-full justify-start text-left font-normal tabular-nums"
+                            className="w-full min-w-0 justify-start px-2 text-left font-normal tabular-nums"
                         >
                             <CalendarIcon data-icon="inline-start" />
                             {draft.executedDate ? formatDateOnly(draft.executedDate) : (
@@ -179,7 +236,7 @@ function AddTransactionRow({
                     </PopoverContent>
                 </Popover>
             </TableCell>
-            <TableCell className="w-20 min-w-20">
+            <TableCell className="px-1.5">
                 <select
                     value={draft.type}
                     disabled={isSaving}
@@ -190,7 +247,7 @@ function AddTransactionRow({
                     <option value="Sell">Sell</option>
                 </select>
             </TableCell>
-            <TableCell className="min-w-28">
+            <TableCell className="px-1.5">
                 <Input
                     type="number"
                     min="1"
@@ -200,7 +257,7 @@ function AddTransactionRow({
                     onChange={(event) => onDraftChange({ ...draft, shares: event.target.value })}
                 />
             </TableCell>
-            <TableCell className="min-w-32">
+            <TableCell className="px-1.5">
                 <Input
                     type="number"
                     min="0.01"
@@ -211,15 +268,16 @@ function AddTransactionRow({
                     onChange={(event) => onDraftChange({ ...draft, price: event.target.value })}
                 />
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
+            <TableCell className="text-right tabular-nums">
                 {totalCost !== null ? formatCurrency(totalCost, currency) : "--"}
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
+            <TableCell className="text-right text-muted-foreground">--</TableCell>
+            <TableCell className="text-right tabular-nums">
                 {marketValue !== null && hasValidShares ? formatCurrency(marketValue, currency) : "--"}
             </TableCell>
             <TableCell className="text-right text-muted-foreground">--</TableCell>
             <TableCell className="text-right text-muted-foreground">--</TableCell>
-            <TableCell className="w-10 min-w-10 pl-0">
+            <TableCell className="pl-0 pr-1">
                 <div className="flex justify-end gap-1">
                     <Button
                         type="button"
@@ -240,6 +298,7 @@ function AddTransactionRow({
 type EditableTradeCellsProps = {
     trade: PortfolioTradeResponse
     draft: TransactionDraft
+    realizedGainDisplay: TradeRealizedGainDisplay
     currency: string | null
     latestPrice: number | null
     isSaving: boolean
@@ -251,6 +310,7 @@ type EditableTradeCellsProps = {
 function EditableTradeCells({
     trade,
     draft,
+    realizedGainDisplay,
     currency,
     latestPrice,
     isSaving,
@@ -268,14 +328,14 @@ function EditableTradeCells({
 
     return (
         <>
-            <TableCell className="min-w-36">
+            <TableCell className="px-1.5">
                 <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
                             variant="outline"
                             disabled={isSaving}
-                            className="w-full justify-start text-left font-normal tabular-nums"
+                            className="w-full min-w-0 justify-start px-2 text-left font-normal tabular-nums"
                         >
                             <CalendarIcon data-icon="inline-start" />
                             {draft.executedDate ? formatDateOnly(draft.executedDate) : (
@@ -304,7 +364,7 @@ function EditableTradeCells({
                     </PopoverContent>
                 </Popover>
             </TableCell>
-            <TableCell className="w-20 min-w-20">
+            <TableCell className="px-1.5">
                 <select
                     value={draft.type}
                     disabled={isSaving}
@@ -316,7 +376,7 @@ function EditableTradeCells({
                     <option value="Sell">Sell</option>
                 </select>
             </TableCell>
-            <TableCell className="min-w-28">
+            <TableCell className="px-1.5">
                 <Input
                     type="number"
                     min="1"
@@ -327,7 +387,7 @@ function EditableTradeCells({
                     onBlur={() => onSave(draft)}
                 />
             </TableCell>
-            <TableCell className="min-w-32">
+            <TableCell className="px-1.5">
                 <Input
                     type="number"
                     min="0.01"
@@ -339,27 +399,32 @@ function EditableTradeCells({
                     onBlur={() => onSave(draft)}
                 />
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
+            <TableCell className="text-right tabular-nums">
                 {formatCurrency(totalCost, currency)}
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
+            <TableCell className="text-right tabular-nums">
+                {realizedGainDisplay.costBasisUsed !== null
+                    ? formatCurrency(realizedGainDisplay.costBasisUsed, currency)
+                    : "--"}
+            </TableCell>
+            <TableCell className="text-right tabular-nums">
                 {marketValue !== null ? formatCurrency(marketValue, currency) : "--"}
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
-                <span className={getPnLClassName(trade.realizedGainPercentage)}>
-                    {trade.realizedGainPercentage !== null
-                        ? `${percentFormatter.format(trade.realizedGainPercentage)}%`
+            <TableCell className="text-right tabular-nums">
+                <span className={getPnLClassName(realizedGainDisplay.realizedGainPercentage)}>
+                    {realizedGainDisplay.realizedGainPercentage !== null
+                        ? `${percentFormatter.format(realizedGainDisplay.realizedGainPercentage)}%`
                         : "--"}
                 </span>
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
-                <span className={getPnLClassName(trade.realizedGain)}>
-                    {trade.realizedGain !== null
-                        ? formatCurrency(trade.realizedGain, currency)
+            <TableCell className="text-right tabular-nums">
+                <span className={getPnLClassName(realizedGainDisplay.realizedGain)}>
+                    {realizedGainDisplay.realizedGain !== null
+                        ? formatCurrency(realizedGainDisplay.realizedGain, currency)
                         : "--"}
                 </span>
             </TableCell>
-            <TableCell className="w-10 min-w-10 pl-0">
+            <TableCell className="pl-0 pr-1">
                 <div className="flex justify-end gap-1">
                     <Button
                         type="button"
@@ -391,6 +456,7 @@ export default function PositionTradesDataTable({
     const [tradeDrafts, setTradeDrafts] = useState<Record<number, TransactionDraft>>({})
     const [rowError, setRowError] = useState<string | null>(null)
     const trades = position.trades
+    const realizedGainDisplaysByTradeId = getTradeRealizedGainDisplays(trades)
 
     const deleteDialogOpen = tradeIdToDelete !== null
 
@@ -546,19 +612,32 @@ export default function PositionTradesDataTable({
                 </span>
             </div>
 
-            <div className="overflow-x-auto rounded-md border bg-background">
-                <Table className="min-w-[1040px]">
+            <div className="overflow-hidden rounded-md border bg-background">
+                <Table className="table-fixed">
+                    <colgroup>
+                        <col className="w-[15%]" />
+                        <col className="w-[7%]" />
+                        <col className="w-[8%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[8%]" />
+                        <col className="w-[9%]" />
+                        <col className="w-[4%]" />
+                    </colgroup>
                     <TableHeader className="bg-muted/30">
                         <TableRow className="hover:bg-muted/30">
-                            <TableHead className="min-w-36 font-semibold">Date</TableHead>
-                            <TableHead className="w-20 min-w-20 text-center font-semibold">Type</TableHead>
-                            <TableHead className="min-w-28 text-right font-semibold">Shares</TableHead>
-                            <TableHead className="min-w-32 text-right font-semibold">Cost/Share</TableHead>
-                            <TableHead className="min-w-36 text-right font-semibold">Total Cost</TableHead>
-                            <TableHead className="min-w-36 text-right font-semibold">Market Value</TableHead>
-                            <TableHead className="min-w-40 text-right font-semibold">Realized Gain %</TableHead>
-                            <TableHead className="min-w-40 text-right font-semibold">Realized Gain $</TableHead>
-                            <TableHead className="w-10 min-w-10 text-right font-semibold">
+                            <TableHead className="px-1.5 font-semibold">Date</TableHead>
+                            <TableHead className="px-1.5 text-center font-semibold">Type</TableHead>
+                            <TableHead className="px-1.5 text-right font-semibold">Shares</TableHead>
+                            <TableHead className="px-1.5 text-right font-semibold">Cost/Share</TableHead>
+                            <TableHead className="px-1.5 text-right font-semibold">Amount ($)</TableHead>
+                            <TableHead className="px-1.5 text-right font-semibold">Cost Basis ($)</TableHead>
+                            <TableHead className="px-1.5 text-right font-semibold">Market Value</TableHead>
+                            <TableHead className="px-1.5 text-right font-semibold">Gain (%)</TableHead>
+                            <TableHead className="px-1.5 text-right font-semibold">Gain ($)</TableHead>
+                            <TableHead className="px-1 pr-1 text-right font-semibold">
                                 <span className="sr-only">Actions</span>
                             </TableHead>
                         </TableRow>
@@ -592,6 +671,7 @@ export default function PositionTradesDataTable({
                                         <EditableTradeCells
                                             trade={trade}
                                             draft={draft}
+                                            realizedGainDisplay={realizedGainDisplaysByTradeId[trade.id]}
                                             currency={position.currency}
                                             latestPrice={position.latestPrice}
                                             isSaving={isSaving || rowIsSaving}
@@ -604,7 +684,7 @@ export default function PositionTradesDataTable({
                             })
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={9} className="h-16 text-center text-muted-foreground">
+                                <TableCell colSpan={10} className="h-16 text-center text-muted-foreground">
                                     No transactions found.
                                 </TableCell>
                             </TableRow>
