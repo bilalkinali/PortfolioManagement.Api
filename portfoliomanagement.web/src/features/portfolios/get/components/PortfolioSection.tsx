@@ -39,7 +39,7 @@ export default function PortfolioSection() {
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold">Your Portfolios</h1>
-                    <p className="text-1xl">Manage and track your portfolios here</p>
+                    <p className="text-muted-foreground">Manage and track your portfolios here</p>
                 </div>
 
                 <Button>New Portfolio</Button>

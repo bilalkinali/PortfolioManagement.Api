@@ -9,7 +9,7 @@ type EmptyPortfolioProps = {
 
 export default function EmptyPortfolio({ onSuccess, portfolioId }: EmptyPortfolioProps) {
   return (
-      <Empty className="border border-gray-300 bg-white">
+      <Empty className="border border-border bg-card">
           <EmptyHeader>
               <EmptyMedia variant="icon">
                   <IconFolderCode />

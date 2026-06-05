@@ -11,7 +11,7 @@ import RegisterDialog from "@/features/auth/register/components/RegisterDialog"
 import { useAuth } from "@/features/auth/shared/auth-context"
 import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
-import { BadgeCheckIcon, BellIcon, BriefcaseBusinessIcon, ChevronDownIcon, LogOutIcon, SearchIcon, SparklesIcon, UserRoundIcon } from "lucide-react";
+import { BadgeCheckIcon, BellIcon, BriefcaseBusinessIcon, ChevronDownIcon, LogOutIcon, MoonIcon, SearchIcon, SparklesIcon, SunIcon, UserRoundIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge"
 import {
     Popover,
@@ -37,6 +37,13 @@ import {
 export default function Header() {
     const { isLoggedIn, user, logout } = useAuth()
 
+    const [theme, setTheme] = useState<"dark" | "light">(() => {
+        if (typeof window === "undefined") {
+            return "dark"
+        }
+
+        return window.localStorage.getItem("theme") === "light" ? "light" : "dark"
+    })
     const [searchOpen, setSearchOpen] = useState(false)
     const [instrumentSearch, setInstrumentSearch] = useState("")
     const [instruments, setInstruments] = useState<SearchInstrumentResult[]>([])
@@ -47,6 +54,12 @@ export default function Header() {
     const navigate = useNavigate()
     const userInitials = getUserInitials(user?.firstName, user?.lastName, user?.email)
     const userDisplayName = user ? `${user.firstName} ${user.lastName}` : null
+
+    useEffect(() => {
+        document.documentElement.classList.toggle("dark", theme === "dark")
+        document.documentElement.style.colorScheme = theme
+        window.localStorage.setItem("theme", theme)
+    }, [theme])
 
     useEffect(() => {
         const query = instrumentSearch.trim();
@@ -96,9 +109,9 @@ export default function Header() {
 
 
     return (
-        <header className="border bg-background">
-            <div className="mx-auto grid h-24 w-full max-w-7xl grid-cols-3 items-center px-6 gap-4">
-                <div className="flex justify-start">Header</div>
+        <header className="border-b border-border/70 bg-card/70">
+            <div className="mx-auto grid h-20 w-full max-w-7xl grid-cols-3 items-center gap-4 px-6">
+                <div className="flex justify-start font-semibold tracking-normal text-foreground">Portfolio Management</div>
 
                 <div className="flex justify-center">
                     <Popover open={searchOpen}>
@@ -215,121 +228,134 @@ export default function Header() {
                 </div>
 
                 <div className="flex justify-end">
-                    {isLoggedIn ? (
-                        <DropdownMenu
-                            onOpenChange={(open) => {
-                                if (!open) {
-                                    window.setTimeout(() => accountMenuTriggerRef.current?.blur(), 0)
-                                }
-                            }}
+                    <div className="flex items-center gap-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                            onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}
                         >
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    ref={accountMenuTriggerRef}
-                                    variant="outline"
-                                    className="h-12 gap-2 rounded-full border-border/70 bg-background px-2 pr-3 shadow-xs focus-visible:border-border/70 focus-visible:ring-0 aria-expanded:border-border/70 aria-expanded:bg-background"
-                                >
-                                    <span className="relative">
-                                        <Avatar className="size-8 border border-border">
-                                            <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-                                                {userInitials}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-background bg-chart-1" />
-                                    </span>
-                                    <span className="hidden h-8 w-24 min-w-0 items-center text-left leading-none sm:flex">
-                                        {userDisplayName ? (
-                                            <span className="w-full truncate text-sm font-semibold">
-                                                {userDisplayName}
-                                            </span>
-                                        ) : (
-                                            <Skeleton className="h-3.5 w-24" />
-                                        )}
-                                    </span>
-                                    <ChevronDownIcon data-icon="inline-end" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                className="w-72 bg-popover before:hidden"
-                                onCloseAutoFocus={(event) => {
-                                    event.preventDefault()
-                                    accountMenuTriggerRef.current?.blur()
+                            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+                        </Button>
+
+                        {isLoggedIn ? (
+                            <DropdownMenu
+                                onOpenChange={(open) => {
+                                    if (!open) {
+                                        window.setTimeout(() => accountMenuTriggerRef.current?.blur(), 0)
+                                    }
                                 }}
                             >
-                                {user ? (
-                                    <>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        ref={accountMenuTriggerRef}
+                                        variant="outline"
+                                        className="h-12 gap-2 rounded-full border-border/70 bg-background/70 px-2 pr-3 shadow-xs focus-visible:border-border/70 focus-visible:ring-0 aria-expanded:border-border/70 aria-expanded:bg-background/70"
+                                    >
+                                        <span className="relative">
+                                            <Avatar className="size-8 border border-border">
+                                                <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+                                                    {userInitials}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-background bg-chart-1" />
+                                        </span>
+                                        <span className="hidden h-8 w-24 min-w-0 items-center text-left leading-none sm:flex">
+                                            {userDisplayName ? (
+                                                <span className="w-full truncate text-sm font-semibold">
+                                                    {userDisplayName}
+                                                </span>
+                                            ) : (
+                                                <Skeleton className="h-3.5 w-24" />
+                                            )}
+                                        </span>
+                                        <ChevronDownIcon data-icon="inline-end" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-72 bg-popover before:hidden"
+                                    onCloseAutoFocus={(event) => {
+                                        event.preventDefault()
+                                        accountMenuTriggerRef.current?.blur()
+                                    }}
+                                >
+                                    {user ? (
+                                        <>
+                                            <DropdownMenuLabel className="p-3">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="size-11 border border-border">
+                                                        <AvatarFallback className="bg-primary text-sm font-semibold text-primary-foreground">
+                                                            {userInitials}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="truncate text-sm font-semibold text-foreground">
+                                                            {userDisplayName}
+                                                        </div>
+                                                        <div className="truncate text-xs text-muted-foreground">
+                                                            {user.email}
+                                                        </div>
+                                                    </div>
+                                                    <Badge variant="secondary">Active</Badge>
+                                                </div>
+                                            </DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem onSelect={() => navigate("/portfolios")}>
+                                                    <BriefcaseBusinessIcon />
+                                                    Portfolios
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => navigate("/")}>
+                                                    <SparklesIcon />
+                                                    Market ideas
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem disabled>
+                                                    <BellIcon />
+                                                    Alerts
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem disabled>
+                                                    <UserRoundIcon />
+                                                    Investor profile
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem disabled>
+                                                    <BadgeCheckIcon />
+                                                    Security
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem variant="destructive" onSelect={logout}>
+                                                    <LogOutIcon />
+                                                    Log out
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                        </>
+                                    ) : (
                                         <DropdownMenuLabel className="p-3">
                                             <div className="flex items-center gap-3">
-                                                <Avatar className="size-11 border border-border">
-                                                    <AvatarFallback className="bg-primary text-sm font-semibold text-primary-foreground">
-                                                        {userInitials}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="truncate text-sm font-semibold text-foreground">
-                                                        {userDisplayName}
-                                                    </div>
-                                                    <div className="truncate text-xs text-muted-foreground">
-                                                        {user.email}
-                                                    </div>
+                                                <Skeleton className="size-11 rounded-full" />
+                                                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                                                    <Skeleton className="h-3.5 w-28" />
+                                                    <Skeleton className="h-3 w-36" />
                                                 </div>
-                                                <Badge variant="secondary">Active</Badge>
                                             </div>
                                         </DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuItem onSelect={() => navigate("/portfolios")}>
-                                                <BriefcaseBusinessIcon />
-                                                Portfolios
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={() => navigate("/")}>
-                                                <SparklesIcon />
-                                                Market ideas
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem disabled>
-                                                <BellIcon />
-                                                Alerts
-                                            </DropdownMenuItem>
-                                        </DropdownMenuGroup>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuItem disabled>
-                                                <UserRoundIcon />
-                                                Investor profile
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem disabled>
-                                                <BadgeCheckIcon />
-                                                Security
-                                            </DropdownMenuItem>
-                                        </DropdownMenuGroup>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuItem variant="destructive" onSelect={logout}>
-                                                <LogOutIcon />
-                                                Log out
-                                            </DropdownMenuItem>
-                                        </DropdownMenuGroup>
-                                    </>
-                                ) : (
-                                    <DropdownMenuLabel className="p-3">
-                                        <div className="flex items-center gap-3">
-                                            <Skeleton className="size-11 rounded-full" />
-                                            <div className="flex min-w-0 flex-1 flex-col gap-1">
-                                                <Skeleton className="h-3.5 w-28" />
-                                                <Skeleton className="h-3 w-36" />
-                                            </div>
-                                        </div>
-                                    </DropdownMenuLabel>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    ) : (
-                        <div className="flex items-center gap-3">
-                            <LoginDialog onSuccess={() => { }} />
-                            <RegisterDialog onSuccess={() => { }} />
-                        </div>
-                    )}
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                <LoginDialog onSuccess={() => { }} />
+                                <RegisterDialog onSuccess={() => { }} />
+                            </div>
+                        )}
+                    </div>
                 </div>
 
             </div>

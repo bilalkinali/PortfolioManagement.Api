@@ -114,10 +114,10 @@ export default function EditTradeForm({
                         value={type}
                         disabled={isSubmitting}
                         onChange={(e) => setType(e.target.value as TradeType)}
-                        className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="border-input bg-transparent text-foreground ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
                     >
-                        <option value="Buy">Buy</option>
-                        <option value="Sell">Sell</option>
+                        <option className="bg-popover text-popover-foreground" value="Buy">Buy</option>
+                        <option className="bg-popover text-popover-foreground" value="Sell">Sell</option>
                     </select>
                 </Field>
                 <Field data-invalid={Boolean(validationErrors.shares)}>

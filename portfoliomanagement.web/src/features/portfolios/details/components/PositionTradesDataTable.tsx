@@ -82,7 +82,7 @@ function getPnLClassName(value: number | null) {
         return "text-muted-foreground"
     }
 
-    return value > 0 ? "text-green-600" : "text-red-600"
+    return value > 0 ? "text-chart-1" : "text-destructive"
 }
 
 function getDraftTotalCost(draft: TransactionDraft) {
@@ -228,10 +228,10 @@ function AddTransactionRow({
                     value={draft.type}
                     disabled={isSaving}
                     onChange={(event) => onDraftChange({ ...draft, type: event.target.value as TradeType })}
-                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mx-auto flex h-9 w-20 appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="border-input bg-transparent text-foreground ring-offset-background focus-visible:ring-ring mx-auto flex h-9 w-20 appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
                 >
-                    <option value="Buy">Buy</option>
-                    <option value="Sell">Sell</option>
+                    <option className="bg-popover text-popover-foreground" value="Buy">Buy</option>
+                    <option className="bg-popover text-popover-foreground" value="Sell">Sell</option>
                 </select>
             </TableCell>
             <TableCell className="px-2">
@@ -351,10 +351,10 @@ function EditableTradeCells({
                     disabled={isSaving}
                     onChange={(event) => onDraftChange({ ...draft, type: event.target.value as TradeType })}
                     onBlur={() => onSave(draft)}
-                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mx-auto flex h-9 w-20 appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="border-input bg-transparent text-foreground ring-offset-background focus-visible:ring-ring mx-auto flex h-9 w-20 appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
                 >
-                    <option value="Buy">Buy</option>
-                    <option value="Sell">Sell</option>
+                    <option className="bg-popover text-popover-foreground" value="Buy">Buy</option>
+                    <option className="bg-popover text-popover-foreground" value="Sell">Sell</option>
                 </select>
             </TableCell>
             <TableCell className="px-2">

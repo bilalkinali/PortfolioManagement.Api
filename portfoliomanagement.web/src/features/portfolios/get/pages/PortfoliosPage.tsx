@@ -19,7 +19,7 @@ function getPnLClassName(value: number) {
         return "text-muted-foreground";
     }
 
-    return value > 0 ? "text-green-600" : "text-red-600";
+    return value > 0 ? "text-chart-1" : "text-destructive";
 }
 
 function formatPercentage(value: number) {

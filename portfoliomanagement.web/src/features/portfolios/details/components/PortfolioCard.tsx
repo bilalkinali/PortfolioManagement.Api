@@ -30,7 +30,7 @@ function getPnLClassName(value: number | null) {
         return "text-muted-foreground";
     }
 
-    return value > 0 ? "text-green-600" : "text-red-600";
+    return value > 0 ? "text-chart-1" : "text-destructive";
 }
 
 export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardProps) {
@@ -67,7 +67,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
             <CardContent>
                 <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-3 mb-6 text-center">
                     <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
-                        <Wallet className="text-blue-600 absolute h-5 w-5 right-4 top-4" />
+                        <Wallet className="absolute right-4 top-4 h-5 w-5 text-primary" />
                         <div>
                             <h1 className="text-sm font-semibold">Total Cost Basis</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
@@ -77,7 +77,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                     </div>
 
                     <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
-                        <LineChart className="text-blue-600 h-5 w-5 absolute right-4 top-4" />
+                        <LineChart className="absolute right-4 top-4 h-5 w-5 text-primary" />
                         <div>
                             <h1 className="text-sm font-semibold">Market Value</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
@@ -88,17 +88,17 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
 
                     <div className="relative grid min-h-36 place-items-center rounded-md bg-muted p-4">
                         {portfolio.totalPnL >= 0 ? (
-                            <TrendingUp className="h-5 w-5 absolute right-4 top-4 text-green-600" />
+                            <TrendingUp className="absolute right-4 top-4 h-5 w-5 text-chart-1" />
                         ) : (
-                            <TrendingDown className="h-5 w-5 absolute right-4 top-4 text-red-600" />
+                            <TrendingDown className="absolute right-4 top-4 h-5 w-5 text-destructive" />
                         )}                        
                         <div>
                             <h1 className="text-sm font-semibold">Profit / Loss</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
-                                <span className={portfolio.totalPnL >= 0 ? "text-green-600" : "text-red-600"}>
+                                <span className={portfolio.totalPnL >= 0 ? "text-chart-1" : "text-destructive"}>
                                     {formatCurrency(portfolio.totalPnL)}                                    
                                 </span>                          
-                                <span className={portfolio.totalPnLPercentage >= 0 ? "block text-sm text-green-600" : "block text-sm text-red-600"}>
+                                <span className={portfolio.totalPnLPercentage >= 0 ? "block text-sm text-chart-1" : "block text-sm text-destructive"}>
                                     ({portfolio.totalPnLPercentage.toFixed(2)}%)
                                 </span>
                             </p>
