@@ -96,14 +96,6 @@ function getDraftTotalCost(draft: TransactionDraft) {
     return shares * price
 }
 
-function getTradeMarketValue(shares: number, latestPrice: number | null) {
-    if (latestPrice === null) {
-        return null
-    }
-
-    return shares * latestPrice
-}
-
 type TradeRealizedGainDisplay = {
     costBasisUsed: number | null
     realizedGain: number | null
@@ -168,7 +160,6 @@ function formatDateOnly(value: string) {
 type AddTransactionRowProps = {
     draft: TransactionDraft
     currency: string | null
-    latestPrice: number | null
     isSaving: boolean
     onDraftChange: (draft: TransactionDraft) => void
     onSave: () => void
@@ -178,16 +169,12 @@ type AddTransactionRowProps = {
 function AddTransactionRow({
     draft,
     currency,
-    latestPrice,
     isSaving,
     onDraftChange,
     onSave,
     onCancel,
 }: AddTransactionRowProps) {
     const totalCost = getDraftTotalCost(draft)
-    const shares = Number(draft.shares)
-    const hasValidShares = Number.isFinite(shares) && shares > 0
-    const marketValue = getTradeMarketValue(hasValidShares ? shares : 0, latestPrice)
     const [datePopoverOpen, setDatePopoverOpen] = useState(false)
 
     return (
@@ -202,14 +189,14 @@ function AddTransactionRow({
                 onSave()
             }}
         >
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
                             variant="outline"
                             disabled={isSaving}
-                            className="w-full min-w-0 justify-start px-2 text-left font-normal tabular-nums"
+                            className="w-32 min-w-0 justify-start px-2 text-left font-normal tabular-nums"
                         >
                             <CalendarIcon data-icon="inline-start" />
                             {draft.executedDate ? formatDateOnly(draft.executedDate) : (
@@ -236,49 +223,46 @@ function AddTransactionRow({
                     </PopoverContent>
                 </Popover>
             </TableCell>
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <select
                     value={draft.type}
                     disabled={isSaving}
                     onChange={(event) => onDraftChange({ ...draft, type: event.target.value as TradeType })}
-                    className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mx-auto flex h-9 w-20 appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <option value="Buy">Buy</option>
                     <option value="Sell">Sell</option>
                 </select>
             </TableCell>
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <Input
                     type="number"
                     min="1"
                     value={draft.shares}
                     disabled={isSaving}
-                    className="text-right tabular-nums"
+                    className="mx-auto w-20 text-right tabular-nums"
                     onChange={(event) => onDraftChange({ ...draft, shares: event.target.value })}
                 />
             </TableCell>
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <Input
                     type="number"
                     min="0.01"
                     step="0.01"
                     value={draft.price}
                     disabled={isSaving}
-                    className="text-right tabular-nums"
+                    className="mx-auto w-24 text-right tabular-nums"
                     onChange={(event) => onDraftChange({ ...draft, price: event.target.value })}
                 />
             </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="px-2 text-right tabular-nums">
                 {totalCost !== null ? formatCurrency(totalCost, currency) : "--"}
             </TableCell>
-            <TableCell className="text-right text-muted-foreground">--</TableCell>
-            <TableCell className="text-right tabular-nums">
-                {marketValue !== null && hasValidShares ? formatCurrency(marketValue, currency) : "--"}
-            </TableCell>
-            <TableCell className="text-right text-muted-foreground">--</TableCell>
-            <TableCell className="text-right text-muted-foreground">--</TableCell>
-            <TableCell className="pl-0 pr-1">
-                <div className="flex justify-end gap-1">
+            <TableCell className="px-2 text-right text-muted-foreground">--</TableCell>
+            <TableCell className="px-2 text-right text-muted-foreground">--</TableCell>
+            <TableCell className="px-2 text-right text-muted-foreground">--</TableCell>
+            <TableCell className="w-10 min-w-10 max-w-10 px-1 text-center">
+                <div className="flex justify-center">
                     <Button
                         type="button"
                         variant="destructive"
@@ -300,7 +284,6 @@ type EditableTradeCellsProps = {
     draft: TransactionDraft
     realizedGainDisplay: TradeRealizedGainDisplay
     currency: string | null
-    latestPrice: number | null
     isSaving: boolean
     onDraftChange: (draft: TransactionDraft) => void
     onSave: (draft: TransactionDraft) => void
@@ -312,7 +295,6 @@ function EditableTradeCells({
     draft,
     realizedGainDisplay,
     currency,
-    latestPrice,
     isSaving,
     onDraftChange,
     onSave,
@@ -324,18 +306,17 @@ function EditableTradeCells({
     const hasValidShares = Number.isFinite(shares) && shares > 0
     const hasValidPrice = Number.isFinite(price) && price > 0
     const totalCost = hasValidShares && hasValidPrice ? shares * price : trade.totalCost
-    const marketValue = getTradeMarketValue(hasValidShares ? shares : trade.shares, latestPrice)
 
     return (
         <>
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
                             variant="outline"
                             disabled={isSaving}
-                            className="w-full min-w-0 justify-start px-2 text-left font-normal tabular-nums"
+                            className="w-32 min-w-0 justify-start px-2 text-left font-normal tabular-nums"
                         >
                             <CalendarIcon data-icon="inline-start" />
                             {draft.executedDate ? formatDateOnly(draft.executedDate) : (
@@ -364,68 +345,65 @@ function EditableTradeCells({
                     </PopoverContent>
                 </Popover>
             </TableCell>
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <select
                     value={draft.type}
                     disabled={isSaving}
                     onChange={(event) => onDraftChange({ ...draft, type: event.target.value as TradeType })}
                     onBlur={() => onSave(draft)}
-                    className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mx-auto flex h-9 w-20 appearance-none rounded-md border px-2 py-1 text-center text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <option value="Buy">Buy</option>
                     <option value="Sell">Sell</option>
                 </select>
             </TableCell>
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <Input
                     type="number"
                     min="1"
                     value={draft.shares}
                     disabled={isSaving}
-                    className="text-right tabular-nums"
+                    className="mx-auto w-20 text-right tabular-nums"
                     onChange={(event) => onDraftChange({ ...draft, shares: event.target.value })}
                     onBlur={() => onSave(draft)}
                 />
             </TableCell>
-            <TableCell className="px-1.5">
+            <TableCell className="px-2">
                 <Input
                     type="number"
                     min="0.01"
                     step="0.01"
                     value={draft.price}
                     disabled={isSaving}
-                    className="text-right tabular-nums"
+                    className="mx-auto w-24 text-right tabular-nums"
                     onChange={(event) => onDraftChange({ ...draft, price: event.target.value })}
                     onBlur={() => onSave(draft)}
                 />
             </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="px-2 text-right tabular-nums">
                 {formatCurrency(totalCost, currency)}
             </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="px-2 text-right tabular-nums">
                 {realizedGainDisplay.costBasisUsed !== null
                     ? formatCurrency(realizedGainDisplay.costBasisUsed, currency)
                     : "--"}
             </TableCell>
-            <TableCell className="text-right tabular-nums">
-                {marketValue !== null ? formatCurrency(marketValue, currency) : "--"}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="px-2 text-right tabular-nums">
                 <span className={getPnLClassName(realizedGainDisplay.realizedGainPercentage)}>
                     {realizedGainDisplay.realizedGainPercentage !== null
                         ? `${percentFormatter.format(realizedGainDisplay.realizedGainPercentage)}%`
                         : "--"}
                 </span>
             </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="px-2 text-right tabular-nums">
                 <span className={getPnLClassName(realizedGainDisplay.realizedGain)}>
                     {realizedGainDisplay.realizedGain !== null
                         ? formatCurrency(realizedGainDisplay.realizedGain, currency)
                         : "--"}
                 </span>
             </TableCell>
-            <TableCell className="pl-0 pr-1">
-                <div className="flex justify-end gap-1">
+            <TableCell className="w-10 min-w-10 max-w-10 px-1 text-center">
+                <div className="flex justify-center">
                     <Button
                         type="button"
                         variant="destructive"
@@ -615,29 +593,27 @@ export default function PositionTradesDataTable({
             <div className="overflow-hidden rounded-md border bg-background">
                 <Table className="table-fixed">
                     <colgroup>
-                        <col className="w-[15%]" />
-                        <col className="w-[7%]" />
-                        <col className="w-[8%]" />
-                        <col className="w-[10%]" />
-                        <col className="w-[12%]" />
-                        <col className="w-[12%]" />
-                        <col className="w-[12%]" />
-                        <col className="w-[8%]" />
+                        <col className="w-[14%]" />
                         <col className="w-[9%]" />
+                        <col className="w-[9%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[13%]" />
+                        <col className="w-[13%]" />
+                        <col className="w-[13%]" />
+                        <col className="w-[14%]" />
                         <col className="w-[4%]" />
                     </colgroup>
                     <TableHeader className="bg-muted/30">
                         <TableRow className="hover:bg-muted/30">
-                            <TableHead className="px-1.5 font-semibold">Date</TableHead>
-                            <TableHead className="px-1.5 text-center font-semibold">Type</TableHead>
-                            <TableHead className="px-1.5 text-right font-semibold">Shares</TableHead>
-                            <TableHead className="px-1.5 text-right font-semibold">Cost/Share</TableHead>
-                            <TableHead className="px-1.5 text-right font-semibold">Amount ($)</TableHead>
-                            <TableHead className="px-1.5 text-right font-semibold">Cost Basis ($)</TableHead>
-                            <TableHead className="px-1.5 text-right font-semibold">Market Value</TableHead>
-                            <TableHead className="px-1.5 text-right font-semibold">Gain (%)</TableHead>
-                            <TableHead className="px-1.5 text-right font-semibold">Gain ($)</TableHead>
-                            <TableHead className="px-1 pr-1 text-right font-semibold">
+                            <TableHead className="px-2 font-semibold">Date</TableHead>
+                            <TableHead className="px-2 text-center font-semibold">Type</TableHead>
+                            <TableHead className="px-2 text-center font-semibold">Shares</TableHead>
+                            <TableHead className="px-2 text-center font-semibold">Cost/Share</TableHead>
+                            <TableHead className="px-2 text-right font-semibold">Amount ($)</TableHead>
+                            <TableHead className="px-2 text-right font-semibold">Cost Basis ($)</TableHead>
+                            <TableHead className="px-2 text-right font-semibold">Gain (%)</TableHead>
+                            <TableHead className="px-2 text-right font-semibold">Gain ($)</TableHead>
+                            <TableHead className="w-10 min-w-10 max-w-10 px-1 text-center font-semibold">
                                 <span className="sr-only">Actions</span>
                             </TableHead>
                         </TableRow>
@@ -647,7 +623,6 @@ export default function PositionTradesDataTable({
                             <AddTransactionRow
                                 draft={addDraft}
                                 currency={position.currency}
-                                latestPrice={position.latestPrice}
                                 isSaving={isSaving}
                                 onDraftChange={(draft) => {
                                     setAddDraft(draft)
@@ -673,7 +648,6 @@ export default function PositionTradesDataTable({
                                             draft={draft}
                                             realizedGainDisplay={realizedGainDisplaysByTradeId[trade.id]}
                                             currency={position.currency}
-                                            latestPrice={position.latestPrice}
                                             isSaving={isSaving || rowIsSaving}
                                             onDraftChange={(nextDraft) => handleTradeDraftChange(trade.id, nextDraft)}
                                             onSave={(nextDraft) => saveTradeDraft(trade, nextDraft)}
@@ -684,7 +658,7 @@ export default function PositionTradesDataTable({
                             })
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={10} className="h-16 text-center text-muted-foreground">
+                                <TableCell colSpan={9} className="h-16 text-center text-muted-foreground">
                                     No transactions found.
                                 </TableCell>
                             </TableRow>
