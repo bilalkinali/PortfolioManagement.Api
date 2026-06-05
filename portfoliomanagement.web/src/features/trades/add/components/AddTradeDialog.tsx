@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import AddTradeForm from './AddTradeForm';
 import { addTrade, type AddTradeRequest } from '../api/addTrade'
+import type { TradeType } from '@/features/portfolios/details/api/getPortfolio';
 
 type ButtonVariant = ComponentPropsWithoutRef<typeof Button>["variant"]
 type ButtonSize = ComponentPropsWithoutRef<typeof Button>["size"]
@@ -44,14 +45,15 @@ export default function AddTradeDialog({
 
     async function handleSubmit(
         instrumentId: number,
-        quantity: number,
+        type: TradeType,
+        shares: number,
         price: number,
         executedDate: string) {
 
         setErrorMessage(null);
         setIsSubmitting(true);
 
-        const request: AddTradeRequest = { instrumentId, quantity, price, executedDate };
+        const request: AddTradeRequest = { instrumentId, type, shares, price, executedDate };
 
         try {
             await addTrade(request, portfolioId);

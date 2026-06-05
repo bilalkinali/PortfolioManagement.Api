@@ -20,6 +20,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import type { TradeType } from "@/features/portfolios/details/api/getPortfolio"
 
 type AddTradeFormProps = {
     ref: RefObject<HTMLFormElement | null>;
@@ -27,7 +28,8 @@ type AddTradeFormProps = {
     errorMessage: string | null;
     onSubmit: (
         instrumentId: number,
-        quantity: number,
+        type: TradeType,
+        shares: number,
         price: number,
         executedDate: string
     ) => Promise<void>;
@@ -35,19 +37,19 @@ type AddTradeFormProps = {
 
 type AddTradeFormErrors = {
     instrument?: string;
-    quantity?: string;
+    shares?: string;
     price?: string;
     executedDate?: string;
 }
 
 function validateTradeForm(
     selectedInstrument: SearchInstrumentResult | null,
-    quantity: string,
+    shares: string,
     price: string,
     executedDate: string
 ): AddTradeFormErrors {
     const errors: AddTradeFormErrors = {};
-    const quantityValue = Number(quantity);
+    const sharesValue = Number(shares);
     const priceValue = Number(price);
     const today = toDateOnlyString(new Date());
 
@@ -55,12 +57,12 @@ function validateTradeForm(
         errors.instrument = "Instrument is required.";
     }
 
-    if (quantity.trim() === "") {
-        errors.quantity = "Quantity is required.";
-    } else if (!Number.isInteger(quantityValue)) {
-        errors.quantity = "Quantity must be a whole number.";
-    } else if (quantityValue === 0) {
-        errors.quantity = "Quantity cannot be zero.";
+    if (shares.trim() === "") {
+        errors.shares = "Shares are required.";
+    } else if (!Number.isInteger(sharesValue)) {
+        errors.shares = "Shares must be a whole number.";
+    } else if (sharesValue <= 0) {
+        errors.shares = "Shares must be greater than zero.";
     }
 
     if (price.trim() === "") {
@@ -79,7 +81,7 @@ function validateTradeForm(
 }
 
 function hasValidationErrors(errors: AddTradeFormErrors) {
-    return Boolean(errors.instrument || errors.quantity || errors.price || errors.executedDate);
+    return Boolean(errors.instrument || errors.shares || errors.price || errors.executedDate);
 }
 
 export default function AddTradeForm({
@@ -92,7 +94,8 @@ export default function AddTradeForm({
     const [instruments, setInstruments] = useState<SearchInstrumentResult[]>([]);
     const [isLoadingInstruments, setIsLoadingInstruments] = useState(false);
     const [selectedInstrument, setSelectedInstrument] = useState<SearchInstrumentResult | null>(null);
-    const [quantity, setQuantity] = useState("");
+    const [type, setType] = useState<TradeType>("Buy");
+    const [shares, setShares] = useState("");
     const [price, setPrice] = useState("");
     const [executedDate, setExecutedDate] = useState("");
     const [validationErrors, setValidationErrors] = useState<AddTradeFormErrors>({});
@@ -102,7 +105,7 @@ export default function AddTradeForm({
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        const nextValidationErrors = validateTradeForm(selectedInstrument, quantity, price, executedDate);
+        const nextValidationErrors = validateTradeForm(selectedInstrument, shares, price, executedDate);
         setValidationErrors(nextValidationErrors);
 
         if (hasValidationErrors(nextValidationErrors) || !selectedInstrument) {
@@ -111,7 +114,8 @@ export default function AddTradeForm({
 
         await onSubmit(
             selectedInstrument.id,
-            Number(quantity),
+            type,
+            Number(shares),
             Number(price),
             executedDate
         );
@@ -287,20 +291,34 @@ export default function AddTradeForm({
                     <FieldError>{validationErrors.instrument}</FieldError>
                     
                 </Field>
-                <Field data-invalid={Boolean(validationErrors.quantity)}>
-                    <FieldLabel>Quantity *</FieldLabel>
+                <Field>
+                    <FieldLabel>Type *</FieldLabel>
+                    <select
+                        id="trade-type"
+                        value={type}
+                        disabled={isSubmitting}
+                        onChange={(e) => setType(e.target.value as TradeType)}
+                        className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="Buy">Buy</option>
+                        <option value="Sell">Sell</option>
+                    </select>
+                </Field>
+                <Field data-invalid={Boolean(validationErrors.shares)}>
+                    <FieldLabel>Shares *</FieldLabel>
                     <Input
-                        id="trade-quantity"
+                        id="trade-shares"
                         type="number"
-                        value={quantity}
+                        min="1"
+                        value={shares}
                         placeholder="0"
                         disabled={isSubmitting}
-                        aria-invalid={Boolean(validationErrors.quantity)}
+                        aria-invalid={Boolean(validationErrors.shares)}
                         onChange={(e) => {
-                            setQuantity(e.target.value)
-                            setValidationErrors((current) => ({ ...current, quantity: undefined }))
+                            setShares(e.target.value)
+                            setValidationErrors((current) => ({ ...current, shares: undefined }))
                         }} />
-                    <FieldError>{validationErrors.quantity}</FieldError>
+                    <FieldError>{validationErrors.shares}</FieldError>
                 </Field>
                 <Field data-invalid={Boolean(validationErrors.price)}>
                     <FieldLabel>Price *</FieldLabel>

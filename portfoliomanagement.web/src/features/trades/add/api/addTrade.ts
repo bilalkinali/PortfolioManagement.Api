@@ -1,8 +1,10 @@
 import { apiFetch } from '@/features/auth/shared/apiClient';
+import type { TradeType } from '@/features/portfolios/details/api/getPortfolio';
 
 export type AddTradeRequest = {
     instrumentId: number;
-    quantity: number;
+    type: TradeType;
+    shares: number;
     price: number;
     executedDate: string;
 };

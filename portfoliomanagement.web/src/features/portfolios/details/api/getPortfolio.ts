@@ -39,9 +39,16 @@ export type PortfolioTradeResponse = {
     id: number;
     isBuy: boolean;
     quantity: number;
+    type: TradeType;
+    shares: number;
     price: number;
+    totalCost: number;
+    realizedGain: number | null;
+    realizedGainPercentage: number | null;
     executedDate: string;
 }
+
+export type TradeType = "Buy" | "Sell";
 
 export async function getPortfolio(portfolioId: number): Promise<PortfolioResponse> {
     const response = await apiFetch(`/api/portfolios/${portfolioId}`, {

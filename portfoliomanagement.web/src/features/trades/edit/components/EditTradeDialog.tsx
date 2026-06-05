@@ -5,7 +5,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { editTrade, type EditTradeRequest } from '../api/editTrade'
 import { PencilIcon } from "lucide-react"
 import EditTradeForm from './EditTradeForm';
-import type { PortfolioTradeResponse } from '../../../portfolios/details/api/getPortfolio';
+import type { PortfolioTradeResponse, TradeType } from '../../../portfolios/details/api/getPortfolio';
 
 type EditTradeDialogProps = {
     portfolioId: number;
@@ -44,14 +44,15 @@ export default function EditTradeDialog({
     }
 
     async function handleSubmit(
-        quantity: number,
+        type: TradeType,
+        shares: number,
         price: number,
         executedDate: string) {
 
         setErrorMessage(null);
         setIsSubmitting(true);
 
-        const request: EditTradeRequest = { quantity, price, executedDate };
+        const request: EditTradeRequest = { type, shares, price, executedDate };
 
         try {
             await editTrade(request, portfolioId, positionId, trade.id);

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using PortfolioManagement.Api.Features.Trades.EditTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using PortfolioManagement.Api.Shared.Events;
 
@@ -45,7 +46,24 @@ public static class AddTradeEndpoint
     }
 }
 
-public record AddTradeRequest(int InstrumentId, int Quantity, decimal Price, DateOnly ExecutedDate);
+public sealed record AddTradeRequest(
+    int InstrumentId,
+    string? Type,
+    int? Shares,
+    decimal Price,
+    DateOnly ExecutedDate,
+    int? Quantity = null)
+{
+    public int ToSignedQuantity()
+    {
+        if (TradeType.IsValid(Type) && Shares is > 0)
+        {
+            return TradeType.ToSignedQuantity(Type!, Shares.Value);
+        }
+
+        return Quantity!.Value;
+    }
+}
 
 public class AddTradeValidator : AbstractValidator<AddTradeRequest>
 {
@@ -54,8 +72,9 @@ public class AddTradeValidator : AbstractValidator<AddTradeRequest>
         RuleFor(x => x.InstrumentId)
             .GreaterThan(0);
 
-        RuleFor(x => x.Quantity)
-            .NotEqual(0);
+        RuleFor(x => x)
+            .Must(TradeType.HasValidTradeSize)
+            .WithMessage("Provide Buy or Sell with positive shares.");
 
         RuleFor(x => x.Price)
             .GreaterThan(0);
@@ -99,9 +118,53 @@ public class AddTradeHandler
             throw new InvalidOperationException("Portfolio not found");
         }
 
-        var trade = portfolio.AddTrade(instrument.Id, request.Quantity, request.Price, request.ExecutedDate);
+        portfolio.AddTrade(instrument.Id, request.ToSignedQuantity(), request.Price, request.ExecutedDate);
 
         await _dbContext.SaveChangesAsync();
     }
 
+}
+
+public static class TradeType
+{
+    public const string Buy = "Buy";
+    public const string Sell = "Sell";
+
+    public static bool IsValid(string? type)
+    {
+        return string.Equals(type, Buy, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(type, Sell, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static string FromQuantity(int quantity)
+    {
+        return quantity > 0 ? Buy : Sell;
+    }
+
+    public static int ToSignedQuantity(string type, int shares)
+    {
+        return string.Equals(type, Sell, StringComparison.OrdinalIgnoreCase)
+            ? -shares
+            : shares;
+    }
+
+    public static bool HasValidTradeSize(AddTradeRequest request)
+    {
+        if (IsValid(request.Type) && request.Shares is > 0)
+        {
+            return true;
+        }
+
+        return request.Quantity is not null and not 0;
+    }
+
+    public static bool HasValidTradeSize(EditTradeRequest request)
+    {
+        if (IsValid(request.Type) && request.Shares is > 0)
+        {
+            return true;
+        }
+
+        return request.Quantity is not null and not 0;
+    }
 }

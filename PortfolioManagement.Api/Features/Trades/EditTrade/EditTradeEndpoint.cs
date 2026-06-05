@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.Trades.EditTrade;
@@ -58,14 +59,31 @@ public static class EditTradeEndpoint
     }
 }
 
-public sealed record EditTradeRequest(int Quantity, decimal Price, DateOnly ExecutedDate);
+public sealed record EditTradeRequest(
+    string? Type,
+    int? Shares,
+    decimal Price,
+    DateOnly ExecutedDate,
+    int? Quantity = null)
+{
+    public int ToSignedQuantity()
+    {
+        if (TradeType.IsValid(Type) && Shares is > 0)
+        {
+            return TradeType.ToSignedQuantity(Type!, Shares.Value);
+        }
+
+        return Quantity!.Value;
+    }
+}
 
 public class EditTradeValidator : AbstractValidator<EditTradeRequest>
 {
     public EditTradeValidator()
     {
-        RuleFor(x => x.Quantity)
-            .NotEqual(0);
+        RuleFor(x => x)
+            .Must(TradeType.HasValidTradeSize)
+            .WithMessage("Provide Buy or Sell with positive shares.");
 
         RuleFor(x => x.Price)
             .GreaterThan(0);
@@ -102,7 +120,7 @@ public class EditTradeHandler(PortfolioDbContext db)
         portfolio.EditTrade(
             positionId,
             tradeId,
-            request.Quantity,
+            request.ToSignedQuantity(),
             request.Price,
             request.ExecutedDate);
 
