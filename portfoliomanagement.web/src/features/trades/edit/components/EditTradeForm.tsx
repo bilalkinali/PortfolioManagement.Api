@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type RefObject } from "react"
 import { Input } from "@/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import type { PortfolioTradeResponse } from '../../../portfolios/details/api/getPortfolio';
+import type { PortfolioTradeResponse, TradeType } from '../../../portfolios/details/api/getPortfolio';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from "lucide-react"
@@ -12,7 +12,8 @@ type EditTradeFormProps = {
     ref: RefObject<HTMLFormElement | null>;
     trade: PortfolioTradeResponse;
     onSubmit: (
-        quantity: number,
+        type: TradeType,
+        shares: number,
         price: number,
         executedDate: string
     ) => Promise<void>;
@@ -22,23 +23,23 @@ type EditTradeFormProps = {
 }
 
 type EditTradeFormErrors = {
-    quantity?: string;
+    shares?: string;
     price?: string;
     executedDate?: string;
 }
 
-function validateTradeForm(quantity: string, price: string, executedDate: string): EditTradeFormErrors {
+function validateTradeForm(shares: string, price: string, executedDate: string): EditTradeFormErrors {
     const errors: EditTradeFormErrors = {};
-    const quantityValue = Number(quantity);
+    const sharesValue = Number(shares);
     const priceValue = Number(price);
     const today = toDateOnlyString(new Date());
 
-    if (quantity.trim() === "") {
-        errors.quantity = "Quantity is required.";
-    } else if (!Number.isInteger(quantityValue)) {
-        errors.quantity = "Quantity must be a whole number.";
-    } else if (quantityValue === 0) {
-        errors.quantity = "Quantity cannot be zero.";
+    if (shares.trim() === "") {
+        errors.shares = "Shares are required.";
+    } else if (!Number.isInteger(sharesValue)) {
+        errors.shares = "Shares must be a whole number.";
+    } else if (sharesValue <= 0) {
+        errors.shares = "Shares must be greater than zero.";
     }
 
     if (price.trim() === "") {
@@ -57,7 +58,7 @@ function validateTradeForm(quantity: string, price: string, executedDate: string
 }
 
 function hasValidationErrors(errors: EditTradeFormErrors) {
-    return Boolean(errors.quantity || errors.price || errors.executedDate);
+    return Boolean(errors.shares || errors.price || errors.executedDate);
 }
 
 export default function EditTradeForm({
@@ -68,7 +69,8 @@ export default function EditTradeForm({
     errorMessage,
     onChangeState
 }: EditTradeFormProps) {
-    const [quantity, setQuantity] = useState(trade.quantity.toString());
+    const [type, setType] = useState<TradeType>(trade.type);
+    const [shares, setShares] = useState(trade.shares.toString());
     const [price, setPrice] = useState(trade.price.toString());
     const [executedDate, setExecutedDate] = useState(trade.executedDate);
     const [validationErrors, setValidationErrors] = useState<EditTradeFormErrors>({});
@@ -76,17 +78,18 @@ export default function EditTradeForm({
 
     useEffect(() => {
         const hasChanges =
-            Number(quantity) !== trade.quantity ||
+            type !== trade.type ||
+            Number(shares) !== trade.shares ||
             Number(price) !== trade.price ||
             executedDate !== trade.executedDate;
 
         onChangeState(hasChanges);
-    }, [quantity, price, executedDate, trade, onChangeState]);
+    }, [type, shares, price, executedDate, trade, onChangeState]);
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        const nextValidationErrors = validateTradeForm(quantity, price, executedDate);
+        const nextValidationErrors = validateTradeForm(shares, price, executedDate);
         setValidationErrors(nextValidationErrors);
 
         if (hasValidationErrors(nextValidationErrors)) {
@@ -94,7 +97,8 @@ export default function EditTradeForm({
         }
 
         await onSubmit(
-            Number(quantity),
+            type,
+            Number(shares),
             Number(price),
             executedDate
         );
@@ -103,20 +107,34 @@ export default function EditTradeForm({
     return (
         <form ref={ref} onSubmit={handleSubmit}>
             <FieldGroup>
-                <Field data-invalid={Boolean(validationErrors.quantity)}>
-                    <FieldLabel>Quantity *</FieldLabel>
+                <Field>
+                    <FieldLabel>Type *</FieldLabel>
+                    <select
+                        id="trade-type"
+                        value={type}
+                        disabled={isSubmitting}
+                        onChange={(e) => setType(e.target.value as TradeType)}
+                        className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="Buy">Buy</option>
+                        <option value="Sell">Sell</option>
+                    </select>
+                </Field>
+                <Field data-invalid={Boolean(validationErrors.shares)}>
+                    <FieldLabel>Shares *</FieldLabel>
                     <Input
-                        id="trade-quantity"
+                        id="trade-shares"
                         type="number"
-                        value={quantity}
+                        min="1"
+                        value={shares}
                         placeholder="0"
                         disabled={isSubmitting}
-                        aria-invalid={Boolean(validationErrors.quantity)}
+                        aria-invalid={Boolean(validationErrors.shares)}
                         onChange={(e) => {
-                            setQuantity(e.target.value)
-                            setValidationErrors((current) => ({ ...current, quantity: undefined }))
+                            setShares(e.target.value)
+                            setValidationErrors((current) => ({ ...current, shares: undefined }))
                         }} />
-                    <FieldError>{validationErrors.quantity}</FieldError>
+                    <FieldError>{validationErrors.shares}</FieldError>
                 </Field>
                 <Field data-invalid={Boolean(validationErrors.price)}>
                     <FieldLabel>Price *</FieldLabel>

@@ -26,8 +26,9 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMmQwZDdlNy04OWRhLTQwNzItYjJkNC1lMzFiNGY3OWQzMWEiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJCaWxhbCIsImxhc3ROYW1lIjoiS2luYWxpIiwiZXhwIjoxNzc3NDY2MTA1LCJpc3MiOiJQb3J0Zm9saW9NYW5hZ2VtZW50LkFwaSIsImF1ZCI6IlBvcnRmb2xpb01hbmFnZW1lbnQuQ2xpZW50In0.6quOUPxw00-AzB3axbsawcro7hhoE6JMIROd3A8QVqY
 
 {
-  "symbol": "TSLA",
-  "quantity": 20,
+  "instrumentId": 1,
+  "type": "Buy",
+  "shares": 20,
   "price": 300.00,
   "executedDate": "2026-04-08"
 }

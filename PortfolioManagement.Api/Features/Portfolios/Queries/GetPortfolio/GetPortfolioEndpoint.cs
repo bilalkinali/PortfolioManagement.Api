@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Features.Trades.AddTrade;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
 namespace PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
@@ -106,14 +108,11 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
                     ? unrealizedPnL.Value / costBasis * 100
                     : null;
 
+                var realizedGainByTradeId = CalculateTradeRealizedGains(position.Trades);
+
                 var trades = position.Trades
                     .OrderByDescending(t => t.ExecutedDate)
-                    .Select(t => new GetPortfolioPositionTradeResponse(
-                        t.Id,
-                        t.IsBuy,
-                        t.Quantity,
-                        t.Price,
-                        t.ExecutedDate))
+                    .Select(t => ToTradeResponse(t, realizedGainByTradeId))
                     .ToList();
 
                 return new GetPortfolioPositionResponse(
@@ -179,6 +178,86 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
 
         return 0;
     }
+
+    private static GetPortfolioPositionTradeResponse ToTradeResponse(
+        Trade trade,
+        IReadOnlyDictionary<int, TradeRealizedGain> realizedGainByTradeId)
+    {
+        realizedGainByTradeId.TryGetValue(trade.Id, out var realizedGain);
+
+        return new GetPortfolioPositionTradeResponse(
+            trade.Id,
+            trade.IsBuy,
+            trade.Quantity,
+            trade.Price,
+            trade.ExecutedDate,
+            TradeType.FromQuantity(trade.Quantity),
+            Math.Abs(trade.Quantity),
+            trade.TradeValue,
+            realizedGain?.Amount,
+            realizedGain?.Percentage);
+    }
+
+    private static Dictionary<int, TradeRealizedGain> CalculateTradeRealizedGains(IEnumerable<Trade> trades)
+    {
+        var realizedGainByTradeId = new Dictionary<int, TradeRealizedGain>();
+        var quantity = 0;
+        var averageCostBasis = 0m;
+
+        foreach (var trade in trades.OrderBy(t => t.ExecutedDate).ThenBy(t => t.Id))
+        {
+            if (quantity == 0)
+            {
+                quantity = trade.Quantity;
+                averageCostBasis = trade.Price;
+                continue;
+            }
+
+            var sameDirection =
+                quantity > 0 && trade.Quantity > 0 ||
+                quantity < 0 && trade.Quantity < 0;
+
+            if (sameDirection)
+            {
+                var currentAbsQuantity = Math.Abs(quantity);
+                var tradeAbsQuantity = Math.Abs(trade.Quantity);
+
+                averageCostBasis =
+                    ((currentAbsQuantity * averageCostBasis) + (tradeAbsQuantity * trade.Price))
+                    / (currentAbsQuantity + tradeAbsQuantity);
+
+                quantity += trade.Quantity;
+                continue;
+            }
+
+            var closingQuantity = Math.Min(Math.Abs(quantity), Math.Abs(trade.Quantity));
+            var amount = quantity > 0
+                ? closingQuantity * (trade.Price - averageCostBasis)
+                : closingQuantity * (averageCostBasis - trade.Price);
+            var closedCostBasis = closingQuantity * averageCostBasis;
+            var percentage = closedCostBasis > 0
+                ? amount / closedCostBasis * 100
+                : 0;
+
+            realizedGainByTradeId[trade.Id] = new TradeRealizedGain(amount, percentage);
+
+            var previousQuantity = quantity;
+            quantity += trade.Quantity;
+
+            if (quantity == 0)
+            {
+                averageCostBasis = 0m;
+            }
+            else if (Math.Abs(trade.Quantity) > Math.Abs(previousQuantity))
+            {
+                averageCostBasis = trade.Price;
+            }
+        }
+
+        return realizedGainByTradeId;
+    }
+
+    private sealed record TradeRealizedGain(decimal Amount, decimal Percentage);
 }
 
 public sealed record GetPortfolioResponse(
@@ -221,5 +300,10 @@ public sealed record GetPortfolioPositionTradeResponse(
     bool IsBuy,
     int Quantity,
     decimal Price,
-    DateOnly ExecutedDate
+    DateOnly ExecutedDate,
+    string Type,
+    int Shares,
+    decimal TotalCost,
+    decimal? RealizedGain,
+    decimal? RealizedGainPercentage
 );
