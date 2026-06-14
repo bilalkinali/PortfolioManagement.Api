@@ -14,6 +14,7 @@ using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfoliosOverview;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
+using PortfolioManagement.Api.Features.StockQuotes.GetStockQuote;
 using PortfolioManagement.Api.Features.Trades.DeleteTrade;
 using PortfolioManagement.Api.Features.Trades.EditTrade;
 
@@ -104,6 +105,7 @@ app.MapDeletePortfolioEndpoint();
 app.MapAddTradeEndpoint();
 app.MapSearchInstrumentsEndpoint();
 app.MapGetStockHistoryEndpoint();
+app.MapGetStockQuoteEndpoint();
 app.MapGetPortfoliosEndpoint();
 app.MapGetPortfolioEndpoint();
 app.MapDeleteTradeEndpoint();

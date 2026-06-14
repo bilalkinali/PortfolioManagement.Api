@@ -374,6 +374,7 @@ dist/
 # Testing local claude configuration with ollama
 .claude
 
+.agents/
 appsettings.Development.json
 /PortfolioManagement.Api/appsettings.Development.json
 /.agents/skills

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import { Area, Bar, CartesianGrid, ComposedChart, XAxis, YAxis } from "recharts";
+import { Button } from "@/components/ui/button";
 import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart";
-import { Button } from "@/components/ui/button";
 import {
     getStockHistory,
     type StockBar,
@@ -195,7 +195,7 @@ function HistoryChartContent({
     currency,
     showVolume,
 }: HistoryChartContentProps) {
-    const maxVolume = Math.max(...chartData.map((x) => x.volume));
+    const maxVolume = Math.max(...chartData.map((point) => point.volume));
 
     return (
         <ChartContainer
@@ -366,18 +366,18 @@ function formatTooltipPayload(
     return payload
         ?.filter((item) => showVolume || (item.dataKey !== "volume" && item.name !== "volume"))
         .map((item) => {
-        if (
-            (item.dataKey !== "close" && item.name !== "close") ||
-            typeof item.value !== "number"
-        ) {
-            return item;
-        }
+            if (
+                (item.dataKey !== "close" && item.name !== "close") ||
+                typeof item.value !== "number"
+            ) {
+                return item;
+            }
 
-        return {
-            ...item,
-            value: formatCurrencyTooltipValue(item.value, currency),
-        };
-    }) as ChartTooltipContentPayload;
+            return {
+                ...item,
+                value: formatCurrencyTooltipValue(item.value, currency),
+            };
+        }) as ChartTooltipContentPayload;
 }
 
 function formatCurrencyTooltipValue(value: number, currency?: string | null) {

@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Features.MarketData;
+using PortfolioManagement.Api.Features.MarketData.Finnhub;
+using PortfolioManagement.Api.Features.MarketData.Yahoo;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile.Proxy;
 
@@ -8,14 +11,23 @@ namespace PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
 public sealed class GetStockProfileHandler
 {
     private readonly PortfolioDbContext _db;
-    private readonly MassiveProfileProxy _proxy;
+    private readonly FinnhubProfileProxy _finnhubProfileProxy;
+    private readonly MassiveProfileProxy _massiveProfileProxy;
+    private readonly MarketDataProviderRouter _providerRouter;
+    private readonly YahooMarketDataProxy _yahooMarketDataProxy;
 
     public GetStockProfileHandler(
         PortfolioDbContext db,
-        MassiveProfileProxy proxy)
+        MassiveProfileProxy massiveProfileProxy,
+        FinnhubProfileProxy finnhubProfileProxy,
+        YahooMarketDataProxy yahooMarketDataProxy,
+        MarketDataProviderRouter providerRouter)
     {
         _db = db;
-        _proxy = proxy;
+        _massiveProfileProxy = massiveProfileProxy;
+        _finnhubProfileProxy = finnhubProfileProxy;
+        _yahooMarketDataProxy = yahooMarketDataProxy;
+        _providerRouter = providerRouter;
     }
 
     public async Task<GetStockProfileResponse?> Handle(
@@ -28,25 +40,50 @@ public sealed class GetStockProfileHandler
             .Include(i => i.StockProfile)
             .FirstOrDefaultAsync(i => i.Symbol == ticker, cancellationToken);
 
+        instrument ??= await CreateInstrumentFromProviderAsync(ticker, cancellationToken);
+
         if (instrument is null)
+        {
             return null;
+        }
         
         if (instrument.StockProfile is not null)
         {
             return MapToResponse(instrument.StockProfile);
         }
 
-        var massiveTickerInfo = await _proxy.GetProfileFromProxyAsync(ticker, cancellationToken);
+        var provider = _providerRouter.ResolveQuoteProvider(ticker, instrument.ExchangeCode);
+        var providerSymbol = string.IsNullOrWhiteSpace(instrument.ProviderSymbol)
+            ? ticker
+            : instrument.ProviderSymbol;
+        var profileSummary = provider == MarketDataProvider.Yahoo
+            ? await _yahooMarketDataProxy.GetProfileAsync(providerSymbol, cancellationToken)
+            : await _finnhubProfileProxy.GetProfileAsync(providerSymbol, cancellationToken);
 
-        if (massiveTickerInfo is null)
+        if (profileSummary is null && provider == MarketDataProvider.Finnhub)
+        {
+            var massiveTickerInfo = await _massiveProfileProxy.GetProfileFromProxyAsync(ticker, cancellationToken);
+
+            if (massiveTickerInfo is not null)
+            {
+                var massiveProfile = await CreateAndSaveMassiveProfileAsync(
+                    instrument.Id,
+                    ticker,
+                    massiveTickerInfo,
+                    cancellationToken);
+
+                return MapToResponse(massiveProfile);
+            }
+        }
+
+        if (profileSummary is null)
         {
             return null;
         }
 
         var newProfile = await CreateAndSaveProfileAsync(
             instrument.Id,
-            ticker,
-            massiveTickerInfo,
+            profileSummary,
             cancellationToken);
 
         return MapToResponse(newProfile);
@@ -89,7 +126,108 @@ public sealed class GetStockProfileHandler
             LastSyncedDate: profile.LastSyncedAtUtc);
     }
 
+    private async Task<Instrument?> CreateInstrumentFromProviderAsync(
+        string ticker,
+        CancellationToken cancellationToken)
+    {
+        var provider = _providerRouter.ResolveSearchProvider(ticker);
+        IReadOnlyList<MarketDataInstrumentLookupResult>? lookupResults = null;
+
+        if (provider == MarketDataProvider.Yahoo)
+        {
+            lookupResults = await _yahooMarketDataProxy.LookupAsync(ticker, cancellationToken);
+        }
+        else
+        {
+            var profile = await _finnhubProfileProxy.GetProfileAsync(ticker, cancellationToken);
+
+            if (profile is not null)
+            {
+                lookupResults =
+                [
+                    new MarketDataInstrumentLookupResult(
+                        Symbol: profile.Ticker,
+                        Name: profile.Name ?? profile.Ticker,
+                        ProviderSymbol: profile.Ticker,
+                        Cik: profile.Cik is not null && int.TryParse(profile.Cik, out var cik) ? cik : null,
+                        Market: profile.Market,
+                        ExchangeCode: profile.PrimaryExchange,
+                        Currency: profile.CurrencyName,
+                        Type: profile.Type)
+                ];
+            }
+        }
+
+        var lookup = lookupResults?.FirstOrDefault();
+
+        if (lookup is null)
+        {
+            return null;
+        }
+
+        var instrument = Instrument.Create(
+            symbol: lookup.Symbol,
+            name: lookup.Name,
+            providerSymbol: lookup.ProviderSymbol,
+            cik: lookup.Cik,
+            market: lookup.Market,
+            exchangeCode: lookup.ExchangeCode,
+            currency: lookup.Currency,
+            type: lookup.Type);
+
+        _db.Instruments.Add(instrument);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return instrument;
+    }
+
     private async Task<StockProfile> CreateAndSaveProfileAsync(
+        int instrumentId,
+        MarketDataStockProfileSummary profileSummary,
+        CancellationToken cancellationToken)
+    {
+        var profile = StockProfile.Create(
+            instrumentId: instrumentId,
+            ticker: profileSummary.Ticker,
+            active: profileSummary.Active,
+            cik: profileSummary.Cik,
+            compositeFigi: null,
+            currencyName: profileSummary.CurrencyName,
+            description: profileSummary.Description,
+            homepageUrl: profileSummary.HomepageUrl,
+            listDate: profileSummary.ListDate,
+            locale: profileSummary.Locale,
+            market: profileSummary.Market,
+            marketCap: profileSummary.MarketCap,
+            name: profileSummary.Name,
+            phoneNumber: profileSummary.PhoneNumber,
+            primaryExchange: profileSummary.PrimaryExchange,
+            roundLot: null,
+            shareClassFigi: null,
+            shareClassSharesOutstanding: null,
+            sicCode: null,
+            sicDescription: null,
+            tickerRoot: null,
+            tickerSuffix: null,
+            totalEmployees: null,
+            type: profileSummary.Type,
+            weightedSharesOutstanding: profileSummary.WeightedSharesOutstanding,
+            addressLine1: null,
+            city: null,
+            state: null,
+            postalCode: null,
+            iconUrl: profileSummary.IconUrl,
+            logoUrl: profileSummary.LogoUrl,
+            delistedUtc: null,
+            lastSyncedAtUtc: DateOnly.FromDateTime(DateTime.UtcNow));
+
+        _db.StockProfiles.Add(profile);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return profile;
+    }
+
+    private async Task<StockProfile> CreateAndSaveMassiveProfileAsync(
     int instrumentId,
     string fallbackTicker,
     MassiveTickerOverviewResponse.TickerInfo massiveTickerInfo,

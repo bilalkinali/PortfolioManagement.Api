@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Features.MarketData;
+using PortfolioManagement.Api.Features.MarketData.Yahoo;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory.Proxy;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -7,15 +9,24 @@ namespace PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 
 public sealed class GetStockHistoryHandler
 {
+    private readonly IConfiguration _configuration;
     private readonly PortfolioDbContext _db;
-    private readonly MassiveStockHistoryProxy _proxy;
+    private readonly MassiveStockHistoryProxy _massiveStockHistoryProxy;
+    private readonly MarketDataProviderRouter _providerRouter;
+    private readonly YahooMarketDataProxy _yahooMarketDataProxy;
 
     public GetStockHistoryHandler(
         PortfolioDbContext db,
-        MassiveStockHistoryProxy proxy)
+        MassiveStockHistoryProxy massiveStockHistoryProxy,
+        MarketDataProviderRouter providerRouter,
+        YahooMarketDataProxy yahooMarketDataProxy,
+        IConfiguration configuration)
     {
         _db = db;
-        _proxy = proxy;
+        _massiveStockHistoryProxy = massiveStockHistoryProxy;
+        _providerRouter = providerRouter;
+        _yahooMarketDataProxy = yahooMarketDataProxy;
+        _configuration = configuration;
     }
 
     public async Task<GetStockHistoryResponse?> Handle(
@@ -25,84 +36,74 @@ public sealed class GetStockHistoryHandler
         var ticker = request.Ticker.Trim().ToUpperInvariant();
         var from = DateOnly.Parse(request.From);
         var to = DateOnly.Parse(request.To);
-        var timespan = StockHistoryRangeRules.ResolveTimespan(request.Range, request.Timespan);
         var period = StockHistoryRangeRules.ResolvePeriod(request.Range, request.Timespan);
         var isRangeRequest = !string.IsNullOrWhiteSpace(request.Range);
 
-        var instrumentId = await _db.Instruments
-            .Where(x => x.Symbol == ticker)
-            .Select(x => (int?)x.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+        var instrument = await _db.Instruments
+            .FirstOrDefaultAsync(x => x.Symbol == ticker, cancellationToken);
+        List<StockBar> dailyLocalBars = [];
 
-        if (instrumentId is not null && period is not null)
+        if (instrument is not null && period is not null)
         {
-            var localBars = isRangeRequest
-                ? await GetAggregatedLocalBarsAsync(
-                    instrumentId.Value,
-                    period.Value,
-                    from,
-                    to,
-                    cancellationToken)
-                : await GetLocalBarsAsync(
-                    instrumentId.Value,
-                    period.Value,
-                    from,
-                    to,
-                    cancellationToken);
+            dailyLocalBars = await GetDailyLocalBarsAsync(
+                instrument.Id,
+                from,
+                to,
+                cancellationToken);
 
-            // For now: local cache wins if any bars exist.
-            // Later: check full date coverage and fetch missing ranges.
-            if (localBars.Count > 0)
+            if (HasRequestedRangeCoverage(dailyLocalBars, from, to))
             {
-                return MapToResponse(ticker, localBars);
+                return MapToResponse(ticker, MapResponseBars(dailyLocalBars, period.Value, isRangeRequest));
             }
         }
 
-        var result = await _proxy.GetHistoryAsync(
+        var providerSymbol = string.IsNullOrWhiteSpace(instrument?.ProviderSymbol)
+            ? ticker
+            : instrument.ProviderSymbol;
+        var provider = _providerRouter.ResolveHistoryProvider(
             ticker,
+            IsMassiveConfigured(),
+            instrument?.ExchangeCode);
+
+        var fetchedDailyBars = new List<MarketDataHistoricalCandle>();
+        var fetchedBars = await FetchDailyBarsAsync(
+            provider,
+            providerSymbol,
             from,
             to,
-            timespan,
             cancellationToken);
 
-        if (result?.Results is null)
+        if (fetchedBars is not null)
         {
-            return result;
+            fetchedDailyBars.AddRange(fetchedBars);
         }
 
-        return result;
+        if (fetchedDailyBars.Count == 0 && dailyLocalBars.Count == 0)
+        {
+            return null;
+        }
+
+        if (fetchedDailyBars.Count > 0)
+        {
+            instrument ??= await CreatePlaceholderInstrumentAsync(ticker, cancellationToken);
+            await SaveDailyBarsAsync(instrument, fetchedDailyBars, cancellationToken);
+        }
+
+        var localDailyBars = instrument is null
+            ? dailyLocalBars
+            : await GetDailyLocalBarsAsync(
+                instrument.Id,
+                from,
+                to,
+                cancellationToken);
+
+        return MapToResponse(
+            ticker,
+            MapResponseBars(localDailyBars, period ?? MarketDataPeriod.Daily, isRangeRequest));
     }
 
-    private async Task<List<StockBar>> GetAggregatedLocalBarsAsync(
+    private async Task<List<StockBar>> GetDailyLocalBarsAsync(
         int instrumentId,
-        MarketDataPeriod period,
-        DateOnly from,
-        DateOnly to,
-        CancellationToken cancellationToken)
-    {
-        var dailyBars = await _db.MarketDataBars
-            .AsNoTracking()
-            .Where(x =>
-                x.InstrumentId == instrumentId &&
-                x.Period == MarketDataPeriod.Daily &&
-                x.Date >= from &&
-                x.Date <= to)
-            .OrderBy(x => x.Date)
-            .Select(x => new StockHistoryDailyBar(
-                x.Date,
-                x.Open,
-                x.High,
-                x.Low,
-                x.Close,
-                x.Volume))
-            .ToListAsync(cancellationToken);
-
-        return StockHistoryBarAggregator.Aggregate(dailyBars, period);
-    }
-
-    private async Task<List<StockBar>> GetLocalBarsAsync(
-        int instrumentId,
-        MarketDataPeriod period,
         DateOnly from,
         DateOnly to,
         CancellationToken cancellationToken)
@@ -111,7 +112,7 @@ public sealed class GetStockHistoryHandler
             .AsNoTracking()
             .Where(x =>
                 x.InstrumentId == instrumentId &&
-                x.Period == period &&
+                x.Period == MarketDataPeriod.Daily &&
                 x.Date >= from &&
                 x.Date <= to)
             .OrderBy(x => x.Date)
@@ -125,6 +126,146 @@ public sealed class GetStockHistoryHandler
                 x.Volume,
                 null))
             .ToListAsync(cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<MarketDataHistoricalCandle>?> FetchDailyBarsAsync(
+        MarketDataProvider provider,
+        string symbol,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
+    {
+        if (provider == MarketDataProvider.Yahoo)
+        {
+            return await _yahooMarketDataProxy.GetDailyHistoryAsync(symbol, from, to, cancellationToken);
+        }
+
+        if (provider == MarketDataProvider.Massive)
+        {
+            var massiveResponse = await _massiveStockHistoryProxy.GetHistoryAsync(
+                symbol,
+                from,
+                to,
+                "day",
+                cancellationToken);
+
+            return massiveResponse?.Results?
+                .Select(MapToCandle)
+                .OrderBy(x => x.Date)
+                .ToList();
+        }
+
+        return null;
+    }
+
+    private async Task SaveDailyBarsAsync(
+        Instrument instrument,
+        IReadOnlyList<MarketDataHistoricalCandle> candles,
+        CancellationToken cancellationToken)
+    {
+        var dates = candles.Select(x => x.Date).Distinct().ToList();
+
+        var existingDates = await _db.MarketDataBars
+            .Where(x =>
+                x.InstrumentId == instrument.Id &&
+                x.Period == MarketDataPeriod.Daily &&
+                dates.Contains(x.Date))
+            .Select(x => x.Date)
+            .ToListAsync(cancellationToken);
+
+        var existingDateSet = existingDates.ToHashSet();
+
+        foreach (var candle in candles)
+        {
+            if (existingDateSet.Contains(candle.Date))
+            {
+                continue;
+            }
+
+            instrument.AddMarketDataBar(
+                candle.Date,
+                MarketDataPeriod.Daily,
+                candle.Open,
+                candle.High,
+                candle.Low,
+                candle.Close,
+                candle.Volume);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<Instrument> CreatePlaceholderInstrumentAsync(
+        string ticker,
+        CancellationToken cancellationToken)
+    {
+        var instrument = Instrument.Create(
+            symbol: ticker,
+            name: ticker,
+            providerSymbol: ticker,
+            market: "stocks",
+            type: "CS");
+
+        _db.Instruments.Add(instrument);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return instrument;
+    }
+
+    private bool IsMassiveConfigured()
+        => !string.IsNullOrWhiteSpace(_configuration["Massive:ApiKey"]);
+
+    private static List<StockHistoryDailyBar> MapToDailyBars(IReadOnlyList<StockBar> bars)
+    {
+        return bars
+            .Select(x => new StockHistoryDailyBar(
+                DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Timestamp).UtcDateTime),
+                x.Open,
+                x.High,
+                x.Low,
+                x.Close,
+                Convert.ToInt64(x.Volume)))
+            .ToList();
+    }
+
+    private static IReadOnlyList<StockBar> MapResponseBars(
+        IReadOnlyList<StockBar> dailyLocalBars,
+        MarketDataPeriod period,
+        bool isRangeRequest)
+    {
+        return period == MarketDataPeriod.Daily && !isRangeRequest
+            ? dailyLocalBars
+            : StockHistoryBarAggregator.Aggregate(MapToDailyBars(dailyLocalBars), period);
+    }
+
+    private static bool HasRequestedRangeCoverage(
+        IReadOnlyList<StockBar> dailyLocalBars,
+        DateOnly from,
+        DateOnly to)
+    {
+        if (dailyLocalBars.Count == 0)
+        {
+            return false;
+        }
+
+        var firstLocalDate = ToDateOnly(dailyLocalBars[0]);
+        var lastLocalDate = ToDateOnly(dailyLocalBars[^1]);
+
+        return firstLocalDate <= from.AddDays(3) && lastLocalDate >= to.AddDays(-3);
+    }
+
+    private static DateOnly ToDateOnly(StockBar bar)
+        => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(bar.Timestamp).UtcDateTime);
+
+    private static MarketDataHistoricalCandle MapToCandle(StockBar bar)
+    {
+        return new MarketDataHistoricalCandle(
+            Date: DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(bar.Timestamp).UtcDateTime),
+            Open: bar.Open,
+            High: bar.High,
+            Low: bar.Low,
+            Close: bar.Close,
+            Volume: Convert.ToInt64(bar.Volume));
     }
 
     private static GetStockHistoryResponse MapToResponse(string ticker, IReadOnlyList<StockBar> bars)

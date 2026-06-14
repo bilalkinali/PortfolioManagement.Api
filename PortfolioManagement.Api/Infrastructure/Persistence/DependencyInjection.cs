@@ -6,10 +6,14 @@ using PortfolioManagement.Api.Features.Auth.Me;
 using PortfolioManagement.Api.Features.Auth.Register;
 using PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 using PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
+using PortfolioManagement.Api.Features.MarketData;
+using PortfolioManagement.Api.Features.MarketData.Finnhub;
+using PortfolioManagement.Api.Features.MarketData.Yahoo;
 using PortfolioManagement.Api.Features.Portfolios.CreatePortfolio;
 using PortfolioManagement.Api.Features.Portfolios.DeletePortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolio;
 using PortfolioManagement.Api.Features.Portfolios.Queries.GetPortfolios;
+using PortfolioManagement.Api.Features.StockQuotes.GetStockQuote;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory;
 using PortfolioManagement.Api.Features.StockHistory.GetStockHistory.Proxy;
 using PortfolioManagement.Api.Features.StockProfiles.GetStockProfile;
@@ -34,6 +38,7 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("PortfolioDbConnection")));
 
         services.AddDataProtection();
+        services.AddMemoryCache();
 
         services
             .AddIdentityCore<AppUser>()
@@ -61,8 +66,18 @@ public static class DependencyInjection
         // Instruments
         services.AddScoped<SearchInstrumentsHandler>();
         services.AddScoped<MassiveSearchProxy>();
+        services.AddScoped<FinnhubSearchProxy>();
+        services.AddScoped<FinnhubQuoteProxy>();
+        services.AddScoped<FinnhubProfileProxy>();
+        services.AddSingleton<MarketDataProviderRouter>();
+        services.AddSingleton<YahooRequestGate>();
+        services.AddScoped<YahooMarketDataProxy>();
         services.AddScoped<IValidator<SearchInstrumentsRequest>, SearchInstrumentsValidator>();
         //services.AddScoped<IDomainEventHandler<TradeAddedEvent>, TrackInstrumentWhenTradeAddedHandler>();
+
+        // Stock Quotes
+        services.AddScoped<GetStockQuoteHandler>();
+        services.AddScoped<IValidator<GetStockQuoteRequest>, GetStockQuoteValidator>();
 
         // Stock History
         services.AddScoped<GetStockHistoryHandler>();
@@ -73,12 +88,23 @@ public static class DependencyInjection
         services.AddScoped<GetStockProfileHandler>();
         services.AddScoped<MassiveProfileProxy>();
         services.AddScoped<IValidator<GetStockProfileRequest>, GetStockProfileValidator>();
+        services.AddHttpClient("Finnhub", (sp, client) =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            client.BaseAddress = new Uri(config["Finnhub:BaseUrl"] ?? "https://finnhub.io");
+        });
+
         services.AddHttpClient("Massive", (sp, client) =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
-            var apiKey = config["Massive:ApiKey"] ?? throw new InvalidOperationException("Massive API key is not configured.");
             client.BaseAddress = new Uri(config["Massive:BaseUrl"] ?? "https://api.massive.com");
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            var apiKey = config["Massive:ApiKey"];
+
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            }
         });
 
         // Auth
