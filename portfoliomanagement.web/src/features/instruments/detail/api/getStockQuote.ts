@@ -9,7 +9,9 @@ export type StockQuoteResponse = {
     low: number | null
     volume: number | null
     timestampUtc: string | null
+    priceDate: string | null
     currency: string | null
+    source: "Live" | "LatestLoaded"
     cachedAtUtc: string
 }
 

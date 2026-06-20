@@ -9,5 +9,7 @@ public sealed record GetStockQuoteResponse(
     decimal? Low,
     long? Volume,
     DateTimeOffset? TimestampUtc,
+    DateOnly? PriceDate,
     string? Currency,
+    string Source,
     DateTimeOffset CachedAtUtc);

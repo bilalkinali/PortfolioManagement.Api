@@ -157,6 +157,25 @@ function formatSignedCurrency(value: number, currency?: string | null) {
     return `${value >= 0 ? "+" : "-"}${formatted}`;
 }
 
+function formatQuoteTimestamp(value: string) {
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(new Date(value));
+}
+
+function formatQuoteDate(value: string) {
+    const [year, month, day] = value.split("-").map(Number);
+
+    if (!year || !month || !day) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+    }).format(new Date(year, month - 1, day));
+}
+
 type QuoteSummaryProps = {
     quote: StockQuoteResponse | null;
     currency?: string | null;
@@ -174,6 +193,13 @@ function QuoteSummary({ quote, currency }: QuoteSummaryProps) {
     const change = quote.previousClose
         ? quote.currentPrice - quote.previousClose
         : null;
+    const quoteMeta = quote.source === "Live"
+        ? quote.timestampUtc
+            ? `Live quote - ${formatQuoteTimestamp(quote.timestampUtc)}`
+            : "Live quote"
+        : quote.priceDate
+            ? `Latest loaded price - ${formatQuoteDate(quote.priceDate)}`
+            : "Latest loaded price";
 
     return (
         <div className="hidden shrink-0 text-right sm:block">
@@ -185,6 +211,9 @@ function QuoteSummary({ quote, currency }: QuoteSummaryProps) {
                     {formatSignedCurrency(change, currency)}
                 </div>
             )}
+            <div className="text-xs text-muted-foreground">
+                {quoteMeta}
+            </div>
         </div>
     );
 }

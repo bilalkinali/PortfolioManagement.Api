@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using PortfolioManagement.Api.Domain;
 using PortfolioManagement.Api.Features.MarketData;
 using PortfolioManagement.Api.Features.MarketData.Finnhub;
 using PortfolioManagement.Api.Features.MarketData.Yahoo;
@@ -43,6 +44,7 @@ public sealed class GetStockQuoteHandler
             .Where(x => x.Symbol == ticker)
             .Select(x => new
             {
+                x.Id,
                 x.Symbol,
                 x.ProviderSymbol,
                 x.Currency,
@@ -67,7 +69,7 @@ public sealed class GetStockQuoteHandler
 
         if (quote is null)
         {
-            return null;
+            return await GetLatestLoadedPriceResponse(ticker, instrument?.Id, instrument?.Currency, cancellationToken);
         }
 
         var response = new GetStockQuoteResponse(
@@ -79,7 +81,9 @@ public sealed class GetStockQuoteHandler
             Low: quote.Low,
             Volume: quote.Volume,
             TimestampUtc: quote.TimestampUtc,
+            PriceDate: null,
             Currency: quote.Currency ?? instrument?.Currency,
+            Source: "Live",
             CachedAtUtc: DateTimeOffset.UtcNow);
 
         _memoryCache.Set(
@@ -88,6 +92,54 @@ public sealed class GetStockQuoteHandler
             GetQuoteCacheDuration(provider));
 
         return response;
+    }
+
+    private async Task<GetStockQuoteResponse?> GetLatestLoadedPriceResponse(
+        string ticker,
+        int? instrumentId,
+        string? currency,
+        CancellationToken cancellationToken)
+    {
+        if (instrumentId is null)
+        {
+            return null;
+        }
+
+        var latestBar = await _db.MarketDataBars
+            .AsNoTracking()
+            .Where(x =>
+                x.InstrumentId == instrumentId &&
+                x.Period == MarketDataPeriod.Daily)
+            .OrderByDescending(x => x.Date)
+            .Select(x => new
+            {
+                x.Date,
+                x.Open,
+                x.High,
+                x.Low,
+                x.Close,
+                x.Volume
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (latestBar is null)
+        {
+            return null;
+        }
+
+        return new GetStockQuoteResponse(
+            Symbol: ticker,
+            CurrentPrice: latestBar.Close,
+            PreviousClose: null,
+            Open: latestBar.Open,
+            High: latestBar.High,
+            Low: latestBar.Low,
+            Volume: latestBar.Volume,
+            TimestampUtc: null,
+            PriceDate: latestBar.Date,
+            Currency: currency,
+            Source: "LatestLoaded",
+            CachedAtUtc: DateTimeOffset.UtcNow);
     }
 
     private TimeSpan GetQuoteCacheDuration(MarketDataProvider provider)
