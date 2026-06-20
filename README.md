@@ -84,15 +84,21 @@ http://127.0.0.1:5174
 
 The Vite dev server proxies `/api` and `/auth` to `http://localhost:5046`.
 
-## Verification Notes For Code Agents
+## Playwright E2E Tests
 
-For browser acceptance checks, prefer the Codex in-app Browser when available. Use Playwright only if the in-app Browser is unavailable or a repo-owned Playwright setup exists for the requested check. This repo currently does not include a Playwright setup.
+The frontend Playwright tests run against:
 
-If the app is already running at `http://127.0.0.1:5174` and the API is available at `http://localhost:5046`, use those running processes. If it is not running and there is no safe repo-owned full-stack startup script, stop and ask the user to start the API and frontend manually with the commands above.
+```text
+Frontend: http://127.0.0.1:5174
+API: http://localhost:5046
+```
 
-Do not invent Windows process-spawning workarounds, fight `PATH`/`Start-Process`/background shell jobs/JavaScript spawning/log redirection, change global Windows or package-manager settings, use elevated/admin permissions, or kill random processes.
+Run the e2e tests manually from the frontend folder:
 
-Known browser-verification caveat: `AAPL` detail can show `Quote unavailable` when Finnhub quote credentials are unavailable. That alone is not a failed browser verification. If app-browser resource timing is unavailable, combine guarded runtime inspection with a frontend source scan for provider key/host leak checks.
+```bash
+cd portfoliomanagement.web
+npm run test:e2e
+```
 
 ## Important Note
 

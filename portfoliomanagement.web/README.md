@@ -20,7 +20,17 @@ Start it with:
 npm run dev
 ```
 
-Browser verification should use the Codex in-app Browser when available. Use Playwright only if the in-app Browser is unavailable or the project later adds a repo-owned Playwright setup. This project currently has no Playwright setup.
+Browser verification should use the repo-owned Playwright setup in this folder when the user asks to test the frontend. The default Playwright `baseURL` is `http://127.0.0.1:5174`.
+
+Run e2e checks with:
+
+```bash
+npm run test:e2e
+```
+
+Use `npm run test:e2e:headed` or `npm run test:e2e:ui` only when headed or interactive debugging is requested. If Playwright reports missing browser binaries, run `npm run playwright:install` only when the user explicitly asks to install dependencies or browser runtimes.
+
+Frontend and Playwright artifact ignore rules are managed from the repository root `.gitignore`. Do not create a `.gitignore` in this folder.
 
 If the frontend/API are not already running and there is no safe repo-owned full-stack startup script, stop and ask the user to start the backend and frontend manually. Do not invent Windows process-spawning workarounds, use elevated/admin permissions, change global settings, or kill unrelated processes.
 

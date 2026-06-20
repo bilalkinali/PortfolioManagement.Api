@@ -371,6 +371,31 @@ node_modules/
 dist/
 .vite/
 
+# Playwright artifacts
+/portfoliomanagement.web/playwright-report/
+/portfoliomanagement.web/blob-report/
+/portfoliomanagement.web/test-results/
+/portfoliomanagement.web/playwright/.cache/
+/portfoliomanagement.web/*.webm
+/portfoliomanagement.web/trace.zip
+
+# Frontend artifacts
+/portfoliomanagement.web/logs/
+/portfoliomanagement.web/npm-debug.log*
+/portfoliomanagement.web/yarn-debug.log*
+/portfoliomanagement.web/yarn-error.log*
+/portfoliomanagement.web/pnpm-debug.log*
+/portfoliomanagement.web/lerna-debug.log*
+/portfoliomanagement.web/dist-ssr/
+/portfoliomanagement.web/*.local
+/portfoliomanagement.web/.vscode/*
+!/portfoliomanagement.web/.vscode/extensions.json
+/portfoliomanagement.web/.idea/
+/portfoliomanagement.web/.DS_Store
+/portfoliomanagement.web/*.ntvs*
+/portfoliomanagement.web/*.njsproj
+/portfoliomanagement.web/*.sw?
+
 # Testing local claude configuration with ollama
 .claude
 
