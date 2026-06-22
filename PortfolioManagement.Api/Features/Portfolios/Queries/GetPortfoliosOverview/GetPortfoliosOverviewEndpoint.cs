@@ -83,7 +83,7 @@ public class GetPortfoliosOverviewQuery(PortfolioDbContext db)
         return portfolios
             .Select(portfolio =>
             {
-                var positions = portfolio.Positions
+                var positionValues = portfolio.Positions
                     .Select(position =>
                     {
                         var hasLatestPrice = latestPrices.TryGetValue(position.InstrumentId, out var latestPrice);
@@ -102,7 +102,7 @@ public class GetPortfoliosOverviewQuery(PortfolioDbContext db)
                             ? unrealizedPnL.Value / costBasis * 100
                             : null;
 
-                        return new PortfolioPositionSummaryResponse(
+                        return new PortfolioPositionSummaryValue(
                             position.Id,
                             position.InstrumentId,
                             position.Instrument.Symbol,
@@ -120,16 +120,35 @@ public class GetPortfoliosOverviewQuery(PortfolioDbContext db)
                     })
                     .ToList();
 
-                var totalCostBasis = positions.Sum(p => p.CostBasis);
-                var totalMarketValue = positions.Sum(p => p.MarketValue ?? 0);
-                var totalUnrealizedPnL = positions.Sum(p => p.UnrealizedPnL ?? 0);
-                var totalRealizedPnL = positions.Sum(p => p.RealizedPnL);
+                var totalCostBasis = positionValues.Sum(p => p.CostBasis);
+                var totalMarketValue = positionValues.Sum(p => p.MarketValue ?? 0);
+                var totalUnrealizedPnL = positionValues.Sum(p => p.UnrealizedPnL ?? 0);
+                var totalRealizedPnL = positionValues.Sum(p => p.RealizedPnL);
                 var totalPnL = totalRealizedPnL + totalUnrealizedPnL;
-                var missingPricePositionCount = positions.Count(p => p.Quantity != 0 && p.LatestPrice is null);
+                var missingPricePositionCount = positionValues.Count(p => p.Quantity != 0 && p.LatestPrice is null);
 
                 var totalPnLPercentage = totalCostBasis > 0
                     ? totalPnL / totalCostBasis * 100
                     : 0;
+
+                var positions = positionValues
+                    .Select(position => new PortfolioPositionSummaryResponse(
+                        position.PositionId,
+                        position.InstrumentId,
+                        position.Symbol,
+                        position.Name,
+                        position.Currency,
+                        position.Quantity,
+                        position.AverageCostBasis,
+                        position.RealizedPnL,
+                        position.LatestPrice,
+                        position.CostBasis,
+                        position.MarketValue,
+                        position.UnrealizedPnL,
+                        position.UnrealizedPnLPercentage,
+                        CalculateAllocationPercentage(position.Quantity, position.MarketValue, totalMarketValue),
+                        position.Status))
+                    .ToList();
 
                 return new GetPortfoliosOverviewResponse(
                     portfolio.Id,
@@ -167,6 +186,33 @@ public class GetPortfoliosOverviewQuery(PortfolioDbContext db)
 
         return 0;
     }
+
+    private static decimal? CalculateAllocationPercentage(int quantity, decimal? marketValue, decimal totalMarketValue)
+    {
+        if (quantity == 0 || marketValue is null || totalMarketValue == 0)
+        {
+            return null;
+        }
+
+        return marketValue.Value / totalMarketValue * 100;
+    }
+
+    private sealed record PortfolioPositionSummaryValue(
+        int PositionId,
+        int InstrumentId,
+        string Symbol,
+        string Name,
+        string? Currency,
+        int Quantity,
+        decimal AverageCostBasis,
+        decimal RealizedPnL,
+        decimal? LatestPrice,
+        decimal CostBasis,
+        decimal? MarketValue,
+        decimal? UnrealizedPnL,
+        decimal? UnrealizedPnLPercentage,
+        string Status
+    );
 }
 
 public sealed record GetPortfoliosOverviewResponse(
@@ -200,5 +246,6 @@ public sealed record PortfolioPositionSummaryResponse(
     decimal? MarketValue,//
     decimal? UnrealizedPnL,//
     decimal? UnrealizedPnLPercentage,//
+    decimal? AllocationPercentage,
     string Status
 );

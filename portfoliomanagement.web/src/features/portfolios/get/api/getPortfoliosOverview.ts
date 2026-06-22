@@ -31,6 +31,7 @@ export type PortfolioPositionSummaryResponse = {
     marketValue: number | null;
     unrealizedPnL: number | null;
     unrealizedPnLPercentage: number | null;
+    allocationPercentage: number | null;
     status: string;
 }
 
