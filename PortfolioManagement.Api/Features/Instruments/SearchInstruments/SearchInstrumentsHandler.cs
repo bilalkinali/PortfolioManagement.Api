@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PortfolioManagement.Api.Domain;
+using PortfolioManagement.Api.Features.MarketData;
+using PortfolioManagement.Api.Features.MarketData.Finnhub;
+using PortfolioManagement.Api.Features.MarketData.Yahoo;
 using PortfolioManagement.Api.Features.Instruments.SearchInstruments.Proxy;
 using PortfolioManagement.Api.Infrastructure.Persistence;
 
@@ -8,17 +11,26 @@ namespace PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 public sealed class SearchInstrumentsHandler
 {
     private readonly PortfolioDbContext _db;
+    private readonly FinnhubSearchProxy _finnhubSearchProxy;
     private readonly ILogger<SearchInstrumentsHandler> _logger;
-    private readonly MassiveSearchProxy _proxy;
+    private readonly MassiveSearchProxy _massiveSearchProxy;
+    private readonly MarketDataProviderRouter _providerRouter;
+    private readonly YahooMarketDataProxy _yahooMarketDataProxy;
 
     public SearchInstrumentsHandler(
         PortfolioDbContext db,
-        MassiveSearchProxy proxy,
+        MassiveSearchProxy massiveSearchProxy,
+        FinnhubSearchProxy finnhubSearchProxy,
+        YahooMarketDataProxy yahooMarketDataProxy,
+        MarketDataProviderRouter providerRouter,
         ILogger<SearchInstrumentsHandler> logger)
     {
         _db = db;
         _logger = logger;
-        _proxy = proxy;
+        _massiveSearchProxy = massiveSearchProxy;
+        _finnhubSearchProxy = finnhubSearchProxy;
+        _yahooMarketDataProxy = yahooMarketDataProxy;
+        _providerRouter = providerRouter;
     }
 
     public async Task<SearchInstrumentsResponse?> Handle(SearchInstrumentsRequest request, CancellationToken cancellationToken)
@@ -29,65 +41,67 @@ public sealed class SearchInstrumentsHandler
 
         var localResults = await SearchLocalDatabase(query, limit, cancellationToken);
 
-        if (localResults.Count > 0)
+        if (localResults.Count >= limit)
         {
             return new SearchInstrumentsResponse(localResults);
         }
 
-        _logger.LogInformation(
-            "No local instruments found for query '{Query}'. Calling Massive API.",
-            query);
+        var remainingLimit = limit - localResults.Count;
+        var provider = _providerRouter.ResolveSearchProvider(query);
 
-        var massiveResponse = await _proxy.SearchAsync(query, limit, type, cancellationToken);
+        var providerResults = provider == MarketDataProvider.Yahoo
+            ? await _yahooMarketDataProxy.LookupAsync(query, cancellationToken)
+            : await _finnhubSearchProxy.SearchAsync(query, remainingLimit, cancellationToken);
 
-        if (massiveResponse is null)
+        if ((providerResults is null || providerResults.Count == 0) &&
+            provider == MarketDataProvider.Finnhub)
         {
-            return null;
+            providerResults = await SearchMassiveFallback(query, remainingLimit, type, cancellationToken);
         }
 
-        if (massiveResponse.Results.Count == 0)
+        if (providerResults is null)
         {
-            _logger.LogInformation(
-                "No instruments found locally or from Massive for query '{Query}'.",
-                query);
-
-            return new SearchInstrumentsResponse([]);
+            return localResults.Count > 0
+                ? new SearchInstrumentsResponse(localResults)
+                : null;
         }
 
-        var idBySymbol = await SaveMissingMassiveInstruments(massiveResponse.Results, cancellationToken);
+        if (providerResults.Count == 0)
+        {
+            return new SearchInstrumentsResponse(localResults);
+        }
 
-        /*
-         Instruments with no latest price is not returned using localDB
-         Calling external API should include fetching price as well, as it
-         wont be in localDB.
-        */
+        var idBySymbol = await SaveMissingInstruments(providerResults, cancellationToken);
+        var localSymbolSet = localResults.Select(x => x.Symbol).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         _logger.LogInformation(
-            "Returning saved data from Massive API without price for tickers: {Tickers}.",
-            string.Join(", ", massiveResponse.Results.Select(result => result.Ticker)));
+            "Returning saved provider data without live quote enrichment for tickers: {Tickers}.",
+            string.Join(", ", providerResults.Select(result => result.Symbol)));
 
-        return new SearchInstrumentsResponse(
-            massiveResponse.Results
+        var remoteResults = providerResults
                 .Where(ticker =>
-                    !string.IsNullOrWhiteSpace(ticker.Ticker) &&
+                    !localSymbolSet.Contains(ticker.Symbol) &&
+                    !string.IsNullOrWhiteSpace(ticker.Symbol) &&
                     !string.IsNullOrWhiteSpace(ticker.Name))
                 .Select(ticker =>
                 {
-                    var symbol = ticker.Ticker!.Trim().ToUpperInvariant();
+                    var symbol = ticker.Symbol.Trim().ToUpperInvariant();
 
                     return new SearchInstrumentResult(
                         idBySymbol[symbol],
                         symbol,
-                        ticker.Name!,
-                        null,
+                        ticker.Name,
+                        ticker.Cik,
                         ticker.Market,
-                        ticker.PrimaryExchange,
-                        ticker.CurrencyName,
+                        ticker.ExchangeCode,
+                        ticker.Currency,
                         ticker.Type,
                         null,
                         null);
                 })
-                .ToList());
+                .ToList();
+
+        return new SearchInstrumentsResponse(localResults.Concat(remoteResults).Take(limit).ToList());
     }
 
     private async Task<List<SearchInstrumentResult>> SearchLocalDatabase(string query, int limit, CancellationToken cancellationToken)
@@ -140,23 +154,55 @@ public sealed class SearchInstrumentsHandler
                 x.LatestBar != null ? x.LatestBar.Date : null))
             .ToListAsync(cancellationToken);
 
-        // Now doesn't return instruments with no latest price.
-        return instruments.Where(i => i.LatestPrice != null).ToList();
+        return instruments;
     }
 
 
-    private async Task<Dictionary<string, int>> SaveMissingMassiveInstruments(
-        List<MassiveTickerResult> massiveResults, 
+    private async Task<IReadOnlyList<MarketDataInstrumentLookupResult>?> SearchMassiveFallback(
+        string query,
+        int limit,
+        SearchInstrumentType type,
         CancellationToken cancellationToken)
     {
-        var validResults = massiveResults
+        _logger.LogInformation(
+            "Calling Massive API as a fallback for query '{Query}'.",
+            query);
+
+        var massiveResponse = await _massiveSearchProxy.SearchAsync(query, limit, type, cancellationToken);
+
+        return massiveResponse?.Results
             .Where(x =>
                 !string.IsNullOrWhiteSpace(x.Ticker) &&
+                !string.IsNullOrWhiteSpace(x.Name))
+            .Select(x =>
+            {
+                var symbol = x.Ticker!.Trim().ToUpperInvariant();
+
+                return new MarketDataInstrumentLookupResult(
+                    Symbol: symbol,
+                    Name: x.Name!,
+                    ProviderSymbol: symbol,
+                    Cik: null,
+                    Market: x.Market,
+                    ExchangeCode: x.PrimaryExchange,
+                    Currency: x.CurrencyName,
+                    Type: x.Type);
+            })
+            .ToList();
+    }
+
+    private async Task<Dictionary<string, int>> SaveMissingInstruments(
+        IReadOnlyList<MarketDataInstrumentLookupResult> providerResults,
+        CancellationToken cancellationToken)
+    {
+        var validResults = providerResults
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x.Symbol) &&
                 !string.IsNullOrWhiteSpace(x.Name))
             .ToList();
 
         var symbols = validResults
-            .Select(x => x.Ticker!.Trim().ToUpperInvariant())
+            .Select(x => x.Symbol.Trim().ToUpperInvariant())
             .Distinct()
             .ToList();
 
@@ -169,7 +215,7 @@ public sealed class SearchInstrumentsHandler
 
         foreach (var result in validResults)
         {
-            var symbol = result.Ticker!.Trim().ToUpperInvariant();
+            var symbol = result.Symbol.Trim().ToUpperInvariant();
 
             if (existingSymbolSet.Contains(symbol))
             {
@@ -178,21 +224,22 @@ public sealed class SearchInstrumentsHandler
 
             var instrument = Instrument.Create(
                 symbol: symbol,
-                name: result.Name!,
-                cik: null,
+                name: result.Name,
+                providerSymbol: result.ProviderSymbol,
+                cik: result.Cik,
                 market: result.Market,
-                exchangeCode: result.PrimaryExchange,
-                currency: result.CurrencyName,
+                exchangeCode: result.ExchangeCode,
+                currency: result.Currency,
                 type: result.Type);
 
 
             _logger.LogInformation(
-                "Added instrument from Massive. Symbol: {Symbol}, Name: {Name}, Market: {Market}, ExchangeCode: {ExchangeCode}, Currency: {Currency}, Type: {Type}",
+                "Added instrument from provider. Symbol: {Symbol}, Name: {Name}, Market: {Market}, ExchangeCode: {ExchangeCode}, Currency: {Currency}, Type: {Type}",
                 symbol,
                 result.Name,
                 result.Market,
-                result.PrimaryExchange,
-                result.CurrencyName,
+                result.ExchangeCode,
+                result.Currency,
                 result.Type);
 
             _db.Instruments.Add(instrument);

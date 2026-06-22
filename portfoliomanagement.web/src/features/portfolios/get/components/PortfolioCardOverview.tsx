@@ -28,6 +28,12 @@ function formatPercentage(value: number | null | undefined) {
     return `${value.toFixed(2)}%`;
 }
 
+function sortByAllocationDescending(positions: PortfoliosOverviewResponse["positions"]) {
+    return [...positions].sort(
+        (left, right) => (right.allocationPercentage ?? -1) - (left.allocationPercentage ?? -1)
+    );
+}
+
 function formatDate(value: string) {
     return new Intl.DateTimeFormat("en-US", {
         month: "short",
@@ -38,6 +44,9 @@ function formatDate(value: string) {
 
 export default function PortfolioCardOverview({ portfolio }: PortfolioCardOverviewProps) {
     const hasMissingPrices = portfolio.missingPricePositionCount > 0;
+    const topAllocations = sortByAllocationDescending(portfolio.positions)
+        .filter((position) => position.quantity !== 0 && position.allocationPercentage !== null)
+        .slice(0, 3);
 
     return (
         <Card>
@@ -97,6 +106,19 @@ export default function PortfolioCardOverview({ portfolio }: PortfolioCardOvervi
                         {formatCurrency(portfolio.totalRealizedPnL)}
                     </p>
                 </div>
+
+                {topAllocations.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                        <p className="text-muted-foreground">Top Allocation</p>
+                        <div className="flex flex-wrap gap-2">
+                            {topAllocations.map((position) => (
+                                <Badge key={position.positionId} variant="secondary">
+                                    {position.symbol} {formatPercentage(position.allocationPercentage)}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+                ) : null}
 
             </CardContent>
             <CardFooter className="flex justify-center">

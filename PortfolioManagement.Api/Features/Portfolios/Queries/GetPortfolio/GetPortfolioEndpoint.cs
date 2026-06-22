@@ -83,7 +83,7 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
                 .First())
             .ToDictionaryAsync(b => b.InstrumentId);
 
-        var positions = portfolio.Positions
+        var positionValues = portfolio.Positions
             .Select(position =>
             {
                 latestBars.TryGetValue(position.InstrumentId, out var latestBar);
@@ -115,7 +115,7 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
                     .Select(t => ToTradeResponse(t, realizedGainByTradeId))
                     .ToList();
 
-                return new GetPortfolioPositionResponse(
+                return new PortfolioPositionValue(
                     position.Id,
                     position.InstrumentId,
                     position.Instrument.Symbol,
@@ -135,15 +135,36 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
             })
             .ToList();
 
-        var totalCostBasis = positions.Sum(p => p.CostBasis);
-        var totalMarketValue = positions.Sum(p => p.MarketValue ?? 0);
-        var totalUnrealizedPnL = positions.Sum(p => p.UnrealizedPnL ?? 0);
-        var totalRealizedPnL = positions.Sum(p => p.RealizedPnL);
+        var totalCostBasis = positionValues.Sum(p => p.CostBasis);
+        var totalMarketValue = positionValues.Sum(p => p.MarketValue ?? 0);
+        var totalUnrealizedPnL = positionValues.Sum(p => p.UnrealizedPnL ?? 0);
+        var totalRealizedPnL = positionValues.Sum(p => p.RealizedPnL);
         var totalPnL = totalRealizedPnL + totalUnrealizedPnL;
 
         var totalPnLPercentage = totalCostBasis > 0
             ? totalPnL / totalCostBasis * 100
             : 0;
+
+        var positions = positionValues
+            .Select(position => new GetPortfolioPositionResponse(
+                position.Id,
+                position.InstrumentId,
+                position.Symbol,
+                position.Name,
+                position.Currency,
+                position.Quantity,
+                position.AverageCostBasis,
+                position.RealizedPnL,
+                position.LatestPrice,
+                position.LatestPriceDate,
+                position.CostBasis,
+                position.MarketValue,
+                position.UnrealizedPnL,
+                position.UnrealizedPnLPercentage,
+                CalculateAllocationPercentage(position.Quantity, position.MarketValue, totalMarketValue),
+                position.Status,
+                position.Trades))
+            .ToList();
 
         return new GetPortfolioResponse(
             portfolio.Id,
@@ -177,6 +198,16 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
         }
 
         return 0;
+    }
+
+    private static decimal? CalculateAllocationPercentage(int quantity, decimal? marketValue, decimal totalMarketValue)
+    {
+        if (quantity == 0 || marketValue is null || totalMarketValue == 0)
+        {
+            return null;
+        }
+
+        return marketValue.Value / totalMarketValue * 100;
     }
 
     private static GetPortfolioPositionTradeResponse ToTradeResponse(
@@ -258,6 +289,24 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
     }
 
     private sealed record TradeRealizedGain(decimal Amount, decimal Percentage);
+
+    private sealed record PortfolioPositionValue(
+        int Id,
+        int InstrumentId,
+        string Symbol,
+        string Name,
+        string? Currency,
+        int Quantity,
+        decimal AverageCostBasis,
+        decimal RealizedPnL,
+        decimal? LatestPrice,
+        DateOnly? LatestPriceDate,
+        decimal CostBasis,
+        decimal? MarketValue,
+        decimal? UnrealizedPnL,
+        decimal? UnrealizedPnLPercentage,
+        string Status,
+        IReadOnlyCollection<GetPortfolioPositionTradeResponse> Trades);
 }
 
 public sealed record GetPortfolioResponse(
@@ -291,6 +340,7 @@ public sealed record GetPortfolioPositionResponse(
     decimal? MarketValue,
     decimal? UnrealizedPnL,
     decimal? UnrealizedPnLPercentage,
+    decimal? AllocationPercentage,
     string Status,
     IReadOnlyCollection<GetPortfolioPositionTradeResponse> Trades
 );

@@ -11,6 +11,7 @@ import StockProfileSection from "./StockProfileSection";
 import StockDetailCardSkeleton from "./StockDetailCardSkeleton";
 import StockHistoryChart from "./StockHistoryChart";
 import { getStockProfile, type StockProfileResponse } from "../api/getStockProfile";
+import { getStockQuote, type StockQuoteResponse } from "../api/getStockQuote";
 import { formatExchangeName } from "@/shared/helpers/formatters";
 
 type StockDetailCardProps = {
@@ -19,6 +20,7 @@ type StockDetailCardProps = {
 
 export default function StockDetailCard({ symbol }: StockDetailCardProps) {
     const [profile, setProfile] = useState<StockProfileResponse | null>(null);
+    const [quote, setQuote] = useState<StockQuoteResponse | null>(null);
     const [isProfileLoading, setIsProfileLoading] = useState(true);
     const [profileError, setProfileError] = useState<string | null>(null);
 
@@ -38,6 +40,19 @@ export default function StockDetailCard({ symbol }: StockDetailCardProps) {
         }
 
         loadProfile();
+    }, [symbol]);
+
+    useEffect(() => {
+        async function loadQuote() {
+            try {
+                const result = await getStockQuote(symbol);
+                setQuote(result);
+            } catch {
+                setQuote(null);
+            }
+        }
+
+        loadQuote();
     }, [symbol]);
     
 
@@ -67,6 +82,11 @@ export default function StockDetailCard({ symbol }: StockDetailCardProps) {
                                 )}
                             </CardDescription>
                         </div>
+
+                        <QuoteSummary
+                            currency={quote?.currency ?? profile.currencyName}
+                            quote={quote}
+                        />
 
                         <div className="mb-2 flex shrink-0 flex-wrap items-center justify-end gap-2">
                             <Badge variant={profile.active ? "secondary" : "outline"}>
@@ -122,4 +142,78 @@ function StockLogo({ ticker, logoUrl }: StockLogoProps) {
 
 function getTickerMark(ticker: string) {
     return ticker.slice(0, 3).toUpperCase();
+}
+
+function formatQuoteCurrency(value: number, currency?: string | null) {
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency?.toUpperCase() ?? "USD",
+        maximumFractionDigits: 2,
+    }).format(value);
+}
+
+function formatSignedCurrency(value: number, currency?: string | null) {
+    const formatted = formatQuoteCurrency(Math.abs(value), currency);
+    return `${value >= 0 ? "+" : "-"}${formatted}`;
+}
+
+function formatQuoteTimestamp(value: string) {
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(new Date(value));
+}
+
+function formatQuoteDate(value: string) {
+    const [year, month, day] = value.split("-").map(Number);
+
+    if (!year || !month || !day) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+    }).format(new Date(year, month - 1, day));
+}
+
+type QuoteSummaryProps = {
+    quote: StockQuoteResponse | null;
+    currency?: string | null;
+};
+
+function QuoteSummary({ quote, currency }: QuoteSummaryProps) {
+    if (!quote) {
+        return (
+            <div className="hidden shrink-0 text-right sm:block">
+                <div className="text-sm text-muted-foreground">Quote unavailable</div>
+            </div>
+        );
+    }
+
+    const change = quote.previousClose
+        ? quote.currentPrice - quote.previousClose
+        : null;
+    const quoteMeta = quote.source === "Live"
+        ? quote.timestampUtc
+            ? `Live quote - ${formatQuoteTimestamp(quote.timestampUtc)}`
+            : "Live quote"
+        : quote.priceDate
+            ? `Latest loaded price - ${formatQuoteDate(quote.priceDate)}`
+            : "Latest loaded price";
+
+    return (
+        <div className="hidden shrink-0 text-right sm:block">
+            <div className="text-xl font-semibold">
+                {formatQuoteCurrency(quote.currentPrice, currency)}
+            </div>
+            {change !== null && (
+                <div className="text-sm text-muted-foreground">
+                    {formatSignedCurrency(change, currency)}
+                </div>
+            )}
+            <div className="text-xs text-muted-foreground">
+                {quoteMeta}
+            </div>
+        </div>
+    );
 }

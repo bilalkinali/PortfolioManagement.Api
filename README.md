@@ -59,7 +59,13 @@ cd PortfolioManagement.Api
 
 ```bash
 dotnet restore
-dotnet run --project PortfolioManagement.Api
+dotnet run --project PortfolioManagement.Api/PortfolioManagement.Api.csproj --launch-profile http
+```
+
+The backend listens at:
+
+```text
+http://localhost:5046
 ```
 
 ### 3. Start the frontend
@@ -68,6 +74,30 @@ dotnet run --project PortfolioManagement.Api
 cd portfoliomanagement.web
 npm install
 npm run dev
+```
+
+The frontend listens at:
+
+```text
+http://127.0.0.1:5174
+```
+
+The Vite dev server proxies `/api` and `/auth` to `http://localhost:5046`.
+
+## Playwright E2E Tests
+
+The frontend Playwright tests run against:
+
+```text
+Frontend: http://127.0.0.1:5174
+API: http://localhost:5046
+```
+
+Run the e2e tests manually from the frontend folder:
+
+```bash
+cd portfoliomanagement.web
+npm run test:e2e
 ```
 
 ## Important Note

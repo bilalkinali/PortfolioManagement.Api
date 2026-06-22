@@ -128,6 +128,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                             <TableHead className="text-right font-semibold">Realized P/L</TableHead>
                             <TableHead className="text-right font-semibold">Unrealized P/L</TableHead>
                             <TableHead className="text-right font-semibold">P/L %</TableHead>
+                            <TableHead className="text-right font-semibold">Allocation</TableHead>
                             <TableHead className="px-6 text-right font-semibold">Latest Price</TableHead>                           
                         </TableRow>
                     </TableHeader>
@@ -204,6 +205,12 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                                             </span>
                                         </TableCell>
 
+                                        <TableCell className="text-right tabular-nums">
+                                            {position.allocationPercentage !== null
+                                                ? `${position.allocationPercentage.toFixed(2)}%`
+                                                : "N/A"}
+                                        </TableCell>
+
                                         <TableCell className="px-6 text-right tabular-nums">
                                             <div className="flex flex-col">
                                                 <span>
@@ -223,7 +230,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
 
                                     {isExpanded ? (
                                         <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                            <TableCell colSpan={10} className="px-6 pb-5 pt-0">
+                                            <TableCell colSpan={11} className="px-6 pb-5 pt-0">
                                                 <PositionTradesDataTable
                                                     portfolioId={portfolio.id}
                                                     position={position}
