@@ -88,13 +88,14 @@ public sealed class SearchInstrumentsHandler
             aliasResults = await _yahooMarketDataProxy.LookupAsync(aliasSymbol, cancellationToken);
         }
 
-        var shouldSearchProvider = localResults.Count < limit || !HasStrongLocalResult(query, localResults);
+        var hasStrongLocalResult = HasStrongLocalResult(query, localResults, aliasSymbol);
+        var shouldSearchProvider = localResults.Count == 0 || !hasStrongLocalResult;
 
         if (shouldSearchProvider)
         {
-            fallbackReason = localResults.Count < limit
-                ? "Local result count was below the requested limit."
-                : "Local results filled the limit but did not contain a strong symbol or name match.";
+            fallbackReason = localResults.Count == 0
+                ? "Local search returned no results."
+                : "Local results did not contain a strong symbol, name, or alias match.";
 
             providerResults = provider == MarketDataProvider.Yahoo
                 ? await _yahooMarketDataProxy.LookupAsync(query, cancellationToken)
@@ -473,8 +474,24 @@ public sealed class SearchInstrumentsHandler
         return score;
     }
 
-    private static bool HasStrongLocalResult(string query, IEnumerable<SearchInstrumentResult> localResults)
-        => localResults.Any(result => GetMatchScore(query, result) <= 30);
+    private static bool HasStrongLocalResult(
+        string query,
+        IEnumerable<SearchInstrumentResult> localResults,
+        string? aliasSymbol)
+    {
+        var normalizedQuery = NormalizeSearchText(query);
+
+        return localResults.Any(result =>
+        {
+            var normalizedSymbol = NormalizeSearchText(result.Symbol);
+            var normalizedName = NormalizeSearchText(result.Name);
+
+            return normalizedSymbol == normalizedQuery ||
+                normalizedSymbol.StartsWith(normalizedQuery, StringComparison.Ordinal) ||
+                normalizedName.Contains(normalizedQuery, StringComparison.Ordinal) ||
+                (aliasSymbol is not null && IsExactSymbolMatch(aliasSymbol, result.Symbol));
+        });
+    }
 
     private void LogSearchSummary(
         string query,
