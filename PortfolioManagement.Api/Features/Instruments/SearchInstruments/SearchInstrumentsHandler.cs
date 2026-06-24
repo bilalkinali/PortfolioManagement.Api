@@ -48,21 +48,43 @@ public sealed class SearchInstrumentsHandler
         var localResults = await SearchLocalDatabase(query, limit, cancellationToken);
 
         var aliasSymbol = ResolveKnownAlias(query);
+        var aliasMatched = aliasSymbol is not null;
+        var aliasTargetAlreadyLocal = aliasSymbol is not null &&
+            localResults.Any(x => IsExactSymbolMatch(aliasSymbol, x.Symbol));
         var hasExactLocalSymbol = localResults.Any(x => IsExactSymbolMatch(query, x.Symbol));
 
         if (hasExactLocalSymbol && aliasSymbol is null)
         {
-            return new SearchInstrumentsResponse(
-                RankResults(query, localResults, aliasSymbol, localResults.Select(x => x.Symbol)).Take(limit).ToList());
+            var exactResults = RankResults(query, localResults, aliasSymbol, localResults.Select(x => x.Symbol))
+                .Take(limit)
+                .ToList();
+
+            LogSearchSummary(
+                query,
+                localResults.Count,
+                aliasMatched,
+                aliasTargetAlreadyLocal,
+                externalAliasLookupCalled: false,
+                finnhubCalled: false,
+                massiveFallbackCalled: false,
+                fallbackReason: "Exact local symbol match returned without provider fallback.",
+                exactResults);
+
+            return new SearchInstrumentsResponse(exactResults);
         }
 
         var remainingLimit = Math.Max(limit - localResults.Count, 1);
         var provider = _providerRouter.ResolveSearchProvider(query);
         IReadOnlyList<MarketDataInstrumentLookupResult>? aliasResults = null;
         IReadOnlyList<MarketDataInstrumentLookupResult>? providerResults = null;
+        var externalAliasLookupCalled = false;
+        var finnhubCalled = false;
+        var massiveFallbackCalled = false;
+        var fallbackReason = "Provider fallback was not needed.";
 
-        if (aliasSymbol is not null)
+        if (aliasSymbol is not null && !aliasTargetAlreadyLocal)
         {
+            externalAliasLookupCalled = true;
             aliasResults = await _yahooMarketDataProxy.LookupAsync(aliasSymbol, cancellationToken);
         }
 
@@ -70,13 +92,21 @@ public sealed class SearchInstrumentsHandler
 
         if (shouldSearchProvider)
         {
+            fallbackReason = localResults.Count < limit
+                ? "Local result count was below the requested limit."
+                : "Local results filled the limit but did not contain a strong symbol or name match.";
+
             providerResults = provider == MarketDataProvider.Yahoo
                 ? await _yahooMarketDataProxy.LookupAsync(query, cancellationToken)
                 : await _finnhubSearchProxy.SearchAsync(query, remainingLimit, cancellationToken);
 
+            finnhubCalled = provider == MarketDataProvider.Finnhub;
+
             if ((providerResults is null || providerResults.Count == 0) &&
                 provider == MarketDataProvider.Finnhub)
             {
+                massiveFallbackCalled = true;
+                fallbackReason = $"{fallbackReason} Finnhub returned no results, so Massive fallback was called.";
                 providerResults = await SearchMassiveFallback(query, remainingLimit, type, cancellationToken);
             }
         }
@@ -85,10 +115,38 @@ public sealed class SearchInstrumentsHandler
 
         if (combinedProviderResults.Count == 0)
         {
-            return localResults.Count > 0
-                ? new SearchInstrumentsResponse(
-                    RankResults(query, localResults, aliasSymbol, localResults.Select(x => x.Symbol)).Take(limit).ToList())
-                : null;
+            if (localResults.Count == 0)
+            {
+                LogSearchSummary(
+                    query,
+                    localResults.Count,
+                    aliasMatched,
+                    aliasTargetAlreadyLocal,
+                    externalAliasLookupCalled,
+                    finnhubCalled,
+                    massiveFallbackCalled,
+                    fallbackReason,
+                    []);
+
+                return null;
+            }
+
+            var localOnlyResults = RankResults(query, localResults, aliasSymbol, localResults.Select(x => x.Symbol))
+                .Take(limit)
+                .ToList();
+
+            LogSearchSummary(
+                query,
+                localResults.Count,
+                aliasMatched,
+                aliasTargetAlreadyLocal,
+                externalAliasLookupCalled,
+                finnhubCalled,
+                massiveFallbackCalled,
+                fallbackReason,
+                localOnlyResults);
+
+            return new SearchInstrumentsResponse(localOnlyResults);
         }
 
         var idBySymbol = await SaveMissingInstruments(combinedProviderResults, cancellationToken);
@@ -121,8 +179,22 @@ public sealed class SearchInstrumentsHandler
                 })
                 .ToList();
 
-        return new SearchInstrumentsResponse(
-            RankResults(query, localResults.Concat(remoteResults), aliasSymbol, localSymbolSet).Take(limit).ToList());
+        var finalResults = RankResults(query, localResults.Concat(remoteResults), aliasSymbol, localSymbolSet)
+            .Take(limit)
+            .ToList();
+
+        LogSearchSummary(
+            query,
+            localResults.Count,
+            aliasMatched,
+            aliasTargetAlreadyLocal,
+            externalAliasLookupCalled,
+            finnhubCalled,
+            massiveFallbackCalled,
+            fallbackReason,
+            finalResults);
+
+        return new SearchInstrumentsResponse(finalResults);
     }
 
     private async Task<List<SearchInstrumentResult>> SearchLocalDatabase(string query, int limit, CancellationToken cancellationToken)
@@ -403,6 +475,30 @@ public sealed class SearchInstrumentsHandler
 
     private static bool HasStrongLocalResult(string query, IEnumerable<SearchInstrumentResult> localResults)
         => localResults.Any(result => GetMatchScore(query, result) <= 30);
+
+    private void LogSearchSummary(
+        string query,
+        int localResultCount,
+        bool aliasMatched,
+        bool aliasTargetAlreadyLocal,
+        bool externalAliasLookupCalled,
+        bool finnhubCalled,
+        bool massiveFallbackCalled,
+        string fallbackReason,
+        IReadOnlyCollection<SearchInstrumentResult> finalResults)
+    {
+        _logger.LogInformation(
+            "Instrument search summary. Query: {Query}; LocalResultCount: {LocalResultCount}; AliasMatched: {AliasMatched}; AliasTargetAlreadyLocal: {AliasTargetAlreadyLocal}; ExternalAliasLookupCalled: {ExternalAliasLookupCalled}; FinnhubCalled: {FinnhubCalled}; MassiveFallbackCalled: {MassiveFallbackCalled}; FallbackReason: {FallbackReason}; FinalReturnedSymbols: {FinalReturnedSymbols}",
+            query,
+            localResultCount,
+            aliasMatched,
+            aliasTargetAlreadyLocal,
+            externalAliasLookupCalled,
+            finnhubCalled,
+            massiveFallbackCalled,
+            fallbackReason,
+            string.Join(", ", finalResults.Select(x => x.Symbol)));
+    }
 
     private static bool IsExactSymbolMatch(string query, string symbol)
         => string.Equals(
