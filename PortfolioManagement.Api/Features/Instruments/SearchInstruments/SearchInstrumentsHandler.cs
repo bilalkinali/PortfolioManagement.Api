@@ -10,6 +10,12 @@ namespace PortfolioManagement.Api.Features.Instruments.SearchInstruments;
 
 public sealed class SearchInstrumentsHandler
 {
+    private static readonly Dictionary<string, string> KnownAliasSymbols = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["novo"] = "NOVO-B.CO",
+        ["novo nordisk"] = "NOVO-B.CO"
+    };
+
     private readonly PortfolioDbContext _db;
     private readonly FinnhubSearchProxy _finnhubSearchProxy;
     private readonly ILogger<SearchInstrumentsHandler> _logger;
@@ -41,44 +47,117 @@ public sealed class SearchInstrumentsHandler
 
         var localResults = await SearchLocalDatabase(query, limit, cancellationToken);
 
-        if (localResults.Count >= limit)
+        var aliasSymbol = ResolveKnownAlias(query);
+        var aliasMatched = aliasSymbol is not null;
+        var aliasTargetAlreadyLocal = aliasSymbol is not null &&
+            localResults.Any(x => IsExactSymbolMatch(aliasSymbol, x.Symbol));
+        var hasExactLocalSymbol = localResults.Any(x => IsExactSymbolMatch(query, x.Symbol));
+
+        if (hasExactLocalSymbol && aliasSymbol is null)
         {
-            return new SearchInstrumentsResponse(localResults);
+            var exactResults = RankResults(query, localResults, aliasSymbol, localResults.Select(x => x.Symbol))
+                .Take(limit)
+                .ToList();
+
+            LogSearchSummary(
+                query,
+                localResults.Count,
+                aliasMatched,
+                aliasTargetAlreadyLocal,
+                externalAliasLookupCalled: false,
+                finnhubCalled: false,
+                massiveFallbackCalled: false,
+                fallbackReason: "Exact local symbol match returned without provider fallback.",
+                exactResults);
+
+            return new SearchInstrumentsResponse(exactResults);
         }
 
-        var remainingLimit = limit - localResults.Count;
+        var remainingLimit = Math.Max(limit - localResults.Count, 1);
         var provider = _providerRouter.ResolveSearchProvider(query);
+        IReadOnlyList<MarketDataInstrumentLookupResult>? aliasResults = null;
+        IReadOnlyList<MarketDataInstrumentLookupResult>? providerResults = null;
+        var externalAliasLookupCalled = false;
+        var finnhubCalled = false;
+        var massiveFallbackCalled = false;
+        var fallbackReason = "Provider fallback was not needed.";
 
-        var providerResults = provider == MarketDataProvider.Yahoo
-            ? await _yahooMarketDataProxy.LookupAsync(query, cancellationToken)
-            : await _finnhubSearchProxy.SearchAsync(query, remainingLimit, cancellationToken);
-
-        if ((providerResults is null || providerResults.Count == 0) &&
-            provider == MarketDataProvider.Finnhub)
+        if (aliasSymbol is not null && !aliasTargetAlreadyLocal)
         {
-            providerResults = await SearchMassiveFallback(query, remainingLimit, type, cancellationToken);
+            externalAliasLookupCalled = true;
+            aliasResults = await _yahooMarketDataProxy.LookupAsync(aliasSymbol, cancellationToken);
         }
 
-        if (providerResults is null)
+        var hasStrongLocalResult = HasStrongLocalResult(query, localResults, aliasSymbol);
+        var shouldSearchProvider = localResults.Count == 0 || !hasStrongLocalResult;
+
+        if (shouldSearchProvider)
         {
-            return localResults.Count > 0
-                ? new SearchInstrumentsResponse(localResults)
-                : null;
+            fallbackReason = localResults.Count == 0
+                ? "Local search returned no results."
+                : "Local results did not contain a strong symbol, name, or alias match.";
+
+            providerResults = provider == MarketDataProvider.Yahoo
+                ? await _yahooMarketDataProxy.LookupAsync(query, cancellationToken)
+                : await _finnhubSearchProxy.SearchAsync(query, remainingLimit, cancellationToken);
+
+            finnhubCalled = provider == MarketDataProvider.Finnhub;
+
+            if ((providerResults is null || providerResults.Count == 0) &&
+                provider == MarketDataProvider.Finnhub)
+            {
+                massiveFallbackCalled = true;
+                fallbackReason = $"{fallbackReason} Finnhub returned no results, so Massive fallback was called.";
+                providerResults = await SearchMassiveFallback(query, remainingLimit, type, cancellationToken);
+            }
         }
 
-        if (providerResults.Count == 0)
+        var combinedProviderResults = CombineProviderResults(aliasResults, providerResults);
+
+        if (combinedProviderResults.Count == 0)
         {
-            return new SearchInstrumentsResponse(localResults);
+            if (localResults.Count == 0)
+            {
+                LogSearchSummary(
+                    query,
+                    localResults.Count,
+                    aliasMatched,
+                    aliasTargetAlreadyLocal,
+                    externalAliasLookupCalled,
+                    finnhubCalled,
+                    massiveFallbackCalled,
+                    fallbackReason,
+                    []);
+
+                return null;
+            }
+
+            var localOnlyResults = RankResults(query, localResults, aliasSymbol, localResults.Select(x => x.Symbol))
+                .Take(limit)
+                .ToList();
+
+            LogSearchSummary(
+                query,
+                localResults.Count,
+                aliasMatched,
+                aliasTargetAlreadyLocal,
+                externalAliasLookupCalled,
+                finnhubCalled,
+                massiveFallbackCalled,
+                fallbackReason,
+                localOnlyResults);
+
+            return new SearchInstrumentsResponse(localOnlyResults);
         }
 
-        var idBySymbol = await SaveMissingInstruments(providerResults, cancellationToken);
+        var idBySymbol = await SaveMissingInstruments(combinedProviderResults, cancellationToken);
         var localSymbolSet = localResults.Select(x => x.Symbol).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         _logger.LogInformation(
             "Returning saved provider data without live quote enrichment for tickers: {Tickers}.",
-            string.Join(", ", providerResults.Select(result => result.Symbol)));
+            string.Join(", ", combinedProviderResults.Select(result => result.Symbol)));
 
-        var remoteResults = providerResults
+        var remoteResults = combinedProviderResults
                 .Where(ticker =>
                     !localSymbolSet.Contains(ticker.Symbol) &&
                     !string.IsNullOrWhiteSpace(ticker.Symbol) &&
@@ -101,7 +180,22 @@ public sealed class SearchInstrumentsHandler
                 })
                 .ToList();
 
-        return new SearchInstrumentsResponse(localResults.Concat(remoteResults).Take(limit).ToList());
+        var finalResults = RankResults(query, localResults.Concat(remoteResults), aliasSymbol, localSymbolSet)
+            .Take(limit)
+            .ToList();
+
+        LogSearchSummary(
+            query,
+            localResults.Count,
+            aliasMatched,
+            aliasTargetAlreadyLocal,
+            externalAliasLookupCalled,
+            finnhubCalled,
+            massiveFallbackCalled,
+            fallbackReason,
+            finalResults);
+
+        return new SearchInstrumentsResponse(finalResults);
     }
 
     private async Task<List<SearchInstrumentResult>> SearchLocalDatabase(string query, int limit, CancellationToken cancellationToken)
@@ -253,4 +347,182 @@ public sealed class SearchInstrumentsHandler
             .Select(i => new { i.Symbol, i.Id })
             .ToDictionaryAsync(x => x.Symbol, x => x.Id, cancellationToken);
     }
+
+    private static string? ResolveKnownAlias(string query)
+    {
+        var normalized = NormalizeSearchText(query);
+
+        return KnownAliasSymbols.TryGetValue(normalized, out var symbol)
+            ? symbol
+            : null;
+    }
+
+    private static IReadOnlyList<MarketDataInstrumentLookupResult> CombineProviderResults(
+        IReadOnlyList<MarketDataInstrumentLookupResult>? aliasResults,
+        IReadOnlyList<MarketDataInstrumentLookupResult>? providerResults)
+    {
+        return (aliasResults ?? [])
+            .Concat(providerResults ?? [])
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x.Symbol) &&
+                !string.IsNullOrWhiteSpace(x.Name))
+            .GroupBy(x => x.Symbol.Trim().ToUpperInvariant())
+            .Select(x => x.First())
+            .ToList();
+    }
+
+    private static List<SearchInstrumentResult> RankResults(
+        string query,
+        IEnumerable<SearchInstrumentResult> results,
+        string? aliasSymbol,
+        IEnumerable<string> localSymbols)
+    {
+        var localSymbolSet = localSymbols.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return results
+            .GroupBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase)
+            .Select(x => x.First())
+            .OrderBy(x => GetResultScore(query, x, aliasSymbol, localSymbolSet.Contains(x.Symbol)))
+            .ThenBy(x => x.Symbol)
+            .ToList();
+    }
+
+    private static int GetResultScore(
+        string query,
+        SearchInstrumentResult result,
+        string? aliasSymbol,
+        bool isLocalResult)
+    {
+        var score = GetMatchScore(query, result);
+
+        if (isLocalResult)
+        {
+            score -= 5;
+        }
+
+        if (aliasSymbol is not null && IsExactSymbolMatch(aliasSymbol, result.Symbol))
+        {
+            score -= 45;
+        }
+
+        score += GetExchangeScore(result);
+
+        return score;
+    }
+
+    private static int GetMatchScore(string query, SearchInstrumentResult result)
+    {
+        var normalizedQuery = NormalizeSearchText(query);
+        var normalizedSymbol = NormalizeSearchText(result.Symbol);
+        var normalizedName = NormalizeSearchText(result.Name);
+
+        if (normalizedSymbol == normalizedQuery)
+        {
+            return 0;
+        }
+
+        if (normalizedName == normalizedQuery)
+        {
+            return 10;
+        }
+
+        if (normalizedName.StartsWith(normalizedQuery, StringComparison.Ordinal))
+        {
+            return 30;
+        }
+
+        if (normalizedSymbol.StartsWith(normalizedQuery, StringComparison.Ordinal))
+        {
+            return 40;
+        }
+
+        if (normalizedSymbol.Contains(normalizedQuery, StringComparison.Ordinal))
+        {
+            return 60;
+        }
+
+        if (normalizedName.Contains(normalizedQuery, StringComparison.Ordinal))
+        {
+            return 70;
+        }
+
+        return 100;
+    }
+
+    private static int GetExchangeScore(SearchInstrumentResult result)
+    {
+        var market = NormalizeSearchText(result.Market ?? string.Empty);
+        var exchange = NormalizeSearchText(result.ExchangeCode ?? string.Empty);
+        var symbol = result.Symbol.Trim().ToUpperInvariant();
+        var type = NormalizeSearchText(result.Type ?? string.Empty);
+        var combined = $"{market} {exchange} {type}";
+
+        var score = 0;
+
+        if (combined.Contains("OTC", StringComparison.Ordinal) ||
+            symbol.EndsWith('F') ||
+            symbol.EndsWith('Y'))
+        {
+            score += 45;
+        }
+
+        if (combined.Contains("ADR", StringComparison.Ordinal))
+        {
+            score += 25;
+        }
+
+        return score;
+    }
+
+    private static bool HasStrongLocalResult(
+        string query,
+        IEnumerable<SearchInstrumentResult> localResults,
+        string? aliasSymbol)
+    {
+        var normalizedQuery = NormalizeSearchText(query);
+
+        return localResults.Any(result =>
+        {
+            var normalizedSymbol = NormalizeSearchText(result.Symbol);
+            var normalizedName = NormalizeSearchText(result.Name);
+
+            return normalizedSymbol == normalizedQuery ||
+                normalizedSymbol.StartsWith(normalizedQuery, StringComparison.Ordinal) ||
+                normalizedName.Contains(normalizedQuery, StringComparison.Ordinal) ||
+                (aliasSymbol is not null && IsExactSymbolMatch(aliasSymbol, result.Symbol));
+        });
+    }
+
+    private void LogSearchSummary(
+        string query,
+        int localResultCount,
+        bool aliasMatched,
+        bool aliasTargetAlreadyLocal,
+        bool externalAliasLookupCalled,
+        bool finnhubCalled,
+        bool massiveFallbackCalled,
+        string fallbackReason,
+        IReadOnlyCollection<SearchInstrumentResult> finalResults)
+    {
+        _logger.LogInformation(
+            "Instrument search summary. Query: {Query}; LocalResultCount: {LocalResultCount}; AliasMatched: {AliasMatched}; AliasTargetAlreadyLocal: {AliasTargetAlreadyLocal}; ExternalAliasLookupCalled: {ExternalAliasLookupCalled}; FinnhubCalled: {FinnhubCalled}; MassiveFallbackCalled: {MassiveFallbackCalled}; FallbackReason: {FallbackReason}; FinalReturnedSymbols: {FinalReturnedSymbols}",
+            query,
+            localResultCount,
+            aliasMatched,
+            aliasTargetAlreadyLocal,
+            externalAliasLookupCalled,
+            finnhubCalled,
+            massiveFallbackCalled,
+            fallbackReason,
+            string.Join(", ", finalResults.Select(x => x.Symbol)));
+    }
+
+    private static bool IsExactSymbolMatch(string query, string symbol)
+        => string.Equals(
+            query.Trim(),
+            symbol.Trim(),
+            StringComparison.OrdinalIgnoreCase);
+
+    private static string NormalizeSearchText(string value)
+        => value.Trim().ToUpperInvariant();
 }
