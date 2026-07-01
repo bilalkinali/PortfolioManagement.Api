@@ -53,9 +53,7 @@ public sealed class GetStockProfileHandler
         }
 
         var provider = _providerRouter.ResolveQuoteProvider(ticker, instrument.ExchangeCode);
-        var providerSymbol = string.IsNullOrWhiteSpace(instrument.ProviderSymbol)
-            ? ticker
-            : instrument.ProviderSymbol;
+        var providerSymbol = _providerRouter.ResolveProviderSymbol(provider, ticker, instrument.ProviderSymbol);
         var profileSummary = provider == MarketDataProvider.Yahoo
             ? await _yahooMarketDataProxy.GetProfileAsync(providerSymbol, cancellationToken)
             : await _finnhubProfileProxy.GetProfileAsync(providerSymbol, cancellationToken);

@@ -57,25 +57,27 @@ public sealed class GetStockHistoryHandler
             }
         }
 
-        var providerSymbol = string.IsNullOrWhiteSpace(instrument?.ProviderSymbol)
-            ? ticker
-            : instrument.ProviderSymbol;
         var provider = _providerRouter.ResolveHistoryProvider(
             ticker,
             IsMassiveConfigured(),
             instrument?.ExchangeCode);
+        var providerSymbol = _providerRouter.ResolveProviderSymbol(provider, ticker, instrument?.ProviderSymbol);
+        var missingRanges = DetermineMissingHistoryRanges(dailyLocalBars, from, to);
 
         var fetchedDailyBars = new List<MarketDataHistoricalCandle>();
-        var fetchedBars = await FetchDailyBarsAsync(
-            provider,
-            providerSymbol,
-            from,
-            to,
-            cancellationToken);
-
-        if (fetchedBars is not null)
+        foreach (var missingRange in missingRanges)
         {
-            fetchedDailyBars.AddRange(fetchedBars);
+            var fetchedBars = await FetchDailyBarsAsync(
+                provider,
+                providerSymbol,
+                missingRange.From,
+                missingRange.To,
+                cancellationToken);
+
+            if (fetchedBars is not null)
+            {
+                fetchedDailyBars.AddRange(fetchedBars);
+            }
         }
 
         if (fetchedDailyBars.Count == 0 && dailyLocalBars.Count == 0)
@@ -254,6 +256,44 @@ public sealed class GetStockHistoryHandler
         return firstLocalDate <= from.AddDays(3) && lastLocalDate >= to.AddDays(-3);
     }
 
+    private static IReadOnlyList<MissingHistoryRange> DetermineMissingHistoryRanges(
+        IReadOnlyList<StockBar> dailyLocalBars,
+        DateOnly from,
+        DateOnly to)
+    {
+        if (dailyLocalBars.Count == 0)
+        {
+            return [new MissingHistoryRange(from, to)];
+        }
+
+        var firstLocalDate = ToDateOnly(dailyLocalBars[0]);
+        var lastLocalDate = ToDateOnly(dailyLocalBars[^1]);
+        var ranges = new List<MissingHistoryRange>();
+
+        if (firstLocalDate > from.AddDays(3))
+        {
+            AddRangeIfValid(ranges, from, firstLocalDate.AddDays(-1));
+        }
+
+        if (lastLocalDate < to.AddDays(-3))
+        {
+            AddRangeIfValid(ranges, lastLocalDate.AddDays(1), to);
+        }
+
+        return ranges;
+    }
+
+    private static void AddRangeIfValid(
+        List<MissingHistoryRange> ranges,
+        DateOnly from,
+        DateOnly to)
+    {
+        if (from <= to)
+        {
+            ranges.Add(new MissingHistoryRange(from, to));
+        }
+    }
+
     private static DateOnly ToDateOnly(StockBar bar)
         => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(bar.Timestamp).UtcDateTime);
 
@@ -282,3 +322,5 @@ public sealed class GetStockHistoryHandler
     }
 
 }
+
+internal sealed record MissingHistoryRange(DateOnly From, DateOnly To);
