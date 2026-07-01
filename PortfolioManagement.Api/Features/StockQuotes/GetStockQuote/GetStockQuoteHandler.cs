@@ -53,9 +53,7 @@ public sealed class GetStockQuoteHandler
             .FirstOrDefaultAsync(cancellationToken);
 
         var provider = _providerRouter.ResolveQuoteProvider(ticker, instrument?.ExchangeCode);
-        var providerSymbol = string.IsNullOrWhiteSpace(instrument?.ProviderSymbol)
-            ? ticker
-            : instrument.ProviderSymbol;
+        var providerSymbol = _providerRouter.ResolveProviderSymbol(provider, ticker, instrument?.ProviderSymbol);
         var cacheKey = $"quote:{provider}:{providerSymbol}";
 
         if (_memoryCache.TryGetValue(cacheKey, out GetStockQuoteResponse? cachedQuote))

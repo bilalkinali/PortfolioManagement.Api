@@ -99,21 +99,21 @@ public class GetStockHistoryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_fetches_requested_range_when_local_cache_is_incomplete()
+    public async Task Handle_fetches_tail_range_when_local_cache_is_missing_newer_bars()
     {
         await using var db = CreateDbContext();
         var instrument = Instrument.Create(
             symbol: "AAPL",
             name: "Apple",
-            providerSymbol: "AAPL",
+            providerSymbol: "AAPL.US",
             currency: "USD");
         DomainTestIds.SetId(instrument, 1);
+        instrument.AddMarketDataBar(new DateOnly(2026, 5, 19), MarketDataPeriod.Daily, 90m, 100m, 89m, 98m, 100);
         instrument.AddMarketDataBar(new DateOnly(2026, 6, 1), MarketDataPeriod.Daily, 100m, 110m, 99m, 108m, 200);
         db.Instruments.Add(instrument);
         await db.SaveChangesAsync();
 
         var httpClientFactory = new TestHttpClientFactory(CreateMassiveHistoryResponse(
-            ("2026-05-19", 90m, 100m, 89m, 98m, 100),
             ("2026-06-15", 108m, 112m, 105m, 110m, 300)));
         var handler = CreateHandler(db, httpClientFactory, new Dictionary<string, string?>
         {
@@ -137,6 +137,91 @@ public class GetStockHistoryHandlerTests
             [new DateOnly(2026, 5, 19), new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 15)],
             result.Results!.Select(x => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Timestamp).UtcDateTime)));
         Assert.Equal(3, await db.MarketDataBars.CountAsync());
+        Assert.Contains("/v2/aggs/ticker/AAPL/range/1/day/2026-06-02/2026-06-15", httpClientFactory.RequestUris.Single());
+    }
+
+    [Fact]
+    public async Task Handle_fetches_tail_range_for_HYLN_with_massive_symbol()
+    {
+        await using var db = CreateDbContext();
+        var instrument = Instrument.Create(
+            symbol: "HYLN",
+            name: "Hyliion",
+            providerSymbol: "HYLN.US",
+            exchangeCode: "NYSE American",
+            currency: "USD");
+        DomainTestIds.SetId(instrument, 1);
+        instrument.AddMarketDataBar(new DateOnly(2026, 5, 19), MarketDataPeriod.Daily, 1.90m, 2.00m, 1.89m, 1.98m, 100);
+        instrument.AddMarketDataBar(new DateOnly(2026, 6, 1), MarketDataPeriod.Daily, 2.00m, 2.10m, 1.99m, 2.08m, 200);
+        db.Instruments.Add(instrument);
+        await db.SaveChangesAsync();
+
+        var httpClientFactory = new TestHttpClientFactory(CreateMassiveHistoryResponse(
+            ("2026-06-15", 2.08m, 2.12m, 2.05m, 2.10m, 300)));
+        var handler = CreateHandler(db, httpClientFactory, new Dictionary<string, string?>
+        {
+            ["Massive:ApiKey"] = "configured"
+        });
+        var request = new GetStockHistoryRequest
+        {
+            Ticker = "HYLN",
+            From = "2026-05-19",
+            To = "2026-06-15",
+            Timespan = "day",
+            Range = "1M"
+        };
+
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result!.ResultsCount);
+        Assert.Equal(1, httpClientFactory.RequestCount);
+        Assert.Equal(
+            [new DateOnly(2026, 5, 19), new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 15)],
+            result.Results!.Select(x => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Timestamp).UtcDateTime)));
+        Assert.Equal(3, await db.MarketDataBars.CountAsync());
+        Assert.Contains("/v2/aggs/ticker/HYLN/range/1/day/2026-06-02/2026-06-15", httpClientFactory.RequestUris.Single());
+    }
+
+    [Fact]
+    public async Task Handle_fetches_head_range_when_local_cache_is_missing_older_bars()
+    {
+        await using var db = CreateDbContext();
+        var instrument = Instrument.Create(
+            symbol: "AAPL",
+            name: "Apple",
+            providerSymbol: "AAPL.US",
+            currency: "USD");
+        DomainTestIds.SetId(instrument, 1);
+        instrument.AddMarketDataBar(new DateOnly(2026, 6, 15), MarketDataPeriod.Daily, 108m, 112m, 105m, 110m, 300);
+        db.Instruments.Add(instrument);
+        await db.SaveChangesAsync();
+
+        var httpClientFactory = new TestHttpClientFactory(CreateMassiveHistoryResponse(
+            ("2026-05-19", 90m, 100m, 89m, 98m, 100)));
+        var handler = CreateHandler(db, httpClientFactory, new Dictionary<string, string?>
+        {
+            ["Massive:ApiKey"] = "configured"
+        });
+        var request = new GetStockHistoryRequest
+        {
+            Ticker = "AAPL",
+            From = "2026-05-19",
+            To = "2026-06-15",
+            Timespan = "day",
+            Range = "1M"
+        };
+
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.ResultsCount);
+        Assert.Equal(1, httpClientFactory.RequestCount);
+        Assert.Equal(
+            [new DateOnly(2026, 5, 19), new DateOnly(2026, 6, 15)],
+            result.Results!.Select(x => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Timestamp).UtcDateTime)));
+        Assert.Equal(2, await db.MarketDataBars.CountAsync());
+        Assert.Contains("/v2/aggs/ticker/AAPL/range/1/day/2026-05-19/2026-06-14", httpClientFactory.RequestUris.Single());
     }
 
     private static PortfolioDbContext CreateDbContext()
@@ -205,6 +290,7 @@ public class GetStockHistoryHandlerTests
         }
 
         public int RequestCount { get; private set; }
+        public List<string> RequestUris { get; } = [];
 
         public HttpClient CreateClient(string name)
             => new(new CountingHandler(this))
@@ -219,6 +305,7 @@ public class GetStockHistoryHandlerTests
                 CancellationToken cancellationToken)
             {
                 factory.RequestCount++;
+                factory.RequestUris.Add(request.RequestUri?.ToString() ?? string.Empty);
 
                 if (factory._responseBody is null)
                 {
