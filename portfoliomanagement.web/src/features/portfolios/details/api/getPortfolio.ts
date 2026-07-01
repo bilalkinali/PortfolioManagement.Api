@@ -13,6 +13,7 @@ export type PortfolioResponse = {
     totalRealizedPnL: number;
     totalPnL: number;
     totalPnLPercentage: number;
+    missingPricePositionCount: number;
     positions: PortfolioPositionResponse[];
 }
 

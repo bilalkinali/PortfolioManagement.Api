@@ -27,7 +27,7 @@ public class GetPortfolioQueryTests
         db.Portfolios.Add(portfolio);
         await db.SaveChangesAsync();
 
-        var result = await new GetPortfolioQuery(db).GetPortfolioAsync(portfolio.Id, "user-1");
+        var result = await new GetPortfolioQuery(db).GetPortfolioAsync(portfolio.Id, "user-1", CancellationToken.None);
 
         var position = Assert.Single(result.Positions);
         var sellResponse = Assert.Single(position.Trades, trade => trade.Id == sell.Id);
@@ -60,7 +60,7 @@ public class GetPortfolioQueryTests
         db.Portfolios.Add(portfolio);
         await db.SaveChangesAsync();
 
-        var result = await new GetPortfolioQuery(db).GetPortfolioAsync(portfolio.Id, "user-1");
+        var result = await new GetPortfolioQuery(db).GetPortfolioAsync(portfolio.Id, "user-1", CancellationToken.None);
 
         var position = Assert.Single(result.Positions);
         var sellResponse = Assert.Single(position.Trades, trade => trade.Id == sell.Id);
