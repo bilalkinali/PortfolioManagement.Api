@@ -35,6 +35,7 @@ function getPnLClassName(value: number | null) {
 
 export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardProps) {
     const [expandedPositionIds, setExpandedPositionIds] = React.useState<Set<number>>(() => new Set())
+    const hasMissingPrices = portfolio.missingPricePositionCount > 0
 
     function togglePosition(positionId: number) {
         setExpandedPositionIds((current) => {
@@ -58,9 +59,14 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                     <CardDescription>{portfolio.description}</CardDescription>
                 </div>
                 <CardAction>
-                    <Badge variant="secondary">
-                        Created: {dateFormatter.format(new Date(portfolio.createdAt))}
-                    </Badge>                    
+                    <div className="flex flex-wrap justify-end gap-2">
+                        {hasMissingPrices ? (
+                            <Badge variant="destructive">{portfolio.missingPricePositionCount} prices missing</Badge>
+                        ) : null}
+                        <Badge variant="secondary">
+                            Created: {dateFormatter.format(new Date(portfolio.createdAt))}
+                        </Badge>
+                    </div>
                 </CardAction>
             </CardHeader>
             
@@ -81,7 +87,7 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                         <div>
                             <h1 className="text-sm font-semibold">Market Value</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
-                                {formatCurrency(portfolio.totalMarketValue)}
+                                {hasMissingPrices ? "Partial" : formatCurrency(portfolio.totalMarketValue)}
                             </p>
                         </div>
                     </div>
@@ -95,12 +101,14 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
                         <div>
                             <h1 className="text-sm font-semibold">Profit / Loss</h1>
                             <p className="mt-1 text-xl font-semibold tabular-nums">
-                                <span className={portfolio.totalPnL >= 0 ? "text-chart-1" : "text-destructive"}>
-                                    {formatCurrency(portfolio.totalPnL)}                                    
+                                <span className={hasMissingPrices ? "text-muted-foreground" : portfolio.totalPnL >= 0 ? "text-chart-1" : "text-destructive"}>
+                                    {hasMissingPrices ? "Partial" : formatCurrency(portfolio.totalPnL)}
                                 </span>                          
-                                <span className={portfolio.totalPnLPercentage >= 0 ? "block text-sm text-chart-1" : "block text-sm text-destructive"}>
-                                    ({portfolio.totalPnLPercentage.toFixed(2)}%)
-                                </span>
+                                {!hasMissingPrices ? (
+                                    <span className={portfolio.totalPnLPercentage >= 0 ? "block text-sm text-chart-1" : "block text-sm text-destructive"}>
+                                        ({portfolio.totalPnLPercentage.toFixed(2)}%)
+                                    </span>
+                                ) : null}
                             </p>
                         </div>
                     </div>

@@ -13,7 +13,8 @@ public static class GetPortfolioEndpoint
         app.MapGet("/api/portfolios/{portfolioId:int}", async (
             int portfolioId,
             GetPortfolioQuery query,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            CancellationToken cancellationToken) =>
         {
             try
             {
@@ -24,7 +25,7 @@ public static class GetPortfolioEndpoint
                     return Results.Unauthorized();
                 }
 
-                var portfolio = await query.GetPortfolioAsync(portfolioId, userId);
+                var portfolio = await query.GetPortfolioAsync(portfolioId, userId, cancellationToken);
 
                 return Results.Ok(portfolio);
             }
@@ -47,7 +48,10 @@ public static class GetPortfolioEndpoint
 
 public sealed class GetPortfolioQuery(PortfolioDbContext db)
 {
-    public async Task<GetPortfolioResponse> GetPortfolioAsync(int portfolioId, string userId)
+    public async Task<GetPortfolioResponse> GetPortfolioAsync(
+        int portfolioId,
+        string userId,
+        CancellationToken cancellationToken)
     {
         var portfolio = await db.Portfolios
             .AsNoTracking()
@@ -56,7 +60,7 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
                 .ThenInclude(pos => pos.Instrument)
             .Include(p => p.Positions)
                 .ThenInclude(pos => pos.Trades)
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == portfolioId);
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == portfolioId, cancellationToken);
 
         if (portfolio is null)
         {
@@ -81,7 +85,7 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
                     LatestPriceDate = b.Date
                 })
                 .First())
-            .ToDictionaryAsync(b => b.InstrumentId);
+            .ToDictionaryAsync(b => b.InstrumentId, cancellationToken);
 
         var positionValues = portfolio.Positions
             .Select(position =>
@@ -140,6 +144,7 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
         var totalUnrealizedPnL = positionValues.Sum(p => p.UnrealizedPnL ?? 0);
         var totalRealizedPnL = positionValues.Sum(p => p.RealizedPnL);
         var totalPnL = totalRealizedPnL + totalUnrealizedPnL;
+        var missingPricePositionCount = positionValues.Count(p => p.Quantity != 0 && p.LatestPrice is null);
 
         var totalPnLPercentage = totalCostBasis > 0
             ? totalPnL / totalCostBasis * 100
@@ -179,6 +184,7 @@ public sealed class GetPortfolioQuery(PortfolioDbContext db)
             totalRealizedPnL,
             totalPnL,
             totalPnLPercentage,
+            missingPricePositionCount,
             positions);
     }
 
@@ -322,6 +328,7 @@ public sealed record GetPortfolioResponse(
     decimal TotalRealizedPnL,
     decimal TotalPnL,
     decimal TotalPnLPercentage,
+    int MissingPricePositionCount,
     IReadOnlyCollection<GetPortfolioPositionResponse> Positions
 );
 
