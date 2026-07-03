@@ -264,7 +264,7 @@ function HistoryChartContent({
                     dataKey="volume"
                     fill="var(--color-volume)"
                     radius={[5, 5, 0, 0]}
-                    opacity={showVolume ? 0.1 : 0}
+                    opacity={showVolume ? 0.18 : 0}
                     isAnimationActive={false}
                 />
             </ComposedChart>
