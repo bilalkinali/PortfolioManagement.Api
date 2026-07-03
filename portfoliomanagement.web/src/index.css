@@ -67,7 +67,7 @@ html:root {
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.56 0.14 65);
-    --chart-1: oklch(0.845 0.143 164.978);
+    --chart-1: oklch(0.596 0.145 163.225);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.596 0.145 163.225);
     --chart-4: oklch(0.508 0.118 165.612);
@@ -102,7 +102,7 @@ html.dark {
     --border: oklch(1 0.012 245 / 7%);
     --input: oklch(0.31 0.018 255);
     --ring: oklch(0.66 0.035 245);
-    --chart-1: oklch(0.845 0.143 164.978);
+    --chart-1: oklch(0.696 0.17 162.48);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.596 0.145 163.225);
     --chart-4: oklch(0.508 0.118 165.612);
