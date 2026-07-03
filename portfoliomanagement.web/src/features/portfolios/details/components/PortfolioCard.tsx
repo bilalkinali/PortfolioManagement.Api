@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Link } from "react-router"
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
 import { type PortfolioResponse } from '@/features/portfolios/details/api/getPortfolio';
 import { Button } from "@/components/ui/button"
@@ -166,7 +167,12 @@ export default function PortfolioCard({ portfolio, onSuccess }: PortfolioCardPro
 
                                         <TableCell className="px-6">
                                             <div className="flex flex-col">
-                                                <span className="font-semibold">{position.symbol}</span>
+                                                <Link
+                                                    to={`/instruments/${encodeURIComponent(position.symbol)}`}
+                                                    className="w-fit rounded-sm font-semibold outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                                >
+                                                    {position.symbol}
+                                                </Link>
                                                 <span className="text-xs text-muted-foreground">
                                                     {position.name}
                                                 </span>
